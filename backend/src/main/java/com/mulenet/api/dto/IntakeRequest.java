@@ -2,10 +2,18 @@ package com.mulenet.api.dto;
 
 import com.mulenet.api.model.Complaint;
 import com.mulenet.api.model.Transaction;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import java.util.List;
 
 public class IntakeRequest {
+    @Valid
+    @NotNull(message = "Complaint is required")
     private Complaint complaint;
+
+    @Valid
+    @NotEmpty(message = "Transaction list cannot be empty")
     private List<Transaction> transactions;
 
     public IntakeRequest() {}

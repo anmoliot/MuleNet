@@ -1,15 +1,23 @@
 package com.mulenet.api.dto;
 
 import com.mulenet.api.model.InvestigatorAction;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 /**
  * Request body for recording an investigator action on a case.
  */
 public class ActionRequest {
 
+    @NotBlank(message = "Account ID is required")
     private String accountId;
+
+    @NotNull(message = "Action type is required")
     private InvestigatorAction.ActionType action;
+
+    @NotBlank(message = "Rationale is required")
     private String rationale;
+
     private String performedBy;
 
     public ActionRequest() {}

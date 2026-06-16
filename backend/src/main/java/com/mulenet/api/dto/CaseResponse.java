@@ -18,7 +18,8 @@ public class CaseResponse {
     private Integer accountsFlagged;
     private String createdAt;
     private String mlResponse;         // raw ML JSON
-    private String policyDecisions;    // policy decisions JSON
+    private String policyDecisions;    // raw policy decisions JSON
+    private String assignedTo;
     private List<InvestigatorAction> actionHistory;
 
     public CaseResponse() {}
@@ -35,6 +36,7 @@ public class CaseResponse {
         r.setCreatedAt(c.getCreatedAt() != null ? c.getCreatedAt().toString() : null);
         r.setMlResponse(c.getMlResponse());
         r.setPolicyDecisions(c.getPolicyDecisions());
+        r.setAssignedTo(c.getAssignedTo());
         return r;
     }
 
@@ -69,6 +71,9 @@ public class CaseResponse {
 
     public String getPolicyDecisions() { return policyDecisions; }
     public void setPolicyDecisions(String policyDecisions) { this.policyDecisions = policyDecisions; }
+
+    public String getAssignedTo() { return assignedTo; }
+    public void setAssignedTo(String assignedTo) { this.assignedTo = assignedTo; }
 
     public List<InvestigatorAction> getActionHistory() { return actionHistory; }
     public void setActionHistory(List<InvestigatorAction> actionHistory) { this.actionHistory = actionHistory; }

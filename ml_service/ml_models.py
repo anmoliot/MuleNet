@@ -175,6 +175,40 @@ class FastPathModel:
 
         return {acct: round(float(prob), 4) for acct, prob in zip(acct_ids, probs)}
 
+    def retrain(self, feedback_samples: List[Dict[str, Any]]):
+        """
+        Retrain XGBoost using original synthetic data augmented with investigator feedback.
+        feedback_samples is a list of dicts: [{'features': [...], 'label': int}]
+        """
+        print(f"[FastPath] Retraining with {len(feedback_samples)} investigator feedback samples...")
+        X_base, y_base = _generate_training_data(n_samples=5000)
+        
+        if feedback_samples:
+            X_feed = np.array([f['features'] for f in feedback_samples], dtype=np.float64)
+            y_feed = np.array([f['label'] for f in feedback_samples], dtype=np.int32)
+            
+            # Oversample feedback to ensure it shifts the decision boundary
+            X_feed_rep = np.repeat(X_feed, 50, axis=0)
+            y_feed_rep = np.repeat(y_feed, 50, axis=0)
+            
+            X = np.vstack([X_base, X_feed_rep])
+            y = np.concatenate([y_base, y_feed_rep])
+        else:
+            X, y = X_base, y_base
+            
+        self.scaler = StandardScaler()
+        self.scaler.fit(X)
+        X_scaled = self.scaler.transform(X)
+        
+        self.model.fit(X_scaled, y)
+        print(f"[FastPath] Retraining complete. Accuracy: {self.model.score(X_scaled, y):.4f}")
+        
+        with open(FAST_PATH_MODEL_PATH, "wb") as f:
+            pickle.dump(self.model, f)
+        with open(FAST_PATH_SCALER_PATH, "wb") as f:
+            pickle.dump(self.scaler, f)
+        print("[FastPath] Model updated and saved to disk.")
+
     def feature_importance(self) -> Dict[str, float]:
         """Return feature importance scores."""
         if hasattr(self.model, "feature_importances_"):
@@ -354,11 +388,25 @@ class GraphNeuralScorer:
         return G, node_features, labels
 
     def _message_pass(self, G, nodes, X):
-        """Single-round message passing: aggregate neighbor features."""
+        """
+        Single-round message passing: aggregate neighbor features.
+        Applies Time-Decayed Attention (Gap 4) based on edge timestamps:
+          weight = amount * exp(-lambda * dt)
+        """
         import networkx as nx
+        import datetime
 
         X_agg = np.copy(X)
         node_idx = {n: i for i, n in enumerate(nodes)}
+        current_time = datetime.datetime.utcnow()
+
+        def parse_ts(ts_str):
+            if not ts_str:
+                return None
+            try:
+                return datetime.datetime.fromisoformat(ts_str.replace('Z', ''))
+            except Exception:
+                return None
 
         for i, node in enumerate(nodes):
             neighbor_features = []
@@ -368,6 +416,11 @@ class GraphNeuralScorer:
                 if pred in node_idx:
                     edge_data = G[pred][node]
                     amount = edge_data.get("amount", 1.0)
+                    ts = parse_ts(edge_data.get("timestamp"))
+                    if ts:
+                        # Exponential decay: lambda = 1e-5 (half-life of ~20 hours)
+                        dt = (current_time - ts).total_seconds()
+                        amount = amount * math.exp(-1e-5 * max(dt, 0.0))
                     neighbor_features.append(X[node_idx[pred]])
                     weights.append(amount)
 
@@ -375,6 +428,10 @@ class GraphNeuralScorer:
                 if succ in node_idx:
                     edge_data = G[node][succ]
                     amount = edge_data.get("amount", 1.0)
+                    ts = parse_ts(edge_data.get("timestamp"))
+                    if ts:
+                        dt = (current_time - ts).total_seconds()
+                        amount = amount * math.exp(-1e-5 * max(dt, 0.0))
                     neighbor_features.append(X[node_idx[succ]])
                     weights.append(amount)
 
@@ -449,6 +506,72 @@ class GraphNeuralScorer:
 
         return {acct: round(float(p), 4) for acct, p in zip(acct_ids, preds)}
 
+    def retrain(self, feedback_graphs: List[Tuple[Any, List[List[float]], List[int]]]):
+        """
+        Fine-tune GNN weights using investigator feedback.
+        Each graph is a tuple: (G, X_matrix, y_vector)
+        """
+        if not feedback_graphs:
+            print("[GNN] No feedback graphs provided for retraining.")
+            return
+
+        print(f"[GNN] Fine-tuning model weights with {len(feedback_graphs)} feedback graphs...")
+        lr = 0.005
+        n_epochs = 20
+        
+        for epoch in range(n_epochs):
+            total_loss = 0.0
+            count = 0
+            for G, X, y in feedback_graphs:
+                if len(X) == 0:
+                    continue
+                
+                # Forward
+                nodes = [f"account:{node_id}" for node_id in G.nodes()]
+                X_arr = np.array(X, dtype=np.float64)
+                y_arr = np.array(y, dtype=np.float64)
+                
+                X_agg = self._message_pass(G, nodes, X_arr)
+                H = X_agg @ self.W1
+                H = np.maximum(H, 0)
+                
+                attn_scores = H @ self.attention
+                attn_weights = 1.0 / (1.0 + np.exp(-np.clip(attn_scores, -10, 10)))
+                H_attn = H * attn_weights[:, np.newaxis]
+                
+                logits = (H_attn @ self.W2).flatten()
+                preds = 1.0 / (1.0 + np.exp(-np.clip(logits, -10, 10)))
+                
+                loss = -np.mean(y_arr * np.log(preds + 1e-7) + (1 - y_arr) * np.log(1 - preds + 1e-7))
+                total_loss += loss
+                count += 1
+                
+                # Backward
+                d_preds = (preds - y_arr) / len(y_arr)
+                d_logits = d_preds * preds * (1 - preds)
+                d_W2 = H_attn.T @ d_logits[:, np.newaxis]
+                d_H_attn = d_logits[:, np.newaxis] @ self.W2.T
+                d_attn_weights = np.sum(d_H_attn * H, axis=1)
+                d_attn_sigmoid = d_attn_weights * attn_weights * (1 - attn_weights)
+                d_attention = H.T @ d_attn_sigmoid
+                d_H = d_H_attn * attn_weights[:, np.newaxis]
+                d_H[X_agg @ self.W1 <= 0] = 0
+                d_W1 = X_agg.T @ d_H
+                
+                self.W1 -= lr * np.clip(d_W1, -1, 1)
+                self.W2 -= lr * np.clip(d_W2, -1, 1)
+                self.attention -= lr * np.clip(d_attention, -1, 1)
+
+        # Save weights
+        with open(GNN_WEIGHTS_PATH, "wb") as f:
+            pickle.dump({
+                "W1": self.W1,
+                "W2": self.W2,
+                "attention": self.attention,
+            }, f)
+        print("[GNN] Fine-tuning complete. Weights saved to disk.")
+
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # SINGLETON MODEL INSTANCES (loaded once at startup)
@@ -472,9 +595,88 @@ def get_gnn_scorer() -> GraphNeuralScorer:
     return _gnn_scorer
 
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# UNSUPERVISED ANOMALY DETECTION LAYER (Isolation Forest)
+# ═══════════════════════════════════════════════════════════════════════════
+
+from sklearn.ensemble import IsolationForest
+
+class IsolationForestAnomalyDetector:
+    """
+    Unsupervised Anomaly Detection using Isolation Forest (Gap 7).
+    Helps detect previously unseen mule patterns and out-of-distribution behaviors.
+    """
+    def __init__(self):
+        self.model = IsolationForest(n_estimators=100, contamination=0.1, random_state=42)
+        self._train()
+
+    def _train(self):
+        print("[AnomalyDetector] Training unsupervised Isolation Forest...")
+        X, _ = _generate_training_data(n_samples=2000)
+        self.model.fit(X)
+        print("[AnomalyDetector] Unsupervised training complete.")
+
+    def predict(self, features: Dict[str, Dict]) -> Dict[str, float]:
+        if not features:
+            return {}
+
+        acct_ids = list(features.keys())
+        X = np.array([
+            [features[a].get(col, 0) for col in FEATURE_COLS]
+            for a in acct_ids
+        ], dtype=np.float64)
+
+        # score_samples returns negative values (lower = more anomalous)
+        scores = self.model.score_samples(X)
+        
+        # Map raw scores to anomaly probability in range [0, 1]
+        anomaly_scores = {}
+        for acct, score in zip(acct_ids, scores):
+            # Normal scores are around -0.4 to -0.5, anomalies are < -0.65
+            norm_anomaly = min(max((-score - 0.35) / 0.3, 0.0), 1.0)
+            anomaly_scores[acct] = round(float(norm_anomaly), 4)
+
+        return anomaly_scores
+
+    def retrain(self, feedback_samples: List[Dict[str, Any]]):
+        """Include investigator feedback features in training set."""
+        X_base, _ = _generate_training_data(n_samples=2000)
+        if feedback_samples:
+            X_feed = np.array([f['features'] for f in feedback_samples], dtype=np.float64)
+            X = np.vstack([X_base, X_feed])
+        else:
+            X = X_base
+        self.model.fit(X)
+        print("[AnomalyDetector] Isolation Forest retrained.")
+
+
+_anomaly_detector: IsolationForestAnomalyDetector = None
+
+def get_anomaly_detector() -> IsolationForestAnomalyDetector:
+    global _anomaly_detector
+    if _anomaly_detector is None:
+        _anomaly_detector = IsolationForestAnomalyDetector()
+    return _anomaly_detector
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# PLATT CALIBRATION FUNCTION
+# ═══════════════════════════════════════════════════════════════════════════
+
+def calibrate_score(raw_score: float) -> float:
+    """
+    Applies sigmoid Platt scaling (Gap 9) to convert a raw composite score 
+    into a calibrated, probability-like risk metric.
+    """
+    # Sigmoid mapping centered at 45.0 with steepness 0.08
+    scaled = 100.0 / (1.0 + math.exp(-0.08 * (raw_score - 45.0)))
+    return min(round(scaled, 2), 100.0)
+
+
 def get_model_metadata() -> Dict[str, Any]:
     """Return metadata about loaded models for governance/monitoring."""
     fp = get_fast_path()
+    ad = get_anomaly_detector()
     return {
         "fast_path": {
             "type": "XGBoost" if HAS_XGB else "GradientBoosting",
@@ -491,4 +693,11 @@ def get_model_metadata() -> Dict[str, Any]:
             "model_path": str(GNN_WEIGHTS_PATH),
             "trained": GNN_WEIGHTS_PATH.exists(),
         },
+        "anomaly_detector": {
+            "type": "IsolationForest",
+            "estimators": 100,
+            "contamination": 0.1,
+            "trained": True,
+        }
     }
+

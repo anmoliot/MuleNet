@@ -1,4 +1,5 @@
 @echo off
+set JAVA_HOME=C:\Program Files\Java\jdk-25
 rem ------------------------------------------------------------
 rem MuleNet – Unified launch script (Windows batch)
 rem ------------------------------------------------------------

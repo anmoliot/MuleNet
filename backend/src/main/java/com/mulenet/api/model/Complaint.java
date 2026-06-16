@@ -1,6 +1,9 @@
 package com.mulenet.api.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
 @Entity
@@ -10,10 +13,20 @@ public class Complaint {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "Complaint ID is required")
     private String complaintId;
+
+    @NotBlank(message = "UTR is required")
     private String utr;
+
+    @NotNull(message = "Amount is required")
+    @DecimalMin(value = "0.01", message = "Amount must be greater than zero")
     private Double amount;
+
+    @NotNull(message = "Timestamp is required")
     private LocalDateTime timestamp;
+
+    @NotBlank(message = "First beneficiary is required")
     private String firstBeneficiary;
 
     public Complaint() {}

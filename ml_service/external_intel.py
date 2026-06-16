@@ -1,11 +1,10 @@
 """
-external_intel.py — External Intelligence Layer (Stub)
-Simulates I4C, NCRP, Suspect Registry, and Watchlist lookups.
-Returns enrichment data that feeds into the scoring pipeline.
+external_intel.py — External Intelligence Layer
+Queries Spring Boot /api/external/watchlist endpoint.
+Returns database-driven enrichment data that feeds into the scoring pipeline.
 """
 
-import hashlib
-import random
+import requests
 from typing import Dict, List, Optional
 from pydantic import BaseModel
 
@@ -27,82 +26,13 @@ class ExternalEnrichment(BaseModel):
     known_mule: bool = False
 
 
-# ── Stub Watchlists ──────────────────────────────────────────────────────────
-# Deterministic "hits" seeded by account ID hash so results are reproducible
-
-_SUSPECT_REGISTRY = {
-    "AC-1199": {"source": "I4C_SUSPECT_REGISTRY", "alert": "I4C-2024-88291"},
-    "AC-8102": {"source": "NCRP_FLAGGED", "alert": "NCRP-2024-44102"},
-}
-
-_DEVICE_BLACKLIST = {"DEV-111", "DEV-333"}
-
-
-def _hash_score(value: str) -> float:
-    """Deterministic pseudo-random score from a string."""
-    h = int(hashlib.sha256(value.encode()).hexdigest()[:8], 16)
-    return (h % 100) / 100.0
-
-
 def check_watchlists(account_id: str, device_ids: List[str] = None) -> ExternalEnrichment:
     """
-    Query external intelligence sources for an account.
-    Currently stub — returns deterministic mock data.
-    In production, this would call I4C API, NCRP database, etc.
+    Query external watchlist API. Wrapper for legacy single checks.
     """
-    hits: List[WatchlistHit] = []
-    risk_uplift = 0.0
-    known_mule = False
-    ncrp_complaints = 0
-
-    # Check suspect registry
-    if account_id in _SUSPECT_REGISTRY:
-        entry = _SUSPECT_REGISTRY[account_id]
-        hits.append(WatchlistHit(
-            source=entry["source"],
-            match_type="EXACT",
-            confidence=0.95,
-            alert_id=entry["alert"],
-            details=f"Account {account_id} found in {entry['source']}"
-        ))
-        risk_uplift += 25.0
-        known_mule = True
-        ncrp_complaints = int(_hash_score(account_id) * 5) + 1
-
-    # Check device blacklist
-    if device_ids:
-        for dev in device_ids:
-            if dev in _DEVICE_BLACKLIST:
-                hits.append(WatchlistHit(
-                    source="DEVICE_BLACKLIST",
-                    match_type="DEVICE_LINKED",
-                    confidence=0.80,
-                    details=f"Device {dev} linked to {account_id} is on blacklist"
-                ))
-                risk_uplift += 10.0
-
-    # Fuzzy watchlist check (deterministic based on account hash)
-    acct_hash = _hash_score(account_id)
-    if acct_hash > 0.7 and account_id not in _SUSPECT_REGISTRY:
-        hits.append(WatchlistHit(
-            source="FUZZY_WATCHLIST",
-            match_type="FUZZY",
-            confidence=round(0.4 + acct_hash * 0.3, 2),
-            details=f"Partial name/PAN match for {account_id} in regional watchlist"
-        ))
-        risk_uplift += 5.0
-
-    # I4C status
-    i4c_status = "FLAGGED" if known_mule else "CLEAR"
-
-    return ExternalEnrichment(
-        account_id=account_id,
-        watchlist_hits=hits,
-        risk_uplift=min(risk_uplift, 40.0),
-        i4c_status=i4c_status,
-        ncrp_complaints=ncrp_complaints,
-        known_mule=known_mule,
-    )
+    dev_map = {account_id: device_ids or []}
+    res = batch_check([account_id], dev_map)
+    return res[account_id]
 
 
 def batch_check(
@@ -110,12 +40,76 @@ def batch_check(
     device_map: Dict[str, List[str]] = None,
 ) -> Dict[str, ExternalEnrichment]:
     """
-    Batch query all accounts against external intelligence.
-    Returns dict keyed by account_id.
+    Batch query all accounts and device IDs against Spring Boot external intelligence registry.
     """
-    results = {}
     device_map = device_map or {}
+    all_devices = []
+    for dev_list in device_map.values():
+        all_devices.extend(dev_list)
+
+    payload = {
+        "accountIds": account_ids,
+        "deviceIds": list(set(all_devices))
+    }
+
+    # Initialize baseline clean results
+    results = {}
     for acct in account_ids:
-        devices = device_map.get(acct, [])
-        results[acct] = check_watchlists(acct, devices)
+        results[acct] = ExternalEnrichment(
+            account_id=acct,
+            watchlist_hits=[],
+            risk_uplift=0.0,
+            i4c_status="CLEAR",
+            ncrp_complaints=0,
+            known_mule=False
+        )
+
+    try:
+        # Call Spring Boot database lookups
+        res = requests.post("http://localhost:8080/api/external/watchlist", json=payload, timeout=5)
+        if res.status_code == 200:
+            hits = res.json()
+            for hit in hits:
+                item_id = hit.get("accountId")
+                source = hit.get("source")
+                risk_uplift = hit.get("riskUplift", 0.0)
+                match_type = hit.get("matchType", "EXACT")
+                confidence = hit.get("confidence", 1.0)
+                details = hit.get("details", "")
+
+                watchlist_hit = WatchlistHit(
+                    source=source,
+                    match_type=match_type,
+                    confidence=confidence,
+                    details=details
+                )
+
+                # Check if this hit is for one of our query accounts
+                if item_id in results:
+                    results[item_id].watchlist_hits.append(watchlist_hit)
+                    results[item_id].risk_uplift = min(results[item_id].risk_uplift + risk_uplift, 40.0)
+                    if source in ["I4C_SUSPECT_REGISTRY", "NCRP_FLAGGED", "CONSORTIUM_BLACKLIST"]:
+                        results[item_id].known_mule = True
+                        results[item_id].i4c_status = "FLAGGED"
+                        if source == "NCRP_FLAGGED":
+                            results[item_id].ncrp_complaints = 3  # simulated count
+
+                # Or if this hit is for a device associated with our query accounts
+                for acct, devices in device_map.items():
+                    if item_id in devices and acct in results:
+                        # Append a device-linked hit details
+                        results[acct].watchlist_hits.append(WatchlistHit(
+                            source=source,
+                            match_type="DEVICE_LINKED",
+                            confidence=confidence * 0.9,
+                            details=f"Device {item_id} linked: {details}"
+                        ))
+                        results[acct].risk_uplift = min(results[acct].risk_uplift + risk_uplift * 0.8, 40.0)
+                        results[acct].i4c_status = "FLAGGED" if results[acct].known_mule else "SUSPICIOUS"
+
+        else:
+            print(f"[Watchlist] External check failed with status: {res.status_code}")
+    except Exception as e:
+        print(f"[Watchlist] Exception during database threat intel search: {str(e)}")
+
     return results

@@ -11,7 +11,7 @@ Implements the full multi-layer decisioning architecture:
   Layer 7: Policy Orchestration + Explainability
 """
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from typing import List, Dict, Any, Optional
 import networkx as nx
 import math
@@ -32,25 +32,25 @@ class BaseModelCamel(BaseModel):
     )
 
 class Transaction(BaseModelCamel):
-    utr: str
-    amount: float
+    utr: str = Field(min_length=8)
+    amount: float = Field(gt=0)
     timestamp: str
-    sender_account: str
-    receiver_account: str
-    device_id: Optional[str] = None
+    sender_account: str = Field(min_length=3)
+    receiver_account: str = Field(min_length=3)
+    device_id: Optional[str] = Field(None, min_length=3)
 
 
 class Complaint(BaseModelCamel):
-    complaint_id: str
-    utr: str
-    amount: float
+    complaint_id: str = Field(min_length=3)
+    utr: str = Field(min_length=8)
+    amount: float = Field(gt=0)
     timestamp: str
-    first_beneficiary: str
+    first_beneficiary: str = Field(min_length=3)
 
 
 class IntakeRequest(BaseModelCamel):
     complaint: Complaint
-    transactions: List[Transaction]
+    transactions: List[Transaction] = Field(min_items=1)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -68,35 +68,61 @@ MODEL_VERSION = "2.0.0"
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# I.  Trust Data Fabric — entity resolution + graph construction
+# I.  Trust Data Fabric — Entity Resolution & Stateful Graph Store (Gaps 2, 3, 6)
 # ─────────────────────────────────────────────────────────────────────────────
+
+GLOBAL_GRAPH = nx.DiGraph()
+GLOBAL_TXNS = []
+COMPLAINT_RISK_UPLIFTS = {}
+
+MERCHANTS = {"AC-MERCHANT", "AC-ECOM", "AC-PG-GATEWAY"}
+
+def parse_time(ts_str):
+    try:
+        s = ts_str.replace('Z', '')
+        return datetime.datetime.fromisoformat(s)
+    except Exception:
+        return datetime.datetime.utcnow()
 
 def build_hetero_graph(request: IntakeRequest) -> nx.DiGraph:
     """
-    Construct a directed heterogeneous NetworkX graph from the intake request.
-    Node types : account | device | complaint
-    Edge types  : sent_to | uses_device | linked_to_case
+    Construct a stateful, directed heterogeneous NetworkX graph (Gap 2).
+    Nodes and edges are persisted globally.
     """
-    G = nx.DiGraph()
-
-    # Add complaint node
-    G.add_node(
-        f"complaint:{request.complaint.complaint_id}",
+    global GLOBAL_GRAPH, GLOBAL_TXNS, COMPLAINT_RISK_UPLIFTS
+    
+    # 1. Store transactions in Online Feature Store cache
+    if request.transactions:
+        GLOBAL_TXNS.extend(request.transactions)
+        
+    # 2. Add nodes and edges to live graph
+    comp_id = f"complaint:{request.complaint.complaint_id}"
+    GLOBAL_GRAPH.add_node(
+        comp_id,
         node_type="complaint",
         amount=request.complaint.amount,
         utr=request.complaint.utr,
+        timestamp=request.complaint.timestamp
     )
-
-    # Add account + device nodes, transaction edges
+    
     for txn in request.transactions:
         for acct in [txn.sender_account, txn.receiver_account]:
-            if not G.has_node(f"account:{acct}"):
-                G.add_node(f"account:{acct}", node_type="account", total_sent=0.0, total_recv=0.0)
+            acct_node = f"account:{acct}"
+            is_merchant = acct in MERCHANTS
+            if not GLOBAL_GRAPH.has_node(acct_node):
+                GLOBAL_GRAPH.add_node(
+                    acct_node, 
+                    node_type="merchant" if is_merchant else "account", 
+                    total_sent=0.0, 
+                    total_recv=0.0
+                )
+            elif is_merchant:
+                GLOBAL_GRAPH.nodes[acct_node]["node_type"] = "merchant"
 
-        G.nodes[f"account:{txn.sender_account}"]["total_sent"] += txn.amount
-        G.nodes[f"account:{txn.receiver_account}"]["total_recv"] += txn.amount
+        GLOBAL_GRAPH.nodes[f"account:{txn.sender_account}"]["total_sent"] += txn.amount
+        GLOBAL_GRAPH.nodes[f"account:{txn.receiver_account}"]["total_recv"] += txn.amount
 
-        G.add_edge(
+        GLOBAL_GRAPH.add_edge(
             f"account:{txn.sender_account}",
             f"account:{txn.receiver_account}",
             edge_type="sent_to",
@@ -107,29 +133,54 @@ def build_hetero_graph(request: IntakeRequest) -> nx.DiGraph:
 
         if txn.device_id:
             dev_node = f"device:{txn.device_id}"
-            if not G.has_node(dev_node):
-                G.add_node(dev_node, node_type="device")
-            G.add_edge(f"account:{txn.sender_account}", dev_node, edge_type="uses_device")
-            G.add_edge(f"account:{txn.receiver_account}", dev_node, edge_type="uses_device")
+            if not GLOBAL_GRAPH.has_node(dev_node):
+                GLOBAL_GRAPH.add_node(dev_node, node_type="device")
+            GLOBAL_GRAPH.add_edge(f"account:{txn.sender_account}", dev_node, edge_type="uses_device")
+            GLOBAL_GRAPH.add_edge(f"account:{txn.receiver_account}", dev_node, edge_type="uses_device")
 
     # Link complaint to first beneficiary
-    G.add_edge(
-        f"complaint:{request.complaint.complaint_id}",
-        f"account:{request.complaint.first_beneficiary}",
-        edge_type="linked_to_case",
-    )
+    beneficiary_node = f"account:{request.complaint.first_beneficiary}"
+    GLOBAL_GRAPH.add_edge(comp_id, beneficiary_node, edge_type="linked_to_case")
 
-    return G
+    # 3. Complaint Propagation Engine BFS (Gap 6)
+    # Start BFS at first beneficiary, propagate risk down 3 hops
+    visited = set()
+    queue = [(beneficiary_node, 30.0)]  # node, initial risk propagation score
+    
+    while queue:
+        node, score = queue.pop(0)
+        if node in visited or score < 5.0:
+            continue
+        visited.add(node)
+        
+        acct_id = node.replace("account:", "")
+        if acct_id not in COMPLAINT_RISK_UPLIFTS:
+            COMPLAINT_RISK_UPLIFTS[acct_id] = 0.0
+        COMPLAINT_RISK_UPLIFTS[acct_id] = max(COMPLAINT_RISK_UPLIFTS[acct_id], score)
+        
+        # Traverse neighbors (counter-parties or shared devices)
+        for neighbor in GLOBAL_GRAPH.successors(node):
+            if neighbor.startswith("account:") or neighbor.startswith("device:"):
+                decay = 0.7 if neighbor.startswith("device:") else 0.5
+                queue.append((neighbor, score * decay))
+        for neighbor in GLOBAL_GRAPH.predecessors(node):
+            if neighbor.startswith("account:") or neighbor.startswith("device:"):
+                decay = 0.7 if neighbor.startswith("device:") else 0.5
+                queue.append((neighbor, score * decay))
+
+    return GLOBAL_GRAPH
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# II. Real-Time Risk Mesh — feature computation
+# II. Real-Time Risk Mesh — Feature Computation & Online Feature Store (Gap 3)
 # ─────────────────────────────────────────────────────────────────────────────
 
 def compute_features(G: nx.DiGraph, request: IntakeRequest) -> Dict[str, Dict]:
+    global GLOBAL_TXNS, COMPLAINT_RISK_UPLIFTS
     features = {}
-    account_nodes = [n for n, d in G.nodes(data=True) if d.get("node_type") == "account"]
+    account_nodes = [n for n, d in G.nodes(data=True) if d.get("node_type") in ["account", "merchant"]]
     total_amount = sum(t.amount for t in request.transactions) or 1.0
+    query_time = parse_time(request.complaint.timestamp)
 
     for node in account_nodes:
         acct_id = node.replace("account:", "")
@@ -143,17 +194,54 @@ def compute_features(G: nx.DiGraph, request: IntakeRequest) -> Dict[str, Dict]:
         total_sent = sum(out_amounts) or 0.0
         total_recv = sum(in_amounts) or 0.0
         pass_through = min(total_sent, total_recv) / (max(total_sent, total_recv) + 1e-9)
-
-        # Fan-out ratio
         fan_out = out_deg / (in_deg + 1)
 
-        # Counterparty entropy (diversity of destinations)
         dest_amounts = out_amounts
         if dest_amounts:
             probs = [a / (total_sent + 1e-9) for a in dest_amounts]
             entropy = -sum(p * math.log(p + 1e-9) for p in probs)
         else:
             entropy = 0.0
+
+        # ── Online Feature Store (Gap 3) — Sliding Windows ──
+        sender_5m = 0
+        recv_30m_funds = 0.0
+        sent_60m_funds = 0.0
+        recv_60m_funds = 0.0
+        
+        for txn in GLOBAL_TXNS:
+            txn_time = parse_time(txn.timestamp)
+            delta = (query_time - txn_time).total_seconds()
+            
+            # 5-minute sliding window for sender count
+            if txn.sender_account == acct_id and 0 <= delta <= 300:
+                sender_5m += 1
+                
+            # 30-minute sliding window for receiver inflow
+            if txn.receiver_account == acct_id and 0 <= delta <= 1800:
+                recv_30m_funds += txn.amount
+                
+            # 60-minute sliding window for velocity
+            if 0 <= delta <= 3600:
+                if txn.sender_account == acct_id:
+                    sent_60m_funds += txn.amount
+                if txn.receiver_account == acct_id:
+                    recv_60m_funds += txn.amount
+                    
+        cash_out_velocity = sent_60m_funds / (recv_60m_funds + 1e-9)
+
+        # Proximity to complaint nodes
+        complaint_prox = 99
+        complaint_nodes = [n for n, d in G.nodes(data=True) if d.get("node_type") == "complaint"]
+        for c_node in complaint_nodes:
+            try:
+                dist = nx.shortest_path_length(G, source=c_node, target=node)
+                if dist < complaint_prox:
+                    complaint_prox = dist
+            except Exception:
+                pass
+
+        complaint_uplift = COMPLAINT_RISK_UPLIFTS.get(acct_id, 0.0)
 
         features[acct_id] = {
             "out_degree": out_deg,
@@ -164,6 +252,13 @@ def compute_features(G: nx.DiGraph, request: IntakeRequest) -> Dict[str, Dict]:
             "fan_out_ratio": round(fan_out, 4),
             "counterparty_entropy": round(entropy, 4),
             "share_of_total_flow": round(total_sent / total_amount, 4),
+            
+            # Sliding window online store metrics
+            "sender_5min_count": sender_5m,
+            "receiver_30min_inflow": round(recv_30m_funds, 2),
+            "cash_out_velocity": round(cash_out_velocity, 4),
+            "complaint_proximity": complaint_prox,
+            "complaint_uplift": round(complaint_uplift, 2),
         }
 
     return features
@@ -230,6 +325,35 @@ def build_explainability(
         top_factors.append("high counterparty diversity")
 
     factors_str = "; ".join(top_factors) if top_factors else "moderate baseline risk"
+    
+    # ── Dynamic Compliance Narrative Generator (Gap 12) ──
+    in_amount = f.get("total_recv", 0.0)
+    out_amount = f.get("total_sent", 0.0)
+    pt_rate = f.get("pass_through_rate", 0.0)
+    out_deg = f.get("out_degree", 0)
+    prox = f.get("complaint_proximity", 99)
+    entropy = f.get("counterparty_entropy", 0.0)
+    action = _recommend_action(composite)
+    is_merchant = acct in MERCHANTS
+
+    narrative = f"Entity '{acct}' has been flagged under compliance review. "
+    if is_merchant:
+        narrative += f"The account is a registered merchant, but displays atypical high-volume pattern spikes. "
+    else:
+        narrative += f"The account received a total inflow of ₹{in_amount:,.2f} and rapidly routed ₹{out_amount:,.2f} out. "
+    
+    narrative += f"The pass-through velocity rate was calculated at {pt_rate * 100:.1f}%, with a fan-out layering chain involving {out_deg} counterparties. "
+    
+    if ext_uplift > 0:
+        narrative += f"External registries (I4C/NCRP) returned positive matches (+{ext_uplift} uplift). "
+        
+    if prox <= 2:
+        narrative += f"Graph path analysis identified immediate proximity ({prox} hops) to complainant node clusters. "
+        
+    if entropy > 1.0:
+        narrative += f"Counterparty diversity entropy ({entropy:.2f}) indicates an active layering transaction ring. "
+        
+    narrative += f"Compliance Recommendation: Execute {action.replace('_', ' ')} protocol immediately."
 
     return {
         "technical": (
@@ -238,7 +362,8 @@ def build_explainability(
             f"pass_through={f['pass_through_rate']}, entropy={f['counterparty_entropy']}, "
             f"composite={composite:.1f}"
         ),
-        "operational": f"Action: {_recommend_action(composite)} — {factors_str}.",
+        "operational": f"Action: {action} — {factors_str}.",
+        "compliance_narrative": narrative,
         "top_risk_factors": top_factors,
         "score_breakdown": {
             "fast_path_xgb": round(fast_score, 4),
@@ -263,7 +388,7 @@ def build_explainability(
 def real_inference(G: nx.DiGraph, request: IntakeRequest) -> Dict[str, Any]:
     """
     Full multi-layer decisioning pipeline with REAL ML models.
-    No mocks — uses trained XGBoost and Graph Attention Network.
+    No mocks — uses trained XGBoost, Graph Attention Network, and Isolation Forest.
     """
     timings = {}
     t0 = time.time()
@@ -305,7 +430,14 @@ def real_inference(G: nx.DiGraph, request: IntakeRequest) -> Dict[str, Any]:
     gnn_scores = gnn.predict(G, features)
     timings["gnn_inference_ms"] = round((time.time() - t) * 1000, 2)
 
-    # ── External Intelligence (stub) ──
+    # ── Layer 5C: Unsupervised Anomaly Path — Isolation Forest (Gap 7) ──
+    t = time.time()
+    from ml_models import get_anomaly_detector
+    ad = get_anomaly_detector()
+    anomaly_scores = ad.predict(features)
+    timings["isolation_forest_ms"] = round((time.time() - t) * 1000, 2)
+
+    # ── External Intelligence ──
     t = time.time()
     from external_intel import batch_check
     device_map = {}
@@ -316,25 +448,40 @@ def real_inference(G: nx.DiGraph, request: IntakeRequest) -> Dict[str, Any]:
     ext_results = batch_check(list(features.keys()), device_map)
     timings["external_intel_ms"] = round((time.time() - t) * 1000, 2)
 
-    # ── Layer 6: Risk Fusion ──
+    # ── Layer 6: Risk Fusion & Platt Sigmoid Calibration (Gap 9) ──
     t = time.time()
     acct_ids = list(features.keys())
     ranking = []
+    from ml_models import calibrate_score
 
     for acct in acct_ids:
         fast_prob = fast_scores.get(acct, 0)
         gnn_prob = gnn_scores.get(acct, 0)
         topo_score = topo.get(acct, 0)
         ext_uplift = ext_results[acct].risk_uplift if acct in ext_results else 0
+        anomaly_score = anomaly_scores.get(acct, 0.0)
+        complaint_uplift = features[acct].get("complaint_uplift", 0.0)
 
-        # Fusion: weighted combination, scaled to 0-100
-        composite = (
-            fast_prob * 100 * FUSION_WEIGHTS["fast_path"]
+        # Base composite ensemble scoring
+        raw_composite = (
+            fast_prob * 100 * FUSION_WEIGHTS["fast_path"] * 0.85
             + gnn_prob * 100 * FUSION_WEIGHTS["gnn"]
-            + topo_score * FUSION_WEIGHTS["topology"]
+            + topo_score * FUSION_WEIGHTS["topology"] * 0.8
+            + anomaly_score * 100 * 0.15          # Unsupervised contribution
             + ext_uplift * FUSION_WEIGHTS["external"]
+            + complaint_uplift                    # Propagated risk score addition
         )
-        composite = min(round(composite, 2), 100.0)
+
+        # Merchant Protection Layer (Gap 8)
+        is_merchant = acct in MERCHANTS
+        if is_merchant:
+            # If high-volume profile matches normal merchant behavior (e.g. low pass-through rate), discount risk
+            pt_rate = features[acct].get("pass_through_rate", 0.0)
+            merchant_safety_factor = max(1.0 - pt_rate, 0.2)
+            raw_composite = raw_composite * (1.0 - 0.75 * merchant_safety_factor)
+
+        # Calibrate composite risk score using Platt Sigmoidal scaling
+        composite = calibrate_score(raw_composite)
 
         confidence_band = "HIGH" if composite > 70 else "MEDIUM" if composite > 40 else "LOW"
 
@@ -345,11 +492,18 @@ def real_inference(G: nx.DiGraph, request: IntakeRequest) -> Dict[str, Any]:
             "fast_path_score": round(fast_prob, 4),
             "gnn_score": round(gnn_prob, 4),
             "topology_score": round(topo_score, 2),
+            "anomaly_score": round(anomaly_score, 4),
             "external_uplift": round(ext_uplift, 2),
+            "complaint_uplift": round(complaint_uplift, 2),
             "total_sent": features[acct]["total_sent"],
             "total_recv": features[acct].get("total_recv", 0),
             "pass_through_rate": features[acct]["pass_through_rate"],
             "out_degree": features[acct]["out_degree"],
+            "in_degree": features[acct]["in_degree"],
+            "fan_out_ratio": features[acct]["fan_out_ratio"],
+            "counterparty_entropy": features[acct]["counterparty_entropy"],
+            "share_of_total_flow": features[acct]["share_of_total_flow"],
+            "is_merchant": is_merchant,
             "action_recommendation": _recommend_action(composite),
         })
 
@@ -370,17 +524,31 @@ def real_inference(G: nx.DiGraph, request: IntakeRequest) -> Dict[str, Any]:
     timings["recovery_engine_ms"] = round((time.time() - t) * 1000, 2)
 
     # ── Suspicious edges ──
-    suspicious_edges = [
-        {
-            "from": u.replace("account:", ""),
-            "to": v.replace("account:", ""),
-            "amount": data.get("amount", 0),
-            "utr": data.get("utr", ""),
-            "timestamp": data.get("timestamp", ""),
-        }
-        for u, v, data in G.edges(data=True)
-        if data.get("edge_type") == "sent_to"
-    ]
+    suspicious_edges = []
+    for u, v, data in G.edges(data=True):
+        u_clean = u.replace("account:", "").replace("device:", "").replace("complaint:", "")
+        v_clean = v.replace("account:", "").replace("device:", "").replace("complaint:", "")
+        if data.get("edge_type") == "sent_to":
+            suspicious_edges.append({
+                "from": u_clean,
+                "to": v_clean,
+                "edge_type": "sent_to",
+                "amount": data.get("amount", 0),
+                "utr": data.get("utr", ""),
+                "timestamp": data.get("timestamp", ""),
+            })
+        elif data.get("edge_type") == "uses_device":
+            suspicious_edges.append({
+                "from": u_clean,
+                "to": v_clean,
+                "edge_type": "uses_device"
+            })
+        elif data.get("edge_type") == "linked_to_case":
+            suspicious_edges.append({
+                "from": u_clean,
+                "to": v_clean,
+                "edge_type": "linked_to_case"
+            })
 
     # ── Explainability (top 5) ──
     explainability = {}
