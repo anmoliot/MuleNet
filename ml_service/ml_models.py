@@ -437,7 +437,11 @@ class GraphNeuralScorer:
 
             if neighbor_features:
                 weights = np.array(weights)
-                weights = weights / (weights.sum() + 1e-9)  # normalize
+                w_sum = weights.sum()
+                if w_sum <= 1e-9:
+                    weights = np.ones_like(weights) / len(weights)
+                else:
+                    weights = weights / w_sum
                 agg = np.average(neighbor_features, axis=0, weights=weights)
                 X_agg[i] = 0.5 * X[i] + 0.5 * agg  # combine self + neighbors
 

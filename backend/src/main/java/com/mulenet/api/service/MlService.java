@@ -32,7 +32,8 @@ public class MlService {
             return response.getBody();
         } catch (Exception e) {
             e.printStackTrace();
-            return "{\"error\": \"Failed to connect to ML service: " + e.getMessage() + "\", \"status\": \"error\"}";
+            String msg = e.getMessage() != null ? e.getMessage().replace("\"", "\\\"").replace("\n", " ").replace("\r", "") : "Unknown error";
+            return "{\"error\": \"Failed to connect to ML service: " + msg + "\", \"status\": \"error\"}";
         }
     }
 }
