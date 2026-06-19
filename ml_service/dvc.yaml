@@ -1,0 +1,61 @@
+# MuleNet DVC Pipeline
+# Tracks dataset and model versioning for reproducible ML experiments.
+# Run: dvc repro  to execute the full pipeline.
+# Run: dvc push   to push data/models to remote storage.
+
+stages:
+
+  # Stage 1: Generate synthetic training data
+  generate_data:
+    cmd: python train.py --synthetic
+    deps:
+      - train.py
+      - ml_models.py
+    outs:
+      - trained_models/fast_path_model.pkl
+      - trained_models/fast_path_scaler.pkl
+      - trained_models/gnn_weights.pkl
+    metrics:
+      - trained_models/metrics.json:
+          cache: false
+    params:
+      - params.yaml:
+          - n_samples
+          - mule_ratio
+          - n_estimators
+          - max_depth
+          - learning_rate
+
+  # Stage 2: Evaluate model performance
+  evaluate:
+    cmd: python -c "from mlops import run_tracked_training; r = run_tracked_training(); import json; open('trained_models/metrics.json','w').write(json.dumps(r['metrics']))"
+    deps:
+      - ml_models.py
+      - mlops.py
+      - trained_models/fast_path_model.pkl
+      - trained_models/fast_path_scaler.pkl
+    metrics:
+      - trained_models/metrics.json:
+          cache: false
+
+  # Stage 3: Train on custom CSV if available
+  train_custom:
+    cmd: python train.py --csv data/transactions.csv
+    deps:
+      - train.py
+      - ml_models.py
+    outs:
+      - trained_models/fast_path_model.pkl:
+          persist: true
+    wdir: .
+
+  # Stage 4: Run tests
+  test:
+    cmd: pytest tests/ -v --tb=short
+    deps:
+      - tests/
+      - ml_models.py
+      - graph_builder.py
+      - shap_explainer.py
+      - threat_intel.py
+      - graph_analytics.py

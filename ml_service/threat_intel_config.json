@@ -1,0 +1,67 @@
+{
+  "blacklisted_accounts": [
+    "AC-MULE-001",
+    "AC-MULE-002",
+    "AC-FRAUD-RING-01",
+    "AC-SCAM-COLLECT",
+    "AC-CRYPTO-CASHOUT",
+    "AC-NCRP-001",
+    "AC-NCRP-002"
+  ],
+  "blacklisted_devices": [
+    "DEV-COMPROMISED-01",
+    "DEV-SHARED-FRAUD",
+    "DEV-50001"
+  ],
+  "high_risk_ips": [
+    "185.220.101.1",
+    "194.165.16.77",
+    "45.142.212.100",
+    "103.114.163.3",
+    "91.108.4.0",
+    "5.188.86.0"
+  ],
+  "tor_exit_nodes": [
+    "176.10.99.200",
+    "185.220.101.34",
+    "199.87.154.255",
+    "178.17.170.135"
+  ],
+  "vpn_cidr_ranges": [
+    "45.142.212.0/24",
+    "104.21.0.0/16",
+    "198.41.128.0/17"
+  ],
+  "sanction_list": [
+    "AC-OFAC-001",
+    "AC-UN-SANCTION-02",
+    "AC-FATF-003"
+  ],
+  "ncrp_flagged_accounts": {
+    "AC-NCRP-001": 5,
+    "AC-NCRP-002": 12,
+    "AC-MULE-001": 8,
+    "AC-1001": 3
+  },
+  "i4c_suspect_registry": [
+    "AC-I4C-SUSPECT-01",
+    "AC-MULE-001",
+    "AC-FRAUD-RING-01",
+    "AC-CRYPTO-CASHOUT"
+  ],
+  "crypto_risk_addresses": [
+    "1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2",
+    "3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy"
+  ],
+  "risk_weights": {
+    "sanction_list": 40,
+    "i4c_registry": 35,
+    "ncrp_flagged": 25,
+    "blacklisted_account": 30,
+    "blacklisted_device": 20,
+    "high_risk_ip": 15,
+    "tor_exit_node": 20,
+    "vpn_proxy": 10,
+    "crypto_risk": 15
+  }
+}
