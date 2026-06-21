@@ -26,21 +26,41 @@ class ExternalEnrichment(BaseModel):
     known_mule: bool = False
 
 
-def check_watchlists(account_id: str, device_ids: List[str] = None) -> ExternalEnrichment:
+import os
+
+def query_abuseipdb(ip_address: str) -> Optional[dict]:
     """
-    Query external watchlist API. Wrapper for legacy single checks.
+    Query AbuseIPDB API for IP address reputation (Layer 11 — External Threat Intel).
     """
-    dev_map = {account_id: device_ids or []}
-    res = batch_check([account_id], dev_map)
-    return res[account_id]
+    api_key = os.getenv("ABUSEIPDB_API_KEY")
+    if not api_key:
+        return None
+    try:
+        url = "https://api.abuseipdb.com/api/v2/check"
+        headers = {
+            "Accept": "application/json",
+            "Key": api_key
+        }
+        params = {
+            "ipAddress": ip_address,
+            "maxAgeInDays": 90
+        }
+        res = requests.get(url, headers=headers, params=params, timeout=3)
+        if res.status_code == 200:
+            return res.json().get("data")
+    except Exception as e:
+        print(f"[Watchlist] AbuseIPDB lookup failed for {ip_address}: {e}")
+    return None
 
 
 def batch_check(
     account_ids: List[str],
     device_map: Dict[str, List[str]] = None,
+    ip_map: Dict[str, List[str]] = None,
 ) -> Dict[str, ExternalEnrichment]:
     """
-    Batch query all accounts and device IDs against Spring Boot external intelligence registry.
+    Batch query all accounts and device IDs against Spring Boot external intelligence registry
+    and external reputation services like AbuseIPDB.
     """
     device_map = device_map or {}
     all_devices = []
@@ -66,7 +86,9 @@ def batch_check(
 
     try:
         # Call Spring Boot database lookups
-        res = requests.post("http://localhost:8080/api/external/watchlist", json=payload, timeout=5)
+        import os
+        backend_url = os.getenv("BACKEND_API_URL", "http://localhost:8080")
+        res = requests.post(f"{backend_url}/api/external/watchlist", json=payload, timeout=5)
         if res.status_code == 200:
             hits = res.json()
             for hit in hits:
@@ -111,5 +133,24 @@ def batch_check(
             print(f"[Watchlist] External check failed with status: {res.status_code}")
     except Exception as e:
         print(f"[Watchlist] Exception during database threat intel search: {str(e)}")
+
+    # 4. Integrate real-time AbuseIPDB query if configured
+    if ip_map and os.getenv("ABUSEIPDB_API_KEY"):
+        for acct, ips in ip_map.items():
+            if acct not in results:
+                continue
+            for ip in ips:
+                ip_data = query_abuseipdb(ip)
+                if ip_data:
+                    score = ip_data.get("abuseConfidenceScore", 0)
+                    if score > 30:
+                        results[acct].watchlist_hits.append(WatchlistHit(
+                            source="AbuseIPDB",
+                            match_type="IP_REPUTATION",
+                            confidence=float(score) / 100.0,
+                            details=f"IP {ip} abuse confidence score: {score}% (Country: {ip_data.get('countryCode', 'N/A')})"
+                        ))
+                        uplift = (score / 100.0) * 25.0
+                        results[acct].risk_uplift = min(results[acct].risk_uplift + uplift, 40.0)
 
     return results

@@ -4,8 +4,8 @@ rem ------------------------------------------------------------
 rem MuleNet – Unified launch script (Windows batch)
 rem ------------------------------------------------------------
 
-rem 1. Ensure MySQL is running (user must start MySQL manually or via Docker)
-rem    Default connection: user=root, password= (empty), database=mulenet
+rem 1. Ensure PostgreSQL is running (user must start PostgreSQL manually or via Docker)
+rem    Default connection: user=postgres, password=postgres, database=mulenet
 
 rem 2. Start Spring Boot backend
 start "Backend" cmd /k "cd /d %~dp0backend && mvnw.cmd spring-boot:run"

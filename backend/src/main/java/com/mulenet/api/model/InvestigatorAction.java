@@ -11,21 +11,26 @@ public class InvestigatorAction {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(name = "case_id", nullable = false, length = 64)
     private String caseId;
 
+    @Column(name = "account_id", length = 64)
     private String accountId;
 
     @Enumerated(EnumType.STRING)
+    @Column(length = 64)
     private ActionType action;
 
-    @Column(columnDefinition = "CLOB")
+    @Column(name = "rationale", columnDefinition = "TEXT")
     private String rationale;
 
+    @Column(name = "performed_by", length = 128)
     private String performedBy;
 
+    @Column(name = "timestamp")
     private LocalDateTime timestamp;
 
+    @Column(name = "risk_score_at_action")
     private Double riskScoreAtAction;
 
     public InvestigatorAction() {
