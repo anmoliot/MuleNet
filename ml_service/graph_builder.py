@@ -38,6 +38,7 @@ class Transaction(BaseModelCamel):
     sender_account: str = Field(min_length=3)
     receiver_account: str = Field(min_length=3)
     device_id: Optional[str] = Field(None, min_length=3)
+    ip_address: Optional[str] = Field(None, min_length=7)
 
 
 class Complaint(BaseModelCamel):
@@ -71,6 +72,19 @@ MODEL_VERSION = "2.0.0"
 # I.  Trust Data Fabric — Entity Resolution & Stateful Graph Store (Gaps 2, 3, 6)
 # ─────────────────────────────────────────────────────────────────────────────
 
+# Initialize Redis for Online Feature Store (Gap 3)
+REDIS_CONN = None
+try:
+    import redis
+    import os
+    REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
+    REDIS_PORT = int(os.getenv("REDIS_PORT", "6379"))
+    REDIS_CONN = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
+    REDIS_CONN.ping()
+    print("[Redis] Online Feature Store connection active.")
+except Exception:
+    print("[Redis] Online Feature Store connection inactive, using local in-memory fallback.")
+
 GLOBAL_GRAPH = nx.DiGraph()
 GLOBAL_TXNS = []
 COMPLAINT_RISK_UPLIFTS = {}
@@ -94,6 +108,34 @@ def build_hetero_graph(request: IntakeRequest) -> nx.DiGraph:
     # 1. Store transactions in Online Feature Store cache
     if request.transactions:
         GLOBAL_TXNS.extend(request.transactions)
+        
+    # Sync ingestion data to Neo4j database if active
+    from neo4j_store import get_neo4j_graph
+    neo4j_graph = get_neo4j_graph()
+    if neo4j_graph.enabled:
+        try:
+            neo4j_graph.add_complaint(
+                request.complaint.complaint_id,
+                request.complaint.amount,
+                request.complaint.utr,
+                request.complaint.timestamp,
+                request.complaint.first_beneficiary
+            )
+            for txn in request.transactions:
+                neo4j_graph.add_transaction(
+                    txn.sender_account,
+                    txn.receiver_account,
+                    txn.amount,
+                    txn.timestamp,
+                    txn.utr,
+                    txn.sender_account in MERCHANTS,
+                    txn.receiver_account in MERCHANTS
+                )
+                if txn.device_id:
+                    neo4j_graph.add_device_link(txn.sender_account, txn.device_id)
+                    neo4j_graph.add_device_link(txn.receiver_account, txn.device_id)
+        except Exception as e:
+            print(f"[Neo4j] Live data replication failed: {e}")
         
     # 2. Add nodes and edges to live graph
     comp_id = f"complaint:{request.complaint.complaint_id}"
@@ -208,27 +250,42 @@ def compute_features(G: nx.DiGraph, request: IntakeRequest) -> Dict[str, Dict]:
         recv_30m_funds = 0.0
         sent_60m_funds = 0.0
         recv_60m_funds = 0.0
-        
-        for txn in GLOBAL_TXNS:
-            txn_time = parse_time(txn.timestamp)
-            delta = (query_time - txn_time).total_seconds()
-            
-            # 5-minute sliding window for sender count
-            if txn.sender_account == acct_id and 0 <= delta <= 300:
-                sender_5m += 1
+        cash_out_velocity = 0.0
+        redis_success = False
+
+        if REDIS_CONN:
+            try:
+                cached = REDIS_CONN.hgetall(f"features:{acct_id}")
+                if cached:
+                    sender_5m = int(cached.get("sender_5min_count", 0))
+                    recv_30m_funds = float(cached.get("receiver_30min_inflow", 0.0))
+                    cash_out_velocity = float(cached.get("cash_out_velocity", 0.0))
+                    redis_success = True
+            except Exception as e:
+                pass
+
+        if not redis_success:
+            for txn in GLOBAL_TXNS:
+                txn_time = parse_time(txn.timestamp)
+                delta = (query_time - txn_time).total_seconds()
                 
-            # 30-minute sliding window for receiver inflow
-            if txn.receiver_account == acct_id and 0 <= delta <= 1800:
-                recv_30m_funds += txn.amount
-                
-            # 60-minute sliding window for velocity
-            if 0 <= delta <= 3600:
-                if txn.sender_account == acct_id:
-                    sent_60m_funds += txn.amount
-                if txn.receiver_account == acct_id:
-                    recv_60m_funds += txn.amount
+                # 5-minute sliding window for sender count
+                if txn.sender_account == acct_id and 0 <= delta <= 300:
+                    sender_5m += 1
                     
-        cash_out_velocity = sent_60m_funds / (recv_60m_funds + 1e-9)
+                # 30-minute sliding window for receiver inflow
+                if txn.receiver_account == acct_id and 0 <= delta <= 1800:
+                    recv_30m_funds += txn.amount
+                    
+                # 60-minute sliding window for velocity
+                if 0 <= delta <= 3600:
+                    if txn.sender_account == acct_id:
+                        sent_60m_funds += txn.amount
+                    if txn.receiver_account == acct_id:
+                        recv_60m_funds += txn.amount
+                        
+            cash_out_velocity = sent_60m_funds / (recv_60m_funds + 1e-9)
+
 
         # Proximity to complaint nodes
         complaint_prox = 99
@@ -441,11 +498,15 @@ def real_inference(G: nx.DiGraph, request: IntakeRequest) -> Dict[str, Any]:
     t = time.time()
     from external_intel import batch_check
     device_map = {}
+    ip_map = {}
     for txn in request.transactions:
         if txn.device_id:
             device_map.setdefault(txn.sender_account, []).append(txn.device_id)
             device_map.setdefault(txn.receiver_account, []).append(txn.device_id)
-    ext_results = batch_check(list(features.keys()), device_map)
+        if txn.ip_address:
+            ip_map.setdefault(txn.sender_account, []).append(txn.ip_address)
+            ip_map.setdefault(txn.receiver_account, []).append(txn.ip_address)
+    ext_results = batch_check(list(features.keys()), device_map, ip_map)
     timings["external_intel_ms"] = round((time.time() - t) * 1000, 2)
 
     # ── Layer 6: Risk Fusion & Platt Sigmoid Calibration (Gap 9) ──

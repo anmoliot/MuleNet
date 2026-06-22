@@ -2,14 +2,17 @@ package com.mulenet.api.service;
 
 import com.mulenet.api.model.Case;
 import com.mulenet.api.model.InvestigatorAction;
+import com.mulenet.api.model.PolicyConfig;
 import com.mulenet.api.repository.CaseRepository;
 import com.mulenet.api.repository.InvestigatorActionRepository;
+import com.mulenet.api.repository.PolicyConfigRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import jakarta.annotation.PostConstruct;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -36,6 +39,31 @@ public class PolicyEngine {
 
     @Autowired
     private InvestigatorActionRepository actionRepository;
+
+    @Autowired
+    private PolicyConfigRepository configRepository;
+
+    @PostConstruct
+    public void init() {
+        freezeThreshold = getOrSaveDefault("freeze_threshold", 70.0);
+        softHoldThreshold = getOrSaveDefault("soft_hold_threshold", 50.0);
+        escalationThreshold = getOrSaveDefault("escalation_threshold", 60.0);
+        monitorThreshold = getOrSaveDefault("monitor_threshold", 25.0);
+    }
+
+    private double getOrSaveDefault(String key, double defaultValue) {
+        try {
+            return configRepository.findById(key)
+                    .map(PolicyConfig::getConfigValue)
+                    .orElseGet(() -> {
+                        configRepository.save(new PolicyConfig(key, defaultValue));
+                        return defaultValue;
+                    });
+        } catch (Exception e) {
+            // Fallback for tests or bootstrapping
+            return defaultValue;
+        }
+    }
 
     /**
      * Process ML response and generate policy decisions.
@@ -204,13 +232,21 @@ public class PolicyEngine {
      * Update policy thresholds.
      */
     public void updateThresholds(Map<String, Double> newThresholds) {
-        if (newThresholds.containsKey("freeze_threshold"))
+        if (newThresholds.containsKey("freeze_threshold")) {
             this.freezeThreshold = newThresholds.get("freeze_threshold");
-        if (newThresholds.containsKey("soft_hold_threshold"))
+            configRepository.save(new PolicyConfig("freeze_threshold", this.freezeThreshold));
+        }
+        if (newThresholds.containsKey("soft_hold_threshold")) {
             this.softHoldThreshold = newThresholds.get("soft_hold_threshold");
-        if (newThresholds.containsKey("escalation_threshold"))
+            configRepository.save(new PolicyConfig("soft_hold_threshold", this.softHoldThreshold));
+        }
+        if (newThresholds.containsKey("escalation_threshold")) {
             this.escalationThreshold = newThresholds.get("escalation_threshold");
-        if (newThresholds.containsKey("monitor_threshold"))
+            configRepository.save(new PolicyConfig("escalation_threshold", this.escalationThreshold));
+        }
+        if (newThresholds.containsKey("monitor_threshold")) {
             this.monitorThreshold = newThresholds.get("monitor_threshold");
+            configRepository.save(new PolicyConfig("monitor_threshold", this.monitorThreshold));
+        }
     }
 }

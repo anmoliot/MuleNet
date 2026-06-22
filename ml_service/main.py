@@ -90,6 +90,13 @@ def query_graph(account_id: str):
     Explore the live stateful graph database (Gap 2).
     Returns the neighborhood network of the given account node.
     """
+    from neo4j_store import get_neo4j_graph
+    neo4j_graph = get_neo4j_graph()
+    if neo4j_graph.enabled:
+        result = neo4j_graph.get_neighborhood(account_id)
+        if result and len(result.get("nodes", [])) > 0:
+            return result
+
     from graph_builder import GLOBAL_GRAPH
     node_name = f"account:{account_id}"
     
@@ -149,6 +156,7 @@ def query_graph(account_id: str):
 
 from fastapi import Header
 from typing import Optional
+import os
 
 @app.post("/api/governance/retrain")
 def retrain_models(authorization: Optional[str] = Header(None)):
@@ -156,14 +164,28 @@ def retrain_models(authorization: Optional[str] = Header(None)):
     Retrain ML models using investigator feedback from resolved cases.
     Forwards user JWT token to retrieve resolved cases from Spring Boot.
     """
+    # Try delegating to Celery task queue if Redis is configured
+    if os.getenv("REDIS_HOST"):
+        try:
+            from celery_app import retrain_models_task
+            task = retrain_models_task.delay(authorization)
+            return {
+                "status": "success",
+                "message": "Asynchronous model retraining task dispatched to Celery worker queue.",
+                "task_id": task.id
+            }
+        except Exception as e:
+            print(f"[Main] Celery queue dispatch failed: {e}. Falling back to synchronous retraining.")
+
     import requests
     import json
     import networkx as nx
     from ml_models import get_fast_path, get_gnn_scorer, get_model_metadata, get_anomaly_detector
     
+    backend_url = os.getenv("BACKEND_API_URL", "http://localhost:8080")
     headers = {"Authorization": authorization} if authorization else {}
     try:
-        response = requests.get("http://localhost:8080/api/cases/feedback", headers=headers, timeout=10)
+        response = requests.get(f"{backend_url}/api/cases/feedback", headers=headers, timeout=10)
         if response.status_code != 200:
             return {"status": "error", "message": f"Failed to fetch feedback from backend: {response.text}"}
         cases = response.json()

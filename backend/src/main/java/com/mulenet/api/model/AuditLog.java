@@ -11,24 +11,38 @@ public class AuditLog {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private LocalDateTime timestamp;
-
-    @Column(nullable = false)
+    @Column(name = "username", nullable = false, length = 128)
     private String actor;
 
-    @Column(nullable = false)
+    @Column(name = "user_role", length = 64)
     private String role;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 128)
     private String action;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "target_entity", length = 128)
+    private String targetEntity;
+
+    @Column(name = "description", columnDefinition = "TEXT")
     private String details;
 
+    @Column(name = "ip_address", length = 64)
     private String ipAddress;
 
-    public AuditLog() {}
+    @Column(name = "user_agent", columnDefinition = "TEXT")
+    private String userAgent;
+
+    @Column(name = "request_id", length = 64)
+    private String requestId;
+
+    private Boolean success = true;
+
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime timestamp;
+
+    public AuditLog() {
+        this.timestamp = LocalDateTime.now();
+    }
 
     public AuditLog(String actor, String role, String action, String details, String ipAddress) {
         this.timestamp = LocalDateTime.now();
@@ -37,6 +51,7 @@ public class AuditLog {
         this.action = action;
         this.details = details;
         this.ipAddress = ipAddress;
+        this.success = true;
     }
 
     // Getters and Setters
@@ -80,6 +95,14 @@ public class AuditLog {
         this.action = action;
     }
 
+    public String getTargetEntity() {
+        return targetEntity;
+    }
+
+    public void setTargetEntity(String targetEntity) {
+        this.targetEntity = targetEntity;
+    }
+
     public String getDetails() {
         return details;
     }
@@ -95,4 +118,29 @@ public class AuditLog {
     public void setIpAddress(String ipAddress) {
         this.ipAddress = ipAddress;
     }
+
+    public String getUserAgent() {
+        return userAgent;
+    }
+
+    public void setUserAgent(String userAgent) {
+        this.userAgent = userAgent;
+    }
+
+    public String getRequestId() {
+        return requestId;
+    }
+
+    public void setRequestId(String requestId) {
+        this.requestId = requestId;
+    }
+
+    public Boolean getSuccess() {
+        return success;
+    }
+
+    public void setSuccess(Boolean success) {
+        this.success = success;
+    }
 }
+

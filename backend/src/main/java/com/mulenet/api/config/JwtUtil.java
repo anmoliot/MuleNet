@@ -4,7 +4,9 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import jakarta.annotation.PostConstruct;
 
 import java.security.Key;
 import java.util.Date;
@@ -15,11 +17,29 @@ import java.util.function.Function;
 @Component
 public class JwtUtil {
 
-    private static final byte[] SECRET = "super-secret-mule-net-jwt-token-signing-key-32-bytes-long".getBytes();
-    private final Key key = Keys.hmacShaKeyFor(SECRET);
+    @Value("${app.security.jwt.secret:dGhpcy1pcy1hLXNlY3VyZS0yNTYtYml0LXNpZ25pbmcta2V5LWZvci1tdWxlbmV0LWFwaS1wbGF0Zm9ybQ==}")
+    private String jwtSecret;
+
+    @Value("${spring.profiles.active:}")
+    private String activeProfiles;
+
+    private Key key;
+
+    private static final String DEFAULT_SECRET = "dGhpcy1pcy1hLXNlY3VyZS0yNTYtYml0LXNpZ25pbmcta2V5LWZvci1tdWxlbmV0LWFwaS1wbGF0Zm9ybQ==";
 
     // 10 hours expiration
     private static final long EXPIRATION_TIME = 1000 * 60 * 60 * 10;
+
+    @PostConstruct
+    public void init() {
+        if (activeProfiles != null && activeProfiles.contains("prod")) {
+            if (jwtSecret == null || jwtSecret.trim().isEmpty() || jwtSecret.equals(DEFAULT_SECRET)) {
+                throw new IllegalStateException("FATAL: Insecure JWT Secret detected in production! " +
+                        "A unique and secure JWT secret must be supplied via the 'JWT_SECRET' environment variable.");
+            }
+        }
+        this.key = Keys.hmacShaKeyFor(jwtSecret.getBytes());
+    }
 
     public String generateToken(String username, String role) {
         Map<String, Object> claims = new HashMap<>();
