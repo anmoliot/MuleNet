@@ -12,6 +12,8 @@ import com.mulenet.api.repository.AuditLogRepository;
 import com.mulenet.api.service.MlService;
 import com.mulenet.api.service.PolicyEngine;
 import com.mulenet.api.service.NotificationService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,6 +25,8 @@ import org.springframework.web.bind.annotation.*;
 @CrossOrigin(origins = "*")
 public class IntakeController {
 
+    private static final Logger logger = LoggerFactory.getLogger(IntakeController.class);
+
     @Autowired
     private ComplaintRepository complaintRepository;
 
@@ -31,6 +35,9 @@ public class IntakeController {
 
     @Autowired
     private AuditLogRepository auditLogRepository;
+
+    @Autowired
+    private com.mulenet.api.repository.AccountRepository accountRepository;
 
     @Autowired
     private MlService mlService;
@@ -51,14 +58,34 @@ public class IntakeController {
                 .findFirst().orElse("UNKNOWN");
     }
 
+    private void ensureAccountExists(String accountId) {
+        if (accountId == null || accountId.trim().isEmpty()) return;
+        if (!accountRepository.findByAccountId(accountId).isPresent()) {
+            com.mulenet.api.model.Account account = new com.mulenet.api.model.Account();
+            account.setAccountId(accountId);
+            account.setHolderName("Account " + accountId);
+            accountRepository.save(account);
+            logger.info("Dynamically initialized missing account: {}", accountId);
+        }
+    }
+
     @PostMapping
     @PreAuthorize("hasAnyRole('INVESTIGATOR', 'SUPERVISOR', 'FRAUD_ADMIN')")
     public ResponseEntity<?> processIntake(@jakarta.validation.Valid @RequestBody IntakeRequest request) {
-        // 1. Save Complaint
+        long startTime = System.currentTimeMillis();
         String complaintId = null;
         if (request.getComplaint() != null) {
             complaintRepository.save(request.getComplaint());
             complaintId = request.getComplaint().getComplaintId();
+        }
+        logger.info("Received intake request processing. Complaint ID: {}", complaintId);
+
+        // 1.5. Ensure all referenced accounts in transactions exist in the database to satisfy FK constraints
+        if (request.getTransactions() != null) {
+            for (Transaction txn : request.getTransactions()) {
+                ensureAccountExists(txn.getSenderAccount());
+                ensureAccountExists(txn.getReceiverAccount());
+            }
         }
 
         // 2. Save Transactions
@@ -74,6 +101,7 @@ public class IntakeController {
 
         // Publish live push notifications for high-risk ingestions
         if (fraudCase.getRiskScore() >= 60.0) {
+            logger.warn("CRITICAL RISK case flagged! caseId: {}, riskScore: {}%", fraudCase.getCaseId(), fraudCase.getRiskScore());
             notificationService.broadcast(
                 "Critical Fraud Flagged", 
                 "Case " + fraudCase.getCaseId() + " has been auto-flagged with a risk score of " + String.format("%.1f", fraudCase.getRiskScore()) + "%. Immediate review required.",
@@ -95,6 +123,9 @@ public class IntakeController {
                 "Processed intake and initialized case " + fraudCase.getCaseId() + " for complaint " + complaintId + ". High risk score: " + fraudCase.getRiskScore(),
                 null
         ));
+
+        long duration = System.currentTimeMillis() - startTime;
+        logger.info("Processed case intake successfully. caseId: {}, duration: {}ms", fraudCase.getCaseId(), duration);
 
         // 6. Return enriched case response
         CaseResponse caseResponse = CaseResponse.fromCase(fraudCase);

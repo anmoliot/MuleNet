@@ -11,35 +11,54 @@ public class Case {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = false)
+    @Column(name = "case_id", unique = true, nullable = false, length = 64)
     private String caseId;
 
+    @Column(name = "complaint_id", length = 64)
     private String complaintId;
 
     @Enumerated(EnumType.STRING)
+    @Column(length = 32)
     private CaseStatus status = CaseStatus.OPEN;
 
+    @Column(name = "risk_score")
     private Double riskScore;
 
+    @Column(name = "assigned_to", length = 128)
     private String assignedTo;
 
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    @Column(name = "resolved_at")
     private LocalDateTime resolvedAt;
 
-    @Column(columnDefinition = "CLOB")
+    @Column(name = "ml_response", columnDefinition = "TEXT")
     private String mlResponse;
 
-    @Column(columnDefinition = "CLOB")
+    @Column(name = "policy_decisions", columnDefinition = "TEXT")
     private String policyDecisions;
 
+    @Column(name = "accounts_analyzed")
     private Integer accountsAnalyzed;
 
+    @Column(name = "accounts_flagged")
     private Integer accountsFlagged;
 
+    @Column(name = "risk_level", length = 16)
     private String severityLevel;
+
+    @Column(name = "supervisor", length = 128)
+    private String supervisor;
+
+    @Column(name = "complaint_amount")
+    private Double complaintAmount;
+
+    @Column(name = "recovery_estimate")
+    private Double recoveryEstimate;
 
     public Case() {
         this.createdAt = LocalDateTime.now();
@@ -96,4 +115,16 @@ public class Case {
 
     public String getSeverityLevel() { return severityLevel; }
     public void setSeverityLevel(String severityLevel) { this.severityLevel = severityLevel; }
+
+    public String getRiskLevel() { return severityLevel; }
+    public void setRiskLevel(String riskLevel) { this.severityLevel = riskLevel; }
+
+    public String getSupervisor() { return supervisor; }
+    public void setSupervisor(String supervisor) { this.supervisor = supervisor; }
+
+    public Double getComplaintAmount() { return complaintAmount; }
+    public void setComplaintAmount(Double complaintAmount) { this.complaintAmount = complaintAmount; }
+
+    public Double getRecoveryEstimate() { return recoveryEstimate; }
+    public void setRecoveryEstimate(Double recoveryEstimate) { this.recoveryEstimate = recoveryEstimate; }
 }

@@ -27,7 +27,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
         // Allow H2 console, option requests, and auth login without JWT
         String path = request.getRequestURI();
-        if (path.startsWith("/h2-console") || path.startsWith("/api/auth") || path.startsWith("/api/external") || "OPTIONS".equalsIgnoreCase(request.getMethod())) {
+        if (path.startsWith("/h2-console") || path.startsWith("/api/auth") || "/api/health".equals(path) || "/api/readiness".equals(path) || "OPTIONS".equalsIgnoreCase(request.getMethod())) {
             filterChain.doFilter(request, response);
             return;
         }

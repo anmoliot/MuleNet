@@ -8,6 +8,8 @@ import com.mulenet.api.model.AuditLog;
 import com.mulenet.api.repository.CaseRepository;
 import com.mulenet.api.repository.InvestigatorActionRepository;
 import com.mulenet.api.repository.AuditLogRepository;
+import com.mulenet.api.repository.CaseCommentRepository;
+import com.mulenet.api.model.CaseComment;
 import com.mulenet.api.service.PolicyEngine;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -32,6 +34,9 @@ public class CaseController {
 
     @Autowired
     private AuditLogRepository auditLogRepository;
+
+    @Autowired
+    private CaseCommentRepository caseCommentRepository;
 
     @Autowired
     private PolicyEngine policyEngine;
@@ -291,5 +296,97 @@ public class CaseController {
                     return ResponseEntity.ok(CaseResponse.fromCase(c));
                 })
                 .orElse(ResponseEntity.notFound().build());
+     }
+
+    /**
+     * GET /api/cases/export/csv — export cases to CSV file
+     */
+    @GetMapping("/export/csv")
+    @PreAuthorize("hasAnyRole('SUPERVISOR', 'COMPLIANCE_OFFICER', 'FRAUD_ADMIN')")
+    public ResponseEntity<String> exportCasesCsv() {
+        List<Case> cases = caseRepository.findAllByOrderByCreatedAtDesc();
+        StringBuilder csv = new StringBuilder();
+        csv.append("Case ID,Complaint ID,Status,Risk Score,Risk Level,Assigned To,Supervisor,Complaint Amount,Recovery Estimate,Created At,Resolved At\n");
+        for (Case c : cases) {
+            csv.append(escapeCsv(c.getCaseId())).append(",")
+               .append(escapeCsv(c.getComplaintId())).append(",")
+               .append(escapeCsv(c.getStatus() != null ? c.getStatus().name() : "")).append(",")
+               .append(c.getRiskScore() != null ? c.getRiskScore() : "").append(",")
+               .append(escapeCsv(c.getRiskLevel())).append(",")
+               .append(escapeCsv(c.getAssignedTo())).append(",")
+               .append(escapeCsv(c.getSupervisor())).append(",")
+               .append(c.getComplaintAmount() != null ? c.getComplaintAmount() : "").append(",")
+               .append(c.getRecoveryEstimate() != null ? c.getRecoveryEstimate() : "").append(",")
+               .append(c.getCreatedAt() != null ? c.getCreatedAt().toString() : "").append(",")
+               .append(c.getResolvedAt() != null ? c.getResolvedAt().toString() : "").append("\n");
+        }
+
+        // Audit the export action
+        auditLogRepository.save(new AuditLog(
+                getUsername(),
+                getRole(),
+                "CASES_EXPORT",
+                "Exported " + cases.size() + " cases to CSV format.",
+                null
+        ));
+
+        return ResponseEntity.ok()
+                .header("Content-Disposition", "attachment; filename=cases_export.csv")
+                .header("Content-Type", "text/csv; charset=UTF-8")
+                .body(csv.toString());
+    }
+
+    /**
+     * GET /api/cases/{caseId}/comments — list all comments for a case
+     */
+    @GetMapping("/{caseId}/comments")
+    @PreAuthorize("hasAnyRole('INVESTIGATOR', 'SUPERVISOR', 'FRAUD_ADMIN', 'COMPLIANCE_OFFICER')")
+    public ResponseEntity<List<CaseComment>> getComments(@PathVariable String caseId) {
+        List<CaseComment> comments = caseCommentRepository.findByCaseIdOrderByCreatedAtAsc(caseId);
+        return ResponseEntity.ok(comments);
+    }
+
+    /**
+     * POST /api/cases/{caseId}/comments — add a comment
+     */
+    @PostMapping("/{caseId}/comments")
+    @PreAuthorize("hasAnyRole('INVESTIGATOR', 'SUPERVISOR', 'FRAUD_ADMIN', 'COMPLIANCE_OFFICER')")
+    public ResponseEntity<?> addComment(
+            @PathVariable String caseId,
+            @RequestBody Map<String, String> body) {
+        
+        String commentText = body.get("commentText");
+        if (commentText == null || commentText.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Comment text is required"));
+        }
+
+        if (caseRepository.findByCaseId(caseId).isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        CaseComment comment = new CaseComment(caseId, getUsername(), commentText);
+        CaseComment saved = caseCommentRepository.save(comment);
+
+        // Audit the comment
+        auditLogRepository.save(new AuditLog(
+                getUsername(),
+                getRole(),
+                "CASE_COMMENT_ADD",
+                "Added comment on case " + caseId + ": " + (commentText.length() > 50 ? commentText.substring(0, 50) + "..." : commentText),
+                null
+        ));
+
+        return ResponseEntity.ok(saved);
+    }
+
+    private String escapeCsv(String value) {
+        if (value == null) {
+            return "";
+        }
+        String clean = value.replace("\"", "\"\"");
+        if (clean.contains(",") || clean.contains("\n") || clean.contains("\"")) {
+            return "\"" + clean + "\"";
+        }
+        return clean;
     }
 }
