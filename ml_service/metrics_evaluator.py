@@ -56,9 +56,3 @@ def export_metrics_csv(metrics: Dict[str, Any]) -> str:
     writer.writerow(metrics.keys())
     writer.writerow([metrics[k] for k in metrics.keys()])
     return output.getvalue()
-    """Evaluate several thresholds for model-selection trade-off visibility."""
-    thresholds = thresholds or [0.70, 0.75, 0.80, 0.85, 0.90, 0.95]
-    return {
-        f"{threshold:.2f}": evaluate_on_held_out(threshold=threshold, n_test_accounts=n_test_accounts)
-        for threshold in thresholds
-    }
