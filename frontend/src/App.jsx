@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, NavLink } from 'react-router-dom';
 import {
-  ShieldAlert, Activity, Network, BarChart3, Settings, Shield, Bell, X
+  ShieldAlert, Activity, Network, BarChart3, Settings, Shield, Bell, X, Store, FileText, AlertTriangle
 } from 'lucide-react';
 
 import Login from './components/Login';
@@ -14,6 +14,10 @@ import AuditLedger from './components/AuditLedger';
 import WatchlistManager from './components/WatchlistManager';
 import UserManagement from './components/UserManagement';
 import Governance from './components/Governance';
+import MerchantRiskOverview from './components/MerchantRiskOverview';
+import MetricsDashboard from './components/MetricsDashboard';
+import AuditTrailViewer from './components/AuditTrailViewer';
+import FailureDemo from './components/FailureDemo';
 import { API } from './components/Common';
 
 export default function App() {
@@ -185,6 +189,20 @@ export default function App() {
             <Shield size={15} className="nav-icon" style={{ color: 'var(--accent-orange)' }} /> Watchlist Registry
           </NavLink>
 
+          <div className="sidebar-section-label">Merchant Demo</div>
+          <NavLink to="/merchant-risk" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+            <Store size={15} className="nav-icon" style={{ color: 'var(--accent-green)' }} /> Merchant Overview
+          </NavLink>
+          <NavLink to="/metrics-dashboard" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+            <BarChart3 size={15} className="nav-icon" /> Metrics Dashboard
+          </NavLink>
+          <NavLink to="/audit-trail" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+            <FileText size={15} className="nav-icon" style={{ color: 'var(--accent-cyan)' }} /> Audit Trail
+          </NavLink>
+          <NavLink to="/failure-demo" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+            <AlertTriangle size={15} className="nav-icon" style={{ color: 'var(--accent-red)' }} /> Failure Demo
+          </NavLink>
+
           <div className="sidebar-section-label">Operations</div>
           <NavLink to="/policy" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
             <Settings size={15} className="nav-icon" /> Policy Config
@@ -217,6 +235,10 @@ export default function App() {
             <Route path="/explorer" element={<GraphExplorer />} />
             <Route path="/policy" element={<PolicyConfig />} />
             <Route path="/watchlist" element={<WatchlistManager role={role} />} />
+            <Route path="/merchant-risk" element={<MerchantRiskOverview />} />
+            <Route path="/metrics-dashboard" element={<MetricsDashboard />} />
+            <Route path="/audit-trail" element={<AuditTrailViewer />} />
+            <Route path="/failure-demo" element={<FailureDemo />} />
             {isSupervisorOrCompliance && (
               <Route path="/audit" element={<AuditLedger />} />
             )}

@@ -4,9 +4,22 @@ Graph-Native Fraud Decisioning Platform — FastAPI entry point
 Full 11-layer architecture with real ML models.
 """
 
-from fastapi import FastAPI
+from datetime import datetime
+
+from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from graph_builder import build_hetero_graph, real_inference, IntakeRequest, MODEL_VERSION, FUSION_WEIGHTS
+import networkx as nx
+
+from agent_loop import MuleNetDetectionAgent, compute_demo_features
+from config import DEFAULT_MULE_RATIO, DEFAULT_SEED, DEFAULT_TEST_ACCOUNTS, DEFAULT_THRESHOLD, ALLOWED_ORIGINS
+from metrics_evaluator import evaluate_on_held_out, threshold_sweep
+from razorpay_simulator import (
+    generate_cold_start_accounts,
+    generate_razorpay_payout_graph,
+)
+
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 app = FastAPI(
     title="MuleNet ML Engine",
@@ -14,12 +27,24 @@ app = FastAPI(
     version=MODEL_VERSION,
 )
 
+security = HTTPBearer()
+
+def verify_jwt(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    # Placeholder JWT verification - replace with real public key / JWKS validation
+    token = credentials.credentials
+    # For demo purposes, accept any non-empty token
+    if not token:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    return token
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+AUDIT_RUNS = {}
 
 
 @app.get("/")
@@ -82,6 +107,97 @@ def model_info():
     """Return metadata about loaded ML models (Layer 10 — Governance)."""
     from ml_models import get_model_metadata
     return get_model_metadata()
+
+
+@app.post("/api/v1/detect")
+async def run_detection(
+    token: str = Depends(verify_jwt),
+    n_accounts: int = DEFAULT_TEST_ACCOUNTS,
+    mule_ratio: float = DEFAULT_MULE_RATIO,
+    threshold: float = DEFAULT_THRESHOLD,
+    include_ground_truth: bool = True,
+    seed: int = DEFAULT_SEED,
+):
+    """
+    Run the full merchant payout demo pipeline on synthetic Razorpay-style data.
+    Returns scores, explanations, clusters, false-positive cost, and audit trail.
+    """
+    graph, labels = generate_razorpay_payout_graph(
+        n_beneficiaries=n_accounts,
+        mule_ratio=mule_ratio,
+        seed=seed,
+    )
+    agent = MuleNetDetectionAgent(threshold=threshold)
+    report = agent.run_pipeline(graph, ground_truth=labels if include_ground_truth else None)
+    AUDIT_RUNS[report["run_id"]] = report
+    return {"status": "success", "report": report}
+
+
+@app.get("/api/v1/metrics")
+async def get_metrics(
+    token: str = Depends(verify_jwt),
+    threshold: float = DEFAULT_THRESHOLD,
+    n_test: int = DEFAULT_TEST_ACCOUNTS,
+    mule_ratio: float = DEFAULT_MULE_RATIO,
+    seed: int = 99,
+    sweep: bool = False,
+):
+    """
+    Return precision, recall, FPR, and false-positive cost on a held-out set.
+    """
+    if sweep:
+        return {"status": "success", "threshold_sweep": threshold_sweep(n_test_accounts=n_test)}
+    metrics = evaluate_on_held_out(
+        threshold=threshold,
+        n_test_accounts=n_test,
+        mule_ratio=mule_ratio,
+        seed=seed,
+    )
+    return {"status": "success", "metrics": metrics}
+
+
+@app.get("/api/v1/audit/{run_id}")
+async def get_audit_trail(run_id: str, token: str = Depends(verify_jwt)):
+    """Return the structured audit trail and explanations for a prior detection run."""
+    report = AUDIT_RUNS.get(run_id)
+    if report is None:
+        raise HTTPException(status_code=404, detail=f"Audit run {run_id} not found")
+    return {
+        "status": "success",
+        "run_id": run_id,
+        "audit_log": report.get("audit_log", []),
+        "explanations": report.get("explanations", {}),
+        "cost_analysis": report.get("false_positive_cost_analysis", {}),
+        "detection_summary": report.get("detection_summary", {}),
+    }
+
+
+@app.post("/api/v1/failure-demo")
+async def failure_demo(n_accounts: int = 5, token: str = Depends(verify_jwt)):
+    """
+    Demonstrate graceful handling for cold-start accounts with zero transaction history.
+    """
+    cold_starts = generate_cold_start_accounts(n=n_accounts)
+    graph = nx.DiGraph()
+    for account in cold_starts:
+        graph.add_node(account["account_id"], node_type="beneficiary", label="unknown")
+
+    features = compute_demo_features(graph, cold_start_accounts=cold_starts)
+    agent = MuleNetDetectionAgent()
+    failures = agent.handle_cold_starts(features)
+    agent._log("FAILURE_DEMO", f"Applied cold-start fallback to {len(failures)} accounts.")
+
+    report = {
+        "run_id": agent.run_id,
+        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "cold_start_accounts": cold_starts,
+        "features": features,
+        "graceful_failures": failures,
+        "audit_log": agent.audit_log,
+        "status": "success",
+    }
+    AUDIT_RUNS[agent.run_id] = report
+    return {"status": "success", "report": report}
 
 
 @app.get("/api/graph/query")
@@ -358,4 +474,3 @@ def stream_next():
             "anomaly_reason": "Suspicious rapid cash-out" if is_anomaly and calibrated_score > 60 else "Normal profile"
         }
     }
-
