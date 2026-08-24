@@ -1,10 +1,18 @@
 """MuleNet detection agent for detect -> explain -> cost -> alert -> audit."""
 
+import logging
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 import networkx as nx
 import numpy as np
+
+try:
+    import anthropic as _anthropic
+except ImportError:  # graceful: anthropic not installed
+    _anthropic = None
+
+log = logging.getLogger(__name__)
 
 from config import AVG_RAZORPAY_PAYOUT_INR, FP_OPPORTUNITY_COST_RATE, MODEL_WEIGHTS
 from graph_analytics import detect_fraud_rings, find_connected_fraud_components
@@ -101,7 +109,7 @@ class MuleNetDetectionAgent:
             if not score["flagged"]:
                 continue
             try:
-                explanations[account_id] = generate_risk_attribution_report(
+                attr_report = generate_risk_attribution_report(
                     account_id=account_id,
                     features=features[account_id],
                     risk_score=score["composite_score"],
@@ -110,6 +118,16 @@ class MuleNetDetectionAgent:
                     confidence=0.85 if score["confidence"] == "HIGH" else 0.62,
                     reason_codes=_reason_codes(score, features[account_id]),
                 )
+                reason_codes = _reason_codes(score, features[account_id])
+                attr_report["llm_explanation"] = llm_narrative_explanation(
+                    account_id=account_id,
+                    score=score,
+                    features=features[account_id],
+                    reason_codes=reason_codes,
+                    shap_summary=attr_report.get("explainability", {}),
+                    fallback_text=attr_report.get("explainability", {}).get("operational", ""),
+                )
+                explanations[account_id] = attr_report
             except Exception as exc:
                 explanations[account_id] = {
                     "account_id": account_id,
@@ -255,6 +273,64 @@ class MuleNetDetectionAgent:
         })
 
 
+def llm_narrative_explanation(
+    account_id: str,
+    score: Dict[str, Any],
+    features: Dict[str, float],
+    reason_codes: List[str],
+    shap_summary: Dict[str, Any],
+    fallback_text: str = "",
+) -> str:
+    """Call Anthropic claude-sonnet-4-6 to produce a plain-English risk explanation.
+
+    Returns a single narrative paragraph suitable for a merchant risk analyst.
+    Falls back to ``fallback_text`` (or a minimal rule-based string) on any
+    error so the demo never breaks.
+    """
+    if _anthropic is None:
+        return fallback_text or (
+            f"Account {account_id} was flagged with a composite risk score of "
+            f"{score['composite_score']} ({score['risk_level']}). "
+            f"Primary signals: {', '.join(reason_codes)}."
+        )
+
+    prompt = (
+        f"You are a fraud-risk analyst assistant for a payment platform. "
+        f"Explain in one clear paragraph, in plain English suitable for a merchant risk analyst, "
+        f"why account '{account_id}' was flagged as suspicious.\n\n"
+        f"Composite risk score: {score['composite_score']} / 100 "
+        f"(risk level: {score['risk_level']}, confidence: {score['confidence']}).\n"
+        f"Model sub-scores — XGBoost fast-path: {score['fast_path_score']:.3f}, "
+        f"GNN structural: {score['gnn_score']:.3f}, "
+        f"Isolation Forest anomaly: {score['anomaly_score']:.3f}, "
+        f"topology: {score['topology_score']}.\n"
+        f"Triggered rule codes: {', '.join(reason_codes)}.\n"
+        f"Key behavioural features — "
+        f"pass-through rate: {features.get('pass_through_rate', 0):.2%}, "
+        f"fan-out ratio: {features.get('fan_out_ratio', 0):.2f}, "
+        f"out-degree: {features.get('out_degree', 0)}, "
+        f"counterparty entropy: {features.get('counterparty_entropy', 0):.3f}.\n"
+        f"SHAP/attribution highlights: {shap_summary}.\n\n"
+        f"Write the explanation in 2-4 sentences. Do not use bullet points."
+    )
+
+    try:
+        client = _anthropic.Anthropic()
+        message = client.messages.create(
+            model="claude-sonnet-4-6",
+            max_tokens=256,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        return message.content[0].text.strip()
+    except Exception as exc:  # noqa: BLE001 — any network/API/auth error
+        log.warning("LLM explanation failed for %s: %s", account_id, exc)
+        return fallback_text or (
+            f"Account {account_id} scored {score['composite_score']} "
+            f"({score['risk_level']}). Signals: {', '.join(reason_codes)}."
+        )
+
+
+
 def compute_demo_features(graph: nx.DiGraph, cold_start_accounts: Optional[List[Dict[str, Any]]] = None) -> Dict[str, Dict[str, float]]:
     """Compute the eight model features expected by existing MuleNet models."""
     features: Dict[str, Dict[str, float]] = {}
@@ -263,6 +339,7 @@ def compute_demo_features(graph: nx.DiGraph, cold_start_accounts: Optional[List[
         if data.get("node_type") in {"merchant", "beneficiary", "account"} or node.startswith(("ACC_", "MERCH_", "CASHOUT_"))
     ]
     total_flow = sum(data.get("amount", 0.0) for _, _, data in graph.edges(data=True) if data.get("edge_type") == "sent_to") or 1.0
+
 
     for node in account_nodes:
         outgoing = [graph[node][target].get("amount", 0.0) for target in graph.successors(node) if graph[node][target].get("edge_type") == "sent_to"]
