@@ -5,6 +5,7 @@ Full 11-layer architecture with real ML models.
 """
 
 from datetime import datetime
+from typing import Any, Dict
 
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
@@ -102,11 +103,29 @@ def external_check(account_ids: list[str]):
     }
 
 
+_MODEL_METRICS_CACHE: Dict[str, Any] = {"data": None, "computed_at": None}
+
+
 @app.get("/api/models")
 def model_info():
-    """Return metadata about loaded ML models (Layer 10 — Governance)."""
+    """
+    Return metadata about loaded ML models (Layer 10 — Governance).
+    Includes cached held-out evaluation metrics (precision/recall/F1/FPR) so
+    this endpoint reflects real model quality, not just "a .pkl file exists".
+    """
     from ml_models import get_model_metadata
-    return get_model_metadata()
+    metadata = get_model_metadata()
+
+    if _MODEL_METRICS_CACHE["data"] is None:
+        _MODEL_METRICS_CACHE["data"] = evaluate_on_held_out()
+        _MODEL_METRICS_CACHE["computed_at"] = datetime.utcnow().isoformat()
+
+    metadata["held_out_evaluation"] = {
+        **_MODEL_METRICS_CACHE["data"],
+        "cached_at": _MODEL_METRICS_CACHE["computed_at"],
+        "note": "Computed once per server run on a seeded held-out synthetic set (seed=99, disjoint from training seed=42). Call /api/v1/metrics for a fresh run.",
+    }
+    return metadata
 
 
 @app.post("/api/v1/detect")
