@@ -2,6 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { BarChart3, Gauge, RefreshCw } from 'lucide-react';
 import { ML_API, Spinner } from './Common';
 
+function mlFetch(path, opts = {}) {
+  const token = localStorage.getItem('token');
+  return fetch(`${ML_API}${path}`, {
+    ...opts,
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...opts.headers,
+    },
+  });
+}
+
 export default function MetricsDashboard() {
   const [metrics, setMetrics] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -10,7 +21,8 @@ export default function MetricsDashboard() {
   const loadMetrics = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${ML_API}/api/v1/metrics?threshold=${threshold}&n_test=70`);
+      const res = await mlFetch(`/api/v1/metrics?threshold=${threshold}&n_test=70`);
+      if (!res.ok) throw new Error(`Metrics ${res.status}`);
       const data = await res.json();
       setMetrics(data.metrics);
     } catch (error) {

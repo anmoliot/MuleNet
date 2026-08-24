@@ -2,6 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { Download, FileText, Search } from 'lucide-react';
 import { ML_API, Spinner } from './Common';
 
+function mlFetch(path, opts = {}) {
+  const token = localStorage.getItem('token');
+  return fetch(`${ML_API}${path}`, {
+    ...opts,
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...opts.headers,
+    },
+  });
+}
+
 export default function AuditTrailViewer() {
   const [runId, setRunId] = useState(localStorage.getItem('lastMerchantRunId') || '');
   const [audit, setAudit] = useState(null);
@@ -11,7 +22,7 @@ export default function AuditTrailViewer() {
     if (!runId) return;
     setLoading(true);
     try {
-      const res = await fetch(`${ML_API}/api/v1/audit/${runId}`);
+      const res = await mlFetch(`/api/v1/audit/${runId}`);
       if (!res.ok) throw new Error(`Audit ${res.status}`);
       setAudit(await res.json());
     } catch (error) {

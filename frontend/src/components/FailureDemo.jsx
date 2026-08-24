@@ -2,6 +2,17 @@ import React, { useState } from 'react';
 import { AlertCircle, RefreshCw, ShieldCheck } from 'lucide-react';
 import { ML_API, Spinner } from './Common';
 
+function mlFetch(path, opts = {}) {
+  const token = localStorage.getItem('token');
+  return fetch(`${ML_API}${path}`, {
+    ...opts,
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...opts.headers,
+    },
+  });
+}
+
 export default function FailureDemo() {
   const [enabled, setEnabled] = useState(true);
   const [count, setCount] = useState(5);
@@ -12,7 +23,8 @@ export default function FailureDemo() {
     if (!enabled) return;
     setLoading(true);
     try {
-      const res = await fetch(`${ML_API}/api/v1/failure-demo?n_accounts=${count}`, { method: 'POST' });
+      const res = await mlFetch(`/api/v1/failure-demo?n_accounts=${count}`, { method: 'POST' });
+      if (!res.ok) throw new Error(`FailureDemo ${res.status}`);
       const data = await res.json();
       setReport(data.report);
       localStorage.setItem('lastMerchantRunId', data.report.run_id);

@@ -3,6 +3,17 @@ import { AlertTriangle, Bot, Download, GitBranch, RefreshCw } from 'lucide-react
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { ML_API, RiskBadge, Spinner } from './Common';
 
+function mlFetch(path, opts = {}) {
+  const token = localStorage.getItem('token');
+  return fetch(`${ML_API}${path}`, {
+    ...opts,
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...opts.headers,
+    },
+  });
+}
+
 const bucketLabels = {
   critical: 'Critical',
   high: 'High',
@@ -28,7 +39,8 @@ export default function MerchantRiskOverview() {
   const runDetection = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${ML_API}/api/v1/detect?n_accounts=${nAccounts}&threshold=${threshold}`);
+      const res = await mlFetch(`/api/v1/detect?n_accounts=${nAccounts}&threshold=${threshold}`);
+      if (!res.ok) throw new Error(`Detect ${res.status}`);
       const data = await res.json();
       setReport(data.report);
       localStorage.setItem('lastMerchantRunId', data.report.run_id);
