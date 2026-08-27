@@ -46,8 +46,6 @@
 
 html, body, #root {
   height: 100%;
-  background: var(--bg-void);
-  color: var(--text-primary);
   font-family: var(--font-sans);
   font-size: 14px;
   line-height: 1.6;
@@ -55,8 +53,10 @@ html, body, #root {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Noise texture overlay */
+/* Noise texture overlay disabled for clean MUI look */
+/* 
 body::before {
+
   content: '';
   position: fixed;
   inset: 0;
@@ -85,13 +85,14 @@ body::before {
 .main-area {
   overflow-y: auto;
   overflow-x: hidden;
-  background: var(--bg-base);
   position: relative;
   display: flex;
   flex-direction: column;
+  background-color: transparent;
 }
 
 /* ── Topbar ── */
+
 .topbar {
   grid-column: 1 / -1;
   display: flex;

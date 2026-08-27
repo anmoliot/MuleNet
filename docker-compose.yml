@@ -7,9 +7,9 @@ services:
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_DB: mulenet
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
@@ -48,7 +48,7 @@ services:
       - "7474:7474"
       - "7687:7687"
     environment:
-      - NEO4J_AUTH=neo4j/passwordpassword
+      - NEO4J_AUTH=${NEO4J_USER}/${NEO4J_PASSWORD}
     volumes:
       - neo4j_data:/data
 
@@ -59,8 +59,11 @@ services:
     ports:
       - "8081:8080"
     environment:
-      - KEYCLOAK_ADMIN=admin
-      - KEYCLOAK_ADMIN_PASSWORD=admin
+      - KEYCLOAK_ADMIN=${KEYCLOAK_ADMIN}
+      - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD}
+    volumes:
+      - ./KeycloakRealm.json:/opt/keycloak/data/import/realm.json
+    command: start-dev --import-realm
 
   backend:
     build: ./backend
@@ -70,10 +73,10 @@ services:
     environment:
       - DB_HOST=postgres
       - DB_PORT=5432
-      - DB_NAME=mulenet
-      - DB_USER=postgres
-      - DB_PASS=postgres
-      - OAUTH2_ENABLED=false
+      - DB_NAME=${POSTGRES_DB}
+      - DB_USER=${POSTGRES_USER}
+      - DB_PASS=${POSTGRES_PASSWORD}
+      - OAUTH2_ENABLED=${OAUTH2_ENABLED}
       - ML_SERVICE_URL=http://ml_service:8000
     depends_on:
       - postgres
@@ -89,8 +92,8 @@ services:
       - REDIS_HOST=redis
       - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
       - NEO4J_URI=bolt://neo4j:7687
-      - NEO4J_USER=neo4j
-      - NEO4J_PASSWORD=passwordpassword
+      - NEO4J_USER=${NEO4J_USER}
+      - NEO4J_PASSWORD=${NEO4J_PASSWORD}
     depends_on:
       - redis
       - neo4j
@@ -105,8 +108,8 @@ services:
       - REDIS_HOST=redis
       - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
       - NEO4J_URI=bolt://neo4j:7687
-      - NEO4J_USER=neo4j
-      - NEO4J_PASSWORD=passwordpassword
+      - NEO4J_USER=${NEO4J_USER}
+      - NEO4J_PASSWORD=${NEO4J_PASSWORD}
     depends_on:
       - redis
       - ml_service

@@ -13,6 +13,14 @@ import math
 from typing import Dict, List, Tuple, Any
 from pathlib import Path
 
+# Helper to safely import shap; if not available, raise informative error when used.
+_shap_available = True
+try:
+    import shap
+except ImportError:
+    _shap_available = False
+    # shap will be lazily imported when needed; placeholder will raise if used.
+
 # ── Try importing xgboost; fall back to sklearn GradientBoosting ─────────────
 try:
     import xgboost as xgb
@@ -215,6 +223,31 @@ class FastPathModel:
             imp = self.model.feature_importances_
             return {col: round(float(v), 4) for col, v in zip(FEATURE_COLS, imp)}
         return {}
+
+    def shap_explain(self, features: Dict[str, Dict]) -> Dict[str, List[float]]:
+        """Generate SHAP explanations for each account.
+
+        Returns a mapping ``account_id -> shap_values`` where ``shap_values`` is a list
+        matching ``FEATURE_COLS`` order.
+        """
+        if not _shap_available:
+            raise ImportError("shap library is required for explanations but is not installed.")
+        if not features:
+            return {}
+        # Prepare matrix
+        acct_ids = list(features.keys())
+        X = np.array([
+            [features[a].get(col, 0) for col in FEATURE_COLS]
+            for a in acct_ids
+        ], dtype=np.float64)
+        # Use TreeExplainer on the underlying model (XGBoost or GradientBoosting)
+        explainer = shap.TreeExplainer(self.model)
+        shap_vals = explainer.shap_values(X)
+        # shap_vals shape: (n_samples, n_features)
+        result = {}
+        for acct, vals in zip(acct_ids, shap_vals):
+            result[acct] = [round(float(v), 6) for v in vals]
+        return result
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -705,3 +738,91 @@ def get_model_metadata() -> Dict[str, Any]:
         }
     }
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# ENSEMBLE SCORER AND TEMPORAL FEATURES
+# ═══════════════════════════════════════════════════════════════════════════════
+
+import os
+from typing import List, Any, Dict
+
+class TemporalFeaturesExtractor:
+    """Extract temporal features from transaction histories.
+
+    Expected ``transactions``: list of dicts with ``amount`` and ``timestamp`` (epoch seconds).
+    Returns a dict of additional features that can be merged into the feature dict.
+    """
+    @staticmethod
+    def extract(transactions: List[Dict[str, Any]]) -> Dict[str, float]:
+        if not transactions:
+            return {"time_decay_amount": 0.0, "txn_count_per_hour": 0.0, "velocity": 0.0}
+        now = max(t["timestamp"] for t in transactions)
+        decay_factor = 0.9
+        weighted_sum = 0.0
+        count_last_hour = 0
+        amount_last_hour = 0.0
+        for txn in transactions:
+            dt = now - txn["timestamp"]
+            weight = decay_factor ** dt
+            weighted_sum += txn["amount"] * weight
+            if dt <= 3600:
+                count_last_hour += 1
+                amount_last_hour += txn["amount"]
+        velocity = amount_last_hour / 3600 if count_last_hour else 0.0
+        return {
+            "time_decay_amount": round(weighted_sum, 2),
+            "txn_count_per_hour": float(count_last_hour),
+            "velocity": round(velocity, 2),
+        }
+
+class EnsembleScorer:
+    """Combine FastPath, GNN, and IsolationForest scores using configurable weights.
+
+    Weights are read from environment variables ENSEMBLE_WEIGHT_FASTPATH,
+    ENSEMBLE_WEIGHT_GNN, ENSEMBLE_WEIGHT_ANOMALY. If not set, equal weighting is used.
+    """
+    def __init__(self):
+        try:
+            w_fp = float(os.getenv("ENSEMBLE_WEIGHT_FASTPATH", "1"))
+            w_gnn = float(os.getenv("ENSEMBLE_WEIGHT_GNN", "1"))
+            w_an = float(os.getenv("ENSEMBLE_WEIGHT_ANOMALY", "1"))
+        except ValueError:
+            w_fp = w_gnn = w_an = 1.0
+        total = w_fp + w_gnn + w_an
+        self.weights = {"fast_path": w_fp / total, "gnn": w_gnn / total, "anomaly": w_an / total}
+        self._fast_path = None
+        self._gnn = None
+        self._anomaly = None
+
+    def _load_components(self):
+        if self._fast_path is None:
+            from .ml_models import get_fast_path, get_gnn_scorer, get_anomaly_detector
+            self._fast_path = get_fast_path()
+            self._gnn = get_gnn_scorer()
+            self._anomaly = get_anomaly_detector()
+
+    def predict(self, features: Dict[str, Dict]) -> Dict[str, float]:
+        """Return calibrated ensemble risk (0‑100) per account."""
+        if not features:
+            return {}
+        self._load_components()
+        fp = self._fast_path.predict(features)
+        gnn = self._gnn.predict(features)
+        an = self._anomaly.predict(features)
+        ensemble = {}
+        for acct in features.keys():
+            raw = (
+                self.weights["fast_path"] * fp.get(acct, 0.0)
+                + self.weights["gnn"] * gnn.get(acct, 0.0)
+                + self.weights["anomaly"] * an.get(acct, 0.0)
+            )
+            # Scale to 0‑100 before calibration
+            ensemble[acct] = calibrate_score(raw * 100)
+        return ensemble
+
+_ensemble_scorer: EnsembleScorer = None
+
+def get_ensemble_scorer() -> EnsembleScorer:
+    global _ensemble_scorer
+    if _ensemble_scorer is None:
+        _ensemble_scorer = EnsembleScorer()
+    return _ensemble_scorer

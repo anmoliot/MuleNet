@@ -10,6 +10,9 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
+import org.springframework.retry.annotation.Recover;
 
 @Service
 public class MlService {
@@ -28,6 +31,11 @@ public class MlService {
         this.restTemplate = new RestTemplate(factory);
     }
 
+    @Retryable(
+      value = {Exception.class},
+      maxAttempts = 3,
+      backoff = @Backoff(delay = 2000, multiplier = 2)
+    )
     public String analyzeGraph(com.mulenet.api.dto.IntakeRequest payload) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -39,14 +47,22 @@ public class MlService {
         try {
             ResponseEntity<String> response = restTemplate.postForEntity(mlServiceUrl, request, String.class);
             long latency = System.currentTimeMillis() - start;
+            if (!response.getStatusCode().is2xxSuccessful()) {
+                throw new RuntimeException("ML Service returned non-2xx status: " + response.getStatusCode());
+            }
             logger.info("Successfully received analysis response from ML service in {}ms", latency);
             return response.getBody();
         } catch (Exception e) {
             long latency = System.currentTimeMillis() - start;
             logger.error("Failed to connect or receive response from ML service at {} (attempt took {}ms): {}", 
-                    mlServiceUrl, latency, e.getMessage(), e);
-            String msg = e.getMessage() != null ? e.getMessage().replace("\"", "\\\"").replace("\n", " ").replace("\r", "") : "Unknown error";
-            return "{\"error\": \"Failed to connect to ML service: " + msg + "\", \"status\": \"error\"}";
+                    mlServiceUrl, latency, e.getMessage());
+            throw new RuntimeException("Failed to connect to ML service: " + e.getMessage(), e);
         }
+    }
+
+    @Recover
+    public String recover(Exception e, com.mulenet.api.dto.IntakeRequest payload) {
+        logger.error("All retries exhausted for ML Service call. Failing fast.");
+        throw new RuntimeException("ML service unavailable after retries", e);
     }
 }

@@ -1,25 +1,29 @@
 @echo off
-set JAVA_HOME=C:\Program Files\Java\jdk-25
 rem ------------------------------------------------------------
-rem MuleNet – Unified launch script (Windows batch)
+rem MuleNet – Unified launch script (Docker Compose)
 rem ------------------------------------------------------------
 
-rem 1. Ensure PostgreSQL is running (user must start PostgreSQL manually or via Docker)
-rem    Default connection: user=postgres, password=postgres, database=mulenet
+rem Wait for Docker daemon to be ready
+:waitdocker
+  docker info >nul 2>&1
+  if errorlevel 1 (
+    echo Waiting for Docker daemon to start…
+    timeout /t 2 > nul
+    goto :waitdocker
+  )
 
-rem 2. Start Spring Boot backend
-start "Backend" cmd /k "cd /d %~dp0backend && mvnw.cmd spring-boot:run"
+rem Start all services in detached mode
+docker compose up -d
 
-rem Wait a few seconds for the backend to spin up
-timeout /t 5 > nul
+rem Wait a few seconds for services to become healthy
+timeout /t 10 > nul
 
-rem 3. Start Python FastAPI ML service
-start "ML Service" cmd /k "cd /d %~dp0ml_service && python -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
+rem Open the frontend in the default browser
+start "" "http://localhost:3000/merchant-risk"
 
-rem Wait a few seconds for the ML service to be ready
-timeout /t 5 > nul
+rem Keep this window open so you can stop the containers later
+echo MuleNet services are running. Press any key to stop them.
+pause
 
-rem 4. Install frontend dependencies (only the first run) and start Vite dev server
-cd /d %~dp0frontend
-if not exist node_modules (npm install)
-start "Frontend" cmd /k "npm run dev"
+rem Bring down the containers when you're done
+docker compose down

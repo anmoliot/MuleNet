@@ -38,7 +38,12 @@ class MuleNetDetectionAgent:
         self.run_id = f"mulenet-{datetime.utcnow().strftime('%Y%m%d-%H%M%S-%f')}"
         self.audit_log: List[Dict[str, str]] = []
 
-    def run_pipeline(self, graph: nx.DiGraph, ground_truth: Optional[Dict[str, int]] = None) -> Dict[str, Any]:
+    def run_pipeline(
+        self,
+        graph: nx.DiGraph,
+        ground_truth: Optional[Dict[str, int]] = None,
+        generate_explanations: bool = True,
+    ) -> Dict[str, Any]:
         self._log("PIPELINE_START", f"Started run on {graph.number_of_nodes()} nodes and {graph.number_of_edges()} edges.")
 
         features = compute_demo_features(graph)
@@ -48,8 +53,12 @@ class MuleNetDetectionAgent:
         flagged_count = sum(1 for score in scores.values() if score["flagged"])
         self._log("DETECTION", f"Flagged {flagged_count} accounts at threshold {self.threshold:.2f}.")
 
-        explanations = self._explain(features, scores)
-        self._log("EXPLANATION", f"Generated explanations for {len(explanations)} flagged accounts.")
+        if generate_explanations:
+            explanations = self._explain(features, scores)
+            self._log("EXPLANATION", f"Generated explanations for {len(explanations)} flagged accounts.")
+        else:
+            explanations = {}
+            self._log("EXPLANATION", "Skipped (generate_explanations=False) — numeric-only run, no LLM calls.")
 
         cost_analysis = self._compute_fp_cost(scores, ground_truth)
         self._log("COST_ANALYSIS", f"False-positive cost INR {cost_analysis['false_positive_cost_inr']:.2f}.")
@@ -315,7 +324,7 @@ def llm_narrative_explanation(
     )
 
     try:
-        client = _anthropic.Anthropic()
+        client = _anthropic.Anthropic(timeout=10.0)
         message = client.messages.create(
             model="claude-sonnet-4-6",
             max_tokens=256,

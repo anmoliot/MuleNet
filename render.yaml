@@ -1,0 +1,58 @@
+services:
+  # Backend Spring Boot Service
+  - type: web
+    name: mulenet-backend
+    env: docker
+    dockerfilePath: ./backend/Dockerfile
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: DB_HOST
+        value: mulenet-postgres
+      - key: REDIS_HOST
+        value: mulenet-redis
+      - key: KAFKA_BOOTSTRAP_SERVERS
+        value: mulenet-kafka:9092
+      - key: KEYCLOAK_URL
+        value: https://your-keycloak-instance.com/auth
+      - key: ML_SERVICE_URL
+        value: https://mulenet-ml-service.onrender.com/api/analyze
+    plan: standard
+
+  # ML FastAPI Service
+  - type: web
+    name: mulenet-ml-service
+    env: docker
+    dockerfilePath: ./ml_service/Dockerfile
+    envVars:
+      - key: REDIS_HOST
+        value: mulenet-redis
+      - key: NEO4J_URI
+        value: bolt://mulenet-neo4j:7687
+    plan: standard
+
+  # Frontend React App (Static Site)
+  - type: web
+    name: mulenet-frontend
+    env: static
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./frontend/dist
+    envVars:
+      - key: VITE_API_BASE_URL
+        value: https://mulenet-backend.onrender.com
+      - key: VITE_WS_URL
+        value: wss://mulenet-backend.onrender.com/ws
+
+  # Postgres Database (Managed)
+  - type: psql
+    name: mulenet-postgres
+    plan: standard
+
+  # Redis (Managed)
+  - type: redis
+    name: mulenet-redis
+    plan: standard
+
+# Note: Kafka and Neo4j require substantial memory and persistent volumes. 
+# For a full Render deployment, they should be deployed as Private Services with attached disks, 
+# or via managed providers (e.g., Confluent Cloud for Kafka, AuraDB for Neo4j).
