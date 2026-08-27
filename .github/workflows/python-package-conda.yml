@@ -5,6 +5,7 @@ on:
     branches: [ "main", "feature-update" ]
   pull_request:
     branches: [ "main", "feature-update" ]
+on: [push]
 
 jobs:
   build-linux:
