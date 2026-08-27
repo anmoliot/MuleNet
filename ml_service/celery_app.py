@@ -21,8 +21,8 @@ celery.conf.update(
 )
 
 
-@celery.task(name="tasks.retrain_models")
-def retrain_models_task(authorization_header):
+@celery.task(name="tasks.retrain_models", bind=True, max_retries=3, default_retry_delay=60)
+def retrain_models_task(self, authorization_header):
     print("[Celery] Starting model retraining task...")
 
     # Import locally inside the task to prevent circular dependencies
@@ -36,10 +36,12 @@ def retrain_models_task(authorization_header):
     try:
         response = requests.get(f"{backend_url}/api/cases/feedback", headers=headers, timeout=20)
         if response.status_code != 200:
-            return {"status": "error", "message": f"Failed to fetch feedback from backend: {response.text}"}
+            print(f"[Celery] Failed to fetch feedback: {response.text}")
+            raise Exception("Backend returned non-200 status")
         cases = response.json()
     except Exception as e:
-        return {"status": "error", "message": f"Could not connect to Spring Boot backend: {str(e)}"}
+        print(f"[Celery] Error fetching feedback, retrying: {e}")
+        raise self.retry(exc=e)
 
     print(f"[Celery] Retraining on {len(cases)} resolved compliance cases.")
     feedback_samples = []

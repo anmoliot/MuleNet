@@ -9,6 +9,7 @@ from typing import Any, Dict
 
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from typing import List
 from graph_builder import build_hetero_graph, real_inference, IntakeRequest, MODEL_VERSION, FUSION_WEIGHTS
 import networkx as nx
 
@@ -82,6 +83,23 @@ def analyze_graph(request: IntakeRequest):
     results = real_inference(G, request)
     return results
 
+@app.post("/api/predict")
+def predict(request: IntakeRequest):
+    """Single transaction prediction endpoint, same response as /api/analyze."""
+    G = build_hetero_graph(request)
+    results = real_inference(G, request)
+    return results
+
+@app.post("/api/batch-predict")
+def batch_predict(requests: List[IntakeRequest]):
+    """Batch prediction for multiple intake requests. Returns list of prediction results."""
+    batch_results = []
+    for req in requests:
+        G = build_hetero_graph(req)
+        res = real_inference(G, req)
+        batch_results.append(res)
+    return {"predictions": batch_results}
+
 
 @app.post("/api/external-check")
 def external_check(account_ids: list[str]):
@@ -148,6 +166,35 @@ async def run_detection(
     )
     agent = MuleNetDetectionAgent(threshold=threshold)
     report = agent.run_pipeline(graph, ground_truth=labels if include_ground_truth else None)
+    AUDIT_RUNS[report["run_id"]] = report
+    return {"status": "success", "report": report}
+
+@app.post("/api/v1/detect/advanced")
+async def detect_advanced(
+    token: str = Depends(verify_jwt),
+    n_accounts: int = DEFAULT_TEST_ACCOUNTS,
+    mule_ratio: float = DEFAULT_MULE_RATIO,
+    threshold: float = DEFAULT_THRESHOLD,
+    include_ground_truth: bool = True,
+    seed: int = DEFAULT_SEED,
+):
+    """Advanced detection using EnsembleScorer and SHAP explanations.
+
+    Returns calibrated ensemble risk scores and SHAP values for each account.
+    """
+    graph, labels = generate_razorpay_payout_graph(
+        n_beneficiaries=n_accounts,
+        mule_ratio=mule_ratio,
+        seed=seed,
+    )
+    # Compute base features using existing utilities
+    agent = MuleNetDetectionAgent(threshold=threshold)
+    report = agent.run_pipeline(graph, ground_truth=labels if include_ground_truth else None)
+    features = compute_demo_features(graph)
+    ensemble = get_ensemble_scorer().predict(features)
+    shap_vals = get_fast_path().shap_explain(features)
+    report["ensemble_score"] = ensemble
+    report["shap_explanations"] = shap_vals
     AUDIT_RUNS[report["run_id"]] = report
     return {"status": "success", "report": report}
 

@@ -1,5 +1,9 @@
 import os
-from neo4j import GraphDatabase
+
+try:
+    from neo4j import GraphDatabase
+except ImportError:
+    GraphDatabase = None
 
 # Configuration
 NEO4J_URI = os.getenv("NEO4J_URI", "bolt://localhost:7687")
@@ -16,6 +20,9 @@ class Neo4jGraphStore:
     def __init__(self):
         self.driver = None
         self.enabled = False
+        if GraphDatabase is None:
+            print("[Neo4j] Optional 'neo4j' driver module not installed. Neo4j store disabled.")
+            return
         try:
             self.driver = GraphDatabase.driver(NEO4J_URI, auth=(NEO4J_USER, NEO4J_PASSWORD))
             # Test connection
@@ -23,6 +30,7 @@ class Neo4jGraphStore:
             self.enabled = True
             print(f"[Neo4j] Connected successfully to graph store at {NEO4J_URI}")
         except Exception as e:
+
             print(f"[Neo4j] Driver initialization failed: {e}. Graph queries will default to NetworkX.")
 
     def close(self):

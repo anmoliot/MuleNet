@@ -22,7 +22,7 @@ import java.util.Collections;
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
-@ConditionalOnProperty(name = "app.security.oauth2.enabled", havingValue = "false", matchIfMissing = true)
+@ConditionalOnProperty(name = "OAUTH2_ENABLED", havingValue = "false", matchIfMissing = true)
 public class SecurityConfig {
 
     @Autowired

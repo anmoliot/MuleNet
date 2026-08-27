@@ -45,3 +45,5 @@ target/
 *.swo
 .DS_Store
 Thumbs.db
+.env
+ml_service/trained_models/
