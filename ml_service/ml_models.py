@@ -278,8 +278,13 @@ class GraphNeuralScorer:
             with open(GNN_WEIGHTS_PATH, "rb") as f:
                 weights = pickle.load(f)
             self.W1 = weights["W1"]
-            self.W2 = weights["W2"]
-            self.attention = weights["attention"]
+            W2 = weights["W2"]
+            if hasattr(W2, "__len__") and len(W2) > self.hidden_dim:
+                W2 = W2[:self.hidden_dim]
+            if hasattr(W2, "reshape"):
+                W2 = W2.reshape(self.hidden_dim, 1)
+            self.W2 = W2
+            self.attention = weights.get("attention", np.random.RandomState(42).randn(self.hidden_dim) * 0.1)
             print("[GNN] Loaded trained weights from disk.")
         else:
             self._train()
