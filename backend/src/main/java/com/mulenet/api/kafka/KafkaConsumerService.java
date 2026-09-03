@@ -9,6 +9,7 @@ import com.mulenet.api.repository.ComplaintRepository;
 import com.mulenet.api.repository.TransactionRepository;
 import com.mulenet.api.service.MlService;
 import com.mulenet.api.service.PolicyEngine;
+import com.mulenet.api.service.NotificationService;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +41,9 @@ public class KafkaConsumerService {
     @Autowired
     private PolicyEngine policyEngine;
 
+    @Autowired
+    private NotificationService notificationService;
+
     @KafkaListener(topics = "mule-events", groupId = "mulenet-backend-group")
     public void consumeTransaction(ConsumerRecord<String, String> record, Acknowledgment acknowledgment) {
         try {
@@ -51,6 +55,7 @@ public class KafkaConsumerService {
             String receiver = (String) txnMap.get("receiver_account");
             double amount = Double.parseDouble(txnMap.get("amount").toString());
             String timestamp = (String) txnMap.get("timestamp");
+            String deviceId = (String) txnMap.getOrDefault("device_id", "UNKNOWN");
 
             // Build Complaint and Transaction
             Complaint complaint = new Complaint();
@@ -65,6 +70,7 @@ public class KafkaConsumerService {
             transaction.setReceiverAccount(receiver);
             transaction.setAmount(amount);
             transaction.setTimestamp(timestamp);
+            transaction.setDeviceId(deviceId);
 
             IntakeRequest intakeRequest = new IntakeRequest(complaint, Collections.singletonList(transaction));
             
@@ -77,6 +83,9 @@ public class KafkaConsumerService {
 
             // Process via PolicyEngine (creates Case/Alert)
             Case fraudCase = policyEngine.processAnalysis(mlResponse, complaint.getComplaintId());
+            
+            // Broadcast via SSE
+            notificationService.broadcastStreamEvent(txnMap, fraudCase);
             
             logger.info("Successfully processed Kafka event into Case: {}, Risk: {}", fraudCase.getCaseId(), fraudCase.getRiskScore());
 

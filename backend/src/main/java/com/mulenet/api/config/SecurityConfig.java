@@ -42,8 +42,11 @@ public class SecurityConfig {
                 .dispatcherTypeMatchers(jakarta.servlet.DispatcherType.ASYNC).permitAll()
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/external/**").permitAll()
+                .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/api/external/**").permitAll()
                 .requestMatchers("/api/health").permitAll()
                 .requestMatchers("/api/readiness").permitAll()
+                .requestMatchers("/api/stream/**").permitAll()
                 .requestMatchers("/h2-console/**").permitAll()
                 // Let options pass through for CORS
                 .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
