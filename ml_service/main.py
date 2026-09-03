@@ -470,6 +470,16 @@ def retrain_models(authorization: Optional[str] = Header(None)):
     }
 
 
+from preprocess import build_live_features, FEATURE_COLS
+import os as _os
+# normalization stats saved by the Kaggle training run (train-only stats)
+_norm_stats_file = _os.path.join(_os.path.dirname(__file__), "trained_models", "norm_stats.json")
+if _os.path.exists(_norm_stats_file):
+    NORM_STATS = json.load(open(_norm_stats_file))
+else:
+    NORM_STATS = {"total_flow": 5238281033.0, "max_entropy": 14.5}
+
+
 def generate_txn_dict():
     import random
     import datetime
@@ -500,17 +510,16 @@ def generate_txn_dict():
     # (So the frontend can show a Flink/XGBoost/GNN live risk evaluation)
     from ml_models import get_fast_path, get_anomaly_detector
     
-    # Compute mock features just for this txn
-    mock_features = {
+    mock_rolling = {
         "out_degree": random.randint(1, 6) if is_anomaly else random.randint(1, 2),
         "in_degree": random.randint(1, 4) if is_anomaly else random.randint(1, 2),
-        "total_sent": amount if is_anomaly else amount * 0.1,
+        "total_sent": amount if is_anomaly else amount * 0.1,   # RAW rupees — same as real window
         "total_recv": amount,
-        "pass_through_rate": 0.85 if is_anomaly else 0.15,
-        "fan_out_ratio": 2.5 if is_anomaly else 0.5,
-        "counterparty_entropy": 1.5 if is_anomaly else 0.2,
-        "share_of_total_flow": 0.4 if is_anomaly else 0.05
+        "out_cp": random.randint(2, 5) if is_anomaly else 1,
+        "inc_cp": random.randint(1, 3) if is_anomaly else random.randint(1, 2),
+        "cp_entropy_raw": 1.5 if is_anomaly else 0.2,
     }
+    mock_features = build_live_features(mock_rolling, NORM_STATS["total_flow"], NORM_STATS["max_entropy"])
     
     fp = get_fast_path()
     ad = get_anomaly_detector()
