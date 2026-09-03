@@ -361,6 +361,8 @@ class HuggingFaceIntegration:
             for k, v in metadata["metrics"].items():
                 metrics_block += f"      - type: {k}\n        value: {v}\n"
 
+        formatted_metrics = metrics_block.rstrip("\n") if metrics_block else "      - type: f1\n        value: N/A"
+
         return f"""---
 language:
 - en
@@ -377,7 +379,7 @@ model-index:
   - task:
       type: binary-classification
     metrics:
-{metrics_block if metrics_block else '      - type: f1\n        value: N/A'}
+{formatted_metrics}
 ---
 
 # MuleNet — Mule Account Detection Model

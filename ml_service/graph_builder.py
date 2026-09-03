@@ -103,8 +103,6 @@ def build_hetero_graph(request: IntakeRequest) -> nx.DiGraph:
     Construct a stateful, directed heterogeneous NetworkX graph (Gap 2).
     Nodes and edges are persisted globally.
     """
-    global GLOBAL_GRAPH, GLOBAL_TXNS, COMPLAINT_RISK_UPLIFTS
-    
     # 1. Store transactions in Online Feature Store cache
     if request.transactions:
         GLOBAL_TXNS.extend(request.transactions)
@@ -218,7 +216,6 @@ def build_hetero_graph(request: IntakeRequest) -> nx.DiGraph:
 # ─────────────────────────────────────────────────────────────────────────────
 
 def compute_features(G: nx.DiGraph, request: IntakeRequest) -> Dict[str, Dict]:
-    global GLOBAL_TXNS, COMPLAINT_RISK_UPLIFTS
     features = {}
     account_nodes = [n for n, d in G.nodes(data=True) if d.get("node_type") in ["account", "merchant"]]
     total_amount = sum(t.amount for t in request.transactions) or 1.0
