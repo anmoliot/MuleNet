@@ -39,7 +39,7 @@ export default function MerchantRiskOverview() {
   const runDetection = async () => {
     setLoading(true);
     try {
-      const res = await mlFetch(`/api/v1/detect?n_accounts=${nAccounts}&threshold=${threshold}`);
+      const res = await mlFetch(`/api/v1/detect?n_accounts=${nAccounts}&threshold=${threshold}`, { method: 'POST' });
       if (!res.ok) throw new Error(`Detect ${res.status}`);
       const data = await res.json();
       setReport(data.report);
