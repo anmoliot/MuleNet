@@ -1,0 +1,13 @@
+[flake8]
+exclude =
+    .git,
+    __pycache__,
+    venv,
+    ml_service/venv,
+    env,
+    .venv,
+    build,
+    dist,
+    node_modules,
+    frontend
+max-line-length = 127

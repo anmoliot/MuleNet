@@ -194,6 +194,7 @@ async def detect_advanced(
     agent = MuleNetDetectionAgent(threshold=threshold)
     report = agent.run_pipeline(graph, ground_truth=labels if include_ground_truth else None)
     features = compute_demo_features(graph)
+    from ml_models import get_ensemble_scorer, get_fast_path
     ensemble = get_ensemble_scorer().predict(features)
     shap_vals = get_fast_path().shap_explain(features)
     report["ensemble_score"] = ensemble
