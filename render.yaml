@@ -28,7 +28,13 @@ services:
       - key: REDIS_HOST
         value: mulenet-redis
       - key: NEO4J_URI
-        value: bolt://mulenet-neo4j:7687
+        value: neo4j+s://82c4815f.databases.neo4j.io
+      - key: NEO4J_USER
+        value: 82c4815f
+      - key: NEO4J_PASSWORD
+        value: _j2B_mQaT_z0q8um6BsKNSod0NzdMvS0IBEHFCxYs7s
+      - key: NEO4J_DATABASE
+        value: 82c4815f
     plan: standard
 
   # Frontend React App (Static Site)

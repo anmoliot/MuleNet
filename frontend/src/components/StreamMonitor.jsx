@@ -15,71 +15,71 @@ export default function StreamMonitor() {
   useEffect(() => {
     if (!isPlaying) return;
 
-    const interval = setInterval(async () => {
-      try {
-        const res = await fetch(`${ML_API}/api/stream/next`);
-        if (!res.ok) throw new Error('API error');
-        const data = await res.json();
+    const eventSource = new EventSource(`${ML_API}/api/stream/subscribe`);
+
+    eventSource.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      
+      setTxns(prev => [data, ...prev.slice(0, 14)]); // Keep last 15 txns
+      
+      // Update stats
+      setStats(prev => {
+        const nextTotal = prev.totalProcessed + 1;
+        const nextAnomalies = prev.anomaliesCount + (data.risk_evaluation.calibrated_risk_score > 60 ? 1 : 0);
+        const nextAvgRisk = (prev.avgRisk * prev.totalProcessed + data.risk_evaluation.calibrated_risk_score) / nextTotal;
+        return {
+          totalProcessed: nextTotal,
+          anomaliesCount: nextAnomalies,
+          avgRisk: nextAvgRisk
+        };
+      });
+
+      // Update Flink sliding windows locally based on the incoming transaction
+      setFlinkWindows(prev => {
+        const next = { ...prev };
+        const acct = data.receiver_account;
         
-        setTxns(prev => [data, ...prev.slice(0, 14)]); // Keep last 15 txns
-        
-        // Update stats
-        setStats(prev => {
-          const nextTotal = prev.totalProcessed + 1;
-          const nextAnomalies = prev.anomaliesCount + (data.risk_evaluation.calibrated_risk_score > 60 ? 1 : 0);
-          const nextAvgRisk = (prev.avgRisk * prev.totalProcessed + data.risk_evaluation.calibrated_risk_score) / nextTotal;
-          return {
-            totalProcessed: nextTotal,
-            anomaliesCount: nextAnomalies,
-            avgRisk: nextAvgRisk
+        if (!next[acct]) {
+          next[acct] = {
+            accountId: acct,
+            sender5mCount: new Set(),
+            inflow30m: 0,
+            outflow60m: 0,
+            lastUpdated: Date.now(),
+            riskScore: data.risk_evaluation.calibrated_risk_score
           };
+        }
+        
+        // Add sender to Set
+        next[acct].sender5mCount.add(data.sender_account);
+        next[acct].inflow30m += data.amount;
+        next[acct].lastUpdated = Date.now();
+        next[acct].riskScore = Math.max(next[acct].riskScore, data.risk_evaluation.calibrated_risk_score);
+        
+        // Simulate outflow for cash-out velocity
+        if (data.risk_evaluation.calibrated_risk_score > 60) {
+          next[acct].outflow60m += data.amount * 0.95;
+        } else {
+          next[acct].outflow60m += data.amount * 0.15;
+        }
+
+        // Clean up old windows (simulating eviction after 5 mins/30 mins in Flink)
+        // For the sake of the simulation, we only keep the top 10 active ones
+        const sorted = Object.values(next).sort((a, b) => b.lastUpdated - a.lastUpdated);
+        const cleaned = {};
+        sorted.slice(0, 10).forEach(item => {
+          cleaned[item.accountId] = item;
         });
+        return cleaned;
+      });
+    };
 
-        // Update Flink sliding windows locally based on the incoming transaction
-        setFlinkWindows(prev => {
-          const next = { ...prev };
-          const acct = data.receiver_account;
-          
-          if (!next[acct]) {
-            next[acct] = {
-              accountId: acct,
-              sender5mCount: new Set(),
-              inflow30m: 0,
-              outflow60m: 0,
-              lastUpdated: Date.now(),
-              riskScore: data.risk_evaluation.calibrated_risk_score
-            };
-          }
-          
-          // Add sender to Set
-          next[acct].sender5mCount.add(data.sender_account);
-          next[acct].inflow30m += data.amount;
-          next[acct].lastUpdated = Date.now();
-          next[acct].riskScore = Math.max(next[acct].riskScore, data.risk_evaluation.calibrated_risk_score);
-          
-          // Simulate outflow for cash-out velocity
-          if (data.risk_evaluation.calibrated_risk_score > 60) {
-            next[acct].outflow60m += data.amount * 0.95;
-          } else {
-            next[acct].outflow60m += data.amount * 0.15;
-          }
+    eventSource.onerror = (e) => {
+      console.error('SSE Error:', e);
+      eventSource.close();
+    };
 
-          // Clean up old windows (simulating eviction after 5 mins/30 mins in Flink)
-          // For the sake of the simulation, we only keep the top 10 active ones
-          const sorted = Object.values(next).sort((a, b) => b.lastUpdated - a.lastUpdated);
-          const cleaned = {};
-          sorted.slice(0, 10).forEach(item => {
-            cleaned[item.accountId] = item;
-          });
-          return cleaned;
-        });
-
-      } catch (e) {
-        console.error('Failed to fetch next stream event:', e);
-      }
-    }, 1500);
-
-    return () => clearInterval(interval);
+    return () => eventSource.close();
   }, [isPlaying]);
 
   return (
@@ -274,7 +274,7 @@ export default function StreamMonitor() {
                         <strong style={{ color: 'var(--text-primary)' }}>{txn.receiver_account}</strong>
                       </div>
                       <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                        <span style={{ color: 'var(--text-muted)' }}>📱 {txn.device_id?.split('-')[-1] || txn.device_id}</span>
+                         <span style={{ color: 'var(--text-muted)' }}>📱 {txn.device_id?.split('-').pop() || txn.device_id}</span>
                         <span style={{
                           fontWeight: 700,
                           color: isRisk ? 'var(--accent-red)' : 'var(--accent-green)',
