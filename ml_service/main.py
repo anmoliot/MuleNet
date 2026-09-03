@@ -15,6 +15,7 @@ from graph_builder import build_hetero_graph, real_inference, IntakeRequest, MOD
 import networkx as nx
 import asyncio
 import json
+import random
 
 from agent_loop import MuleNetDetectionAgent, compute_demo_features
 from config import DEFAULT_MULE_RATIO, DEFAULT_SEED, DEFAULT_TEST_ACCOUNTS, DEFAULT_THRESHOLD, ALLOWED_ORIGINS
@@ -470,98 +471,83 @@ def retrain_models(authorization: Optional[str] = Header(None)):
     }
 
 
-from preprocess import build_live_features, FEATURE_COLS
-import os as _os
-# normalization stats saved by the Kaggle training run (train-only stats)
-_norm_stats_file = _os.path.join(_os.path.dirname(__file__), "trained_models", "norm_stats.json")
-if _os.path.exists(_norm_stats_file):
-    NORM_STATS = json.load(open(_norm_stats_file))
-else:
-    NORM_STATS = {"total_flow": 5238281033.0, "max_entropy": 14.5}
+# ═══════════════════════════════════════════════════════════════════════════
+# LIVE STREAM — one transaction generator used by BOTH REST and SSE paths
+# ═══════════════════════════════════════════════════════════════════════════
 
-
-def generate_txn_dict():
-    import random
+def generate_txn_dict() -> dict:
     import datetime
-    
-    # Pre-defined pools of accounts and devices to simulate real-world overlaps
-    accounts = [f"AC-{i}" for i in range(1001, 1030)] + ["AC-VICTIM", "AC-MERCHANT", "AC-ECOM", "AC-PG-GATEWAY"]
+    accounts = [f"AC-{i}" for i in range(1001, 1030)] + \
+               ["AC-VICTIM", "AC-MERCHANT", "AC-ECOM", "AC-PG-GATEWAY"]
     devices = [f"DEV-{i}" for i in range(50001, 50015)]
-    
-    # 20% chance of an anomalous transaction (large amount or mule-like)
+
     is_anomaly = random.random() < 0.20
-    
     sender = random.choice(accounts)
     receiver = random.choice([a for a in accounts if a != sender])
-    
+
     if is_anomaly:
         amount = round(random.uniform(50000, 250000), 2)
-        # Anomalies often share the same device or hit the merchant/mule pattern
-        device = random.choice(devices[:3]) # more collisions
+        device = random.choice(devices[:3])          # device collisions
     else:
         amount = round(random.uniform(100, 15000), 2)
         device = random.choice(devices)
-        
+
     utr = f"UTR{random.randint(100000000000, 999999999999)}"
     ts = datetime.datetime.utcnow().isoformat() + "Z"
-    
-    # Let's perform a lightweight live check to see what the simulated risk would be
-    # Build a mini features dict to calculate an inline risk score
-    # (So the frontend can show a Flink/XGBoost/GNN live risk evaluation)
-    from ml_models import get_fast_path, get_anomaly_detector
-    
-    mock_rolling = {
+
+    from ml_models import get_fast_path, get_anomaly_detector, calibrate_score
+    mock_features = {
         "out_degree": random.randint(1, 6) if is_anomaly else random.randint(1, 2),
         "in_degree": random.randint(1, 4) if is_anomaly else random.randint(1, 2),
-        "total_sent": amount if is_anomaly else amount * 0.1,   # RAW rupees — same as real window
+        "total_sent": amount if is_anomaly else amount * 0.1,
         "total_recv": amount,
-        "out_cp": random.randint(2, 5) if is_anomaly else 1,
-        "inc_cp": random.randint(1, 3) if is_anomaly else random.randint(1, 2),
-        "cp_entropy_raw": 1.5 if is_anomaly else 0.2,
+        "pass_through_rate": 0.85 if is_anomaly else 0.15,
+        "fan_out_ratio": 2.5 if is_anomaly else 0.5,
+        "counterparty_entropy": 1.5 if is_anomaly else 0.2,
+        "share_of_total_flow": 0.4 if is_anomaly else 0.05,
     }
-    mock_features = build_live_features(mock_rolling, NORM_STATS["total_flow"], NORM_STATS["max_entropy"])
-    
     fp = get_fast_path()
     ad = get_anomaly_detector()
-    
-    # predict takes a dict of {acct_id: features_dict}
     fp_prob = fp.predict({receiver: mock_features}).get(receiver, 0.0)
     ad_prob = ad.predict({receiver: mock_features}).get(receiver, 0.0)
-    
-    # Sigmoidal combination
     raw_score = fp_prob * 45 + ad_prob * 35 + (30 if is_anomaly else 5)
-    
-    from ml_models import calibrate_score
     calibrated_score = calibrate_score(raw_score)
-    
+
     return {
-        "utr": utr,
-        "amount": amount,
-        "timestamp": ts,
-        "sender_account": sender,
-        "receiver_account": receiver,
-        "device_id": device,
+        "utr": utr, "amount": amount, "timestamp": ts,
+        "sender_account": sender, "receiver_account": receiver, "device_id": device,
         "risk_evaluation": {
             "fast_path_score": fp_prob,
             "anomaly_score": ad_prob,
             "calibrated_risk_score": calibrated_score,
-            "anomaly_reason": "Suspicious rapid cash-out" if is_anomaly and calibrated_score > 60 else "Normal profile"
-        }
+            "anomaly_reason": "Suspicious rapid cash-out" if is_anomaly and calibrated_score > 60
+                              else "Normal profile",
+        },
     }
+
 
 @app.get("/api/stream/next")
 def stream_next():
-    """
-    Simulates a live incoming UPI transaction event on the Kafka topic (Gap 1).
-    Dynamically generates accounts, devices, amounts, and flags anomalies.
-    """
+    """REST fallback — same payload as the SSE stream."""
     return generate_txn_dict()
+
 
 @app.get("/api/stream/subscribe")
 async def stream_subscribe():
-    async def gen():
+    """SSE endpoint — this is what the frontend's EventSource needs."""
+    from fastapi.responses import StreamingResponse
+
+    async def event_gen():
+        yield "retry: 3000\n\n"                      # browser reconnect hint
         while True:
-            txn = generate_txn_dict()
-            yield f"data: {json.dumps(txn)}\n\n"
+            try:
+                yield f"data: {json.dumps(generate_txn_dict())}\n\n"
+            except Exception as e:
+                print(f"[stream] txn generation failed: {e}")
             await asyncio.sleep(1.5)
-    return StreamingResponse(gen(), media_type="text/event-stream")
+
+    return StreamingResponse(
+        event_gen(), media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no",
+                 "Connection": "keep-alive"},
+    )
