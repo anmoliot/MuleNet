@@ -8,10 +8,13 @@ from datetime import datetime
 from typing import Any, Dict
 
 from fastapi import FastAPI, HTTPException, Depends
+from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List
 from graph_builder import build_hetero_graph, real_inference, IntakeRequest, MODEL_VERSION, FUSION_WEIGHTS
 import networkx as nx
+import asyncio
+import json
 
 from agent_loop import MuleNetDetectionAgent, compute_demo_features
 from config import DEFAULT_MULE_RATIO, DEFAULT_SEED, DEFAULT_TEST_ACCOUNTS, DEFAULT_THRESHOLD, ALLOWED_ORIGINS
@@ -466,12 +469,7 @@ def retrain_models(authorization: Optional[str] = Header(None)):
     }
 
 
-@app.get("/api/stream/next")
-def stream_next():
-    """
-    Simulates a live incoming UPI transaction event on the Kafka topic (Gap 1).
-    Dynamically generates accounts, devices, amounts, and flags anomalies.
-    """
+def generate_txn_dict():
     import random
     import datetime
     
@@ -540,3 +538,20 @@ def stream_next():
             "anomaly_reason": "Suspicious rapid cash-out" if is_anomaly and calibrated_score > 60 else "Normal profile"
         }
     }
+
+@app.get("/api/stream/next")
+def stream_next():
+    """
+    Simulates a live incoming UPI transaction event on the Kafka topic (Gap 1).
+    Dynamically generates accounts, devices, amounts, and flags anomalies.
+    """
+    return generate_txn_dict()
+
+@app.get("/api/stream/subscribe")
+async def stream_subscribe():
+    async def gen():
+        while True:
+            txn = generate_txn_dict()
+            yield f"data: {json.dumps(txn)}\n\n"
+            await asyncio.sleep(1.5)
+    return StreamingResponse(gen(), media_type="text/event-stream")
