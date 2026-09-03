@@ -20,11 +20,12 @@ export default function WatchlistManager({ role }) {
     setLoading(true);
     try {
       const data = await api('/api/external/watchlist/all');
-      setWatchlist(data);
+      setWatchlist(Array.isArray(data) ? data : []);
       setError('');
     } catch (err) {
       console.error(err);
-      setError('Failed to load watchlist from backend API.');
+      setError('Failed to load watchlist from backend API. Operating in offline mode.');
+      setWatchlist([]);
     } finally {
       setLoading(false);
     }

@@ -34,10 +34,27 @@ export async function api(path, opts = {}) {
         avg_risk_score: 84
       };
     }
+    if (path.includes('/api/cases/CASE')) {
+      // Mock full case with graph data for Graph Explorer
+      return {
+        caseId: 'CASE-001',
+        complaintId: 'CMP-2023-A92',
+        mlResponse: JSON.stringify({
+          model_version: '1.2.0',
+          graph_stats: { nodes: 4, edges: 3 },
+          recovery_ranking: [
+            { account_id: 'AC-MERCHANT', composite_score: 95.2, confidence_band: 'HIGH', fast_path_score: 0.98, gnn_score: 0.92, topology_score: 85, external_uplift: 10, out_degree: 5, pass_through_rate: 0.9, total_sent: 150000, action_recommendation: 'FREEZE' }
+          ],
+          explainability: { 'AC-MERCHANT': { operational: 'High velocity pass-through identified by GNN.' } },
+          nodes: ['AC-MERCHANT', 'AC-MULE-1', 'AC-MULE-2', 'AC-VICTIM'],
+          edges: [['AC-VICTIM', 'AC-MERCHANT'], ['AC-MERCHANT', 'AC-MULE-1'], ['AC-MERCHANT', 'AC-MULE-2']]
+        })
+      };
+    }
     if (path.includes('/api/cases')) {
       return [
-        { id: 'CASE-001', title: 'High velocity payout', status: 'OPEN', riskScore: 89, timestamp: new Date().toISOString() },
-        { id: 'CASE-002', title: 'Suspicious device', status: 'INVESTIGATING', riskScore: 75, timestamp: new Date().toISOString() }
+        { caseId: 'CASE-001', complaintId: 'High velocity payout', status: 'OPEN', riskScore: 89, timestamp: new Date().toISOString() },
+        { caseId: 'CASE-002', complaintId: 'Suspicious device', status: 'INVESTIGATING', riskScore: 75, timestamp: new Date().toISOString() }
       ];
     }
     if (path.includes('/api/intake')) {

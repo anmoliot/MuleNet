@@ -488,7 +488,7 @@ body::before {
   color: var(--text-muted);
   width: 20px;
 }
-.rank-acct { font-family: var(--font-mono); font-size: 12px; font-weight: 600; flex: 1; }
+.rank-acct { font-family: var(--font-mono); font-size: 12px; font-weight: 600; flex: 1; color: var(--text-primary); }
 .risk-badge {
   font-size: 10px;
   font-weight: 700;
