@@ -10,7 +10,7 @@ import numpy as np
 import os
 import pickle
 import math
-from typing import Dict, List, Tuple, Any
+from typing import Dict, List, Tuple, Any, Optional
 from pathlib import Path
 
 # Helper to safely import shap; if not available, raise informative error when used.
@@ -37,6 +37,7 @@ MODEL_DIR.mkdir(exist_ok=True)
 FAST_PATH_MODEL_PATH = MODEL_DIR / "fast_path_model.pkl"
 FAST_PATH_SCALER_PATH = MODEL_DIR / "fast_path_scaler.pkl"
 GNN_WEIGHTS_PATH = MODEL_DIR / "gnn_weights.pkl"
+ISOLATION_FOREST_PATH = MODEL_DIR / "isolation_forest.pkl"
 
 # Feature order used by the fast-path model
 FEATURE_COLS = [
@@ -485,15 +486,24 @@ class GraphNeuralScorer:
 
         return X_agg
 
-    def predict(self, G, features: Dict[str, Dict]) -> Dict[str, float]:
+    def predict(self, G=None, features: Optional[Dict[str, Dict]] = None) -> Dict[str, float]:
         """
         Score accounts using trained GNN weights with real message-passing
         over the actual transaction graph.
         """
         import networkx as nx
 
+        if features is None and isinstance(G, dict):
+            features = G
+            G = None
+
         if not features:
             return {}
+
+        if G is None:
+            G = nx.DiGraph()
+            for a in features.keys():
+                G.add_node(f"account:{a}")
 
         # Compute graph-level centrality features
         try:
@@ -650,12 +660,26 @@ class IsolationForestAnomalyDetector:
     """
     def __init__(self):
         self.model = IsolationForest(n_estimators=100, contamination=0.1, random_state=42)
-        self._train()
+        if ISOLATION_FOREST_PATH.exists():
+            try:
+                with open(ISOLATION_FOREST_PATH, "rb") as f:
+                    self.model = pickle.load(f)
+                print("[AnomalyDetector] Loaded trained Isolation Forest from disk.")
+            except Exception as e:
+                print(f"[AnomalyDetector] Failed to load saved model ({e}), retraining...")
+                self._train()
+        else:
+            self._train()
 
     def _train(self):
         print("[AnomalyDetector] Training unsupervised Isolation Forest...")
         X, _ = _generate_training_data(n_samples=2000)
         self.model.fit(X)
+        try:
+            with open(ISOLATION_FOREST_PATH, "wb") as f:
+                pickle.dump(self.model, f)
+        except Exception:
+            pass
         print("[AnomalyDetector] Unsupervised training complete.")
 
     def predict(self, features: Dict[str, Dict]) -> Dict[str, float]:
@@ -689,6 +713,8 @@ class IsolationForestAnomalyDetector:
         else:
             X = X_base
         self.model.fit(X)
+        with open(ISOLATION_FOREST_PATH, "wb") as f:
+            pickle.dump(self.model, f)
         print("[AnomalyDetector] Isolation Forest retrained.")
 
 
@@ -739,7 +765,8 @@ def get_model_metadata() -> Dict[str, Any]:
             "type": "IsolationForest",
             "estimators": 100,
             "contamination": 0.1,
-            "trained": True,
+            "model_path": str(ISOLATION_FOREST_PATH),
+            "trained": ISOLATION_FOREST_PATH.exists(),
         }
     }
 
