@@ -55,26 +55,26 @@ MuleNet combines a distributed, event-driven streaming pipeline with a dual-path
 ```mermaid
 graph TD
     %% Entities
-    Sim[Transaction Ingestion Stream / Simulator]
-    Kafka[Kafka Broker (upi.transactions)]
-    Backend[Spring Boot Backend Engine]
-    ML[FastAPI ML Inference Engine]
-    Frontend[React Cyber-Fintech UI]
+    Sim["Transaction Ingestion Stream / Simulator"]
+    Kafka["Kafka Broker (upi.transactions)"]
+    Backend["Spring Boot Backend Engine"]
+    ML["FastAPI ML Inference Engine"]
+    Frontend["React Cyber-Fintech UI"]
     
     %% Databases & Security
-    DB_PG[(PostgreSQL - Audits/Cases)]
-    DB_REDIS[(Redis - Feature Cache & Celery)]
-    Keycloak[Keycloak OIDC SSO]
+    DB_PG[("PostgreSQL - Audits/Cases")]
+    DB_REDIS[("Redis - Feature Cache & Celery")]
+    Keycloak["Keycloak OIDC SSO"]
 
     %% Flow
-    Sim -->|Ingests UPI & IMPS Transactions| Kafka
-    Kafka -->|Consumes stream| Backend
-    Backend -->|Dispatches Subgraph Inference| ML
-    ML -->|Fast-Path XGBoost & Graph Neural Network| ML
-    ML -->|Risk Scores, Topology & Velocity| Backend
-    Backend -->|Autonomous Policy Engine (FREEZE / HOLD)| DB_PG
-    Backend <-->|JWT / Role Validation| Keycloak
-    Frontend <-->|Real-Time SSE Feed & REST APIs| Backend
+    Sim -->|"Ingests UPI & IMPS Transactions"| Kafka
+    Kafka -->|"Consumes stream"| Backend
+    Backend -->|"Dispatches Subgraph Inference"| ML
+    ML -->|"Fast-Path XGBoost & Graph Neural Network"| ML
+    ML -->|"Risk Scores, Topology & Velocity"| Backend
+    Backend -->|"Autonomous Policy Engine (FREEZE / HOLD)"| DB_PG
+    Backend <-->|"JWT / Role Validation"| Keycloak
+    Frontend <-->|"Real-Time SSE Feed & REST APIs"| Backend
 ```
 
 ### 🧠 Dual-Path AI Engine
