@@ -18,6 +18,9 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Collections;
 import java.util.Map;
 
@@ -54,7 +57,19 @@ public class KafkaConsumerService {
             String sender = (String) txnMap.get("sender_account");
             String receiver = (String) txnMap.get("receiver_account");
             double amount = Double.parseDouble(txnMap.get("amount").toString());
-            String timestamp = (String) txnMap.get("timestamp");
+            String timestampStr = (String) txnMap.get("timestamp");
+            LocalDateTime txTime = LocalDateTime.now();
+            if (timestampStr != null && !timestampStr.trim().isEmpty()) {
+                try {
+                    txTime = Instant.parse(timestampStr).atZone(ZoneId.systemDefault()).toLocalDateTime();
+                } catch (Exception ex) {
+                    try {
+                        txTime = LocalDateTime.parse(timestampStr.replace("Z", ""));
+                    } catch (Exception ignored) {
+                        txTime = LocalDateTime.now();
+                    }
+                }
+            }
             String deviceId = (String) txnMap.getOrDefault("device_id", "UNKNOWN");
 
             // Build Complaint and Transaction
@@ -69,7 +84,7 @@ public class KafkaConsumerService {
             transaction.setSenderAccount(sender);
             transaction.setReceiverAccount(receiver);
             transaction.setAmount(amount);
-            transaction.setTimestamp(timestamp);
+            transaction.setTimestamp(txTime);
             transaction.setDeviceId(deviceId);
 
             IntakeRequest intakeRequest = new IntakeRequest(complaint, Collections.singletonList(transaction));
