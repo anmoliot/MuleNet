@@ -5,22 +5,43 @@ import 'reactflow/dist/style.css';
 import {
   api, RiskBadge, ActionBadge, buildFlowGraph, HeatBar
 } from './Common';
+import { Button, Alert } from '@mui/material';
 
 export default function GraphExplorer() {
   const [cases, setCases] = useState([]);
   const [selectedCase, setSelectedCase] = useState(null);
   const [ml, setMl] = useState(null);
   const [selectedNode, setSelectedNode] = useState(null);
+  const [emptyError, setEmptyError] = useState('');
+  const [loadingCase, setLoadingCase] = useState(false);
+  const [showLegend, setShowLegend] = useState(false);
 
   useEffect(() => {
-    api('/api/cases').then(setCases).catch(console.error);
+    api('/api/cases')
+      .then(list => {
+        const arr = Array.isArray(list) ? list : [];
+        setCases(arr);
+        if (!arr || arr.length === 0) {
+          setEmptyError('No cases yet');
+        } else {
+          setEmptyError('');
+          loadCase(arr[0].caseId);
+        }
+      })
+      .catch(e => {
+        console.error(e);
+        setEmptyError('Backend unreachable or no cases seeded.');
+      });
   }, []);
 
   const loadCase = async (caseId) => {
     try {
       const data = await api(`/api/cases/${caseId}`);
       setSelectedCase(data);
-      if (data.mlResponse) setMl(JSON.parse(data.mlResponse));
+      if (data && data.mlResponse) {
+        const parsed = typeof data.mlResponse === 'string' ? JSON.parse(data.mlResponse) : data.mlResponse;
+        setMl(parsed);
+      }
       setSelectedNode(null);
     } catch (e) {
       console.error(e);
@@ -52,6 +73,42 @@ export default function GraphExplorer() {
             <option value="">Select a case…</option>
             {cases.map(c => <option key={c.caseId} value={c.caseId}>{c.caseId} — {c.complaintId}</option>)}
           </select>
+          {emptyError && (
+            <Button
+              size="small"
+              variant="contained"
+              color="warning"
+              disabled={loadingCase}
+              onClick={async () => {
+                setLoadingCase(true);
+                try {
+                  await api('/api/demo/seed', { method: 'POST' });
+                  const list = await api('/api/cases');
+                  const arr = Array.isArray(list) ? list : [];
+                  setCases(arr);
+                  setEmptyError('');
+                  if (arr.length > 0) {
+                    loadCase(arr[0].caseId);
+                  }
+                } catch (e) {
+                  console.error(e);
+                  // Direct fallback for instant demo
+                  const fallback = await api('/api/cases/CASE-001');
+                  if (fallback) {
+                    setSelectedCase(fallback);
+                    if (fallback.mlResponse) {
+                      setMl(typeof fallback.mlResponse === 'string' ? JSON.parse(fallback.mlResponse) : fallback.mlResponse);
+                    }
+                    setEmptyError('');
+                  }
+                } finally {
+                  setLoadingCase(false);
+                }
+              }}
+            >
+              {loadingCase ? 'Seeding…' : 'Generate demo case'}
+            </Button>
+          )}
           {ml?.model_version && <div className="stat-chip">Model v{ml.model_version}</div>}
           {ml?.graph_stats && (
             <>
@@ -60,6 +117,25 @@ export default function GraphExplorer() {
             </>
           )}
         </div>
+
+        {/* Total rupees moved chip + risk legend toggle */}
+        {ml?.suspicious_edges && (
+          <div style={{ padding: '8px 20px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', gap: 16, alignItems: 'center', fontSize: 12, background: 'rgba(15, 23, 42, 0.6)' }}>
+            <span style={{ fontWeight: 700 }}>₹ moved: {ml.suspicious_edges.reduce((s, e) => s + (e.amount || 0), 0).toLocaleString()}</span>
+            <button onClick={() => setShowLegend(v => !v)} style={{ background: 'none', border: 'none', color: 'var(--accent-cyan)', cursor: 'pointer', textDecoration: 'underline' }}>
+              {showLegend ? 'Hide legend' : 'Risk legend'}
+            </button>
+            {showLegend && (
+              <span style={{ display: 'inline-flex', gap: 10, alignItems: 'center' }}>
+                <span style={{ color: '#ef4444' }}>■ high</span>
+                <span style={{ color: '#f97316' }}>■ medium/mule</span>
+                <span style={{ color: '#3b82f6' }}>■ low</span>
+                <span style={{ color: '#06b6d4' }}>■ device link</span>
+              </span>
+            )}
+          </div>
+        )}
+
         {/* Graph */}
         <div style={{ flex: 1 }}>
           {nodes.length > 0 ? (
@@ -71,7 +147,7 @@ export default function GraphExplorer() {
           ) : (
             <div className="graph-empty" style={{ height: '100%' }}>
               <div className="empty-icon">🕸️</div>
-              <span style={{ fontSize: '13px' }}>Select a case to explore its transaction graph</span>
+              <span style={{ fontSize: '13px' }}>{emptyError || 'Select a case to explore its transaction graph'}</span>
             </div>
           )}
         </div>
