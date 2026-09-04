@@ -11,6 +11,43 @@
 
 ---
 
+## 📸 Platform Interface Preview
+
+### 1. Unified Intelligence Dashboard
+Real-time operational command center providing live risk posture, alert severity distribution, active layering investigations, and immediate freeze telemetry.
+
+![Intelligence Dashboard](docs/screenshots/dashboard.png)
+
+---
+
+### 2. Mule Flow Explorer & Telemetry Bar
+Interactive canvas visualizing transaction paths with glowing money badges in Indian Rupees (`₹`), compact Lakh notation (`1.18 L`), hop velocity metrics, and dispersal threshold filtering (`> ₹50k`).
+
+![Mule Flow Explorer](docs/screenshots/graph_explorer.png)
+
+---
+
+### 3. Account Cash Flow Dynamics & Direct Hop Ledger
+Deep-dive account dossier displaying inflow vs. outflow cards, pass-through laundering velocity gauge (`% funds drained immediately`), and individual transaction ledgers.
+
+![Cash Flow Dynamics Dossier](docs/screenshots/node_dossier.png)
+
+---
+
+### 4. Real-Time Ingestion Stream Monitor
+High-throughput transaction event monitor powered by Server-Sent Events (SSE) with millisecond-latency AI scoring, dynamic policy evaluation, and manual override controls.
+
+![Real-Time Stream Monitor](docs/screenshots/stream_monitor.png)
+
+---
+
+### 5. External Threat Watchlist (I4C / NCRP)
+Direct integration with the Indian Cybercrime Coordination Centre (I4C), NCRP suspect registries, and blacklisted device fingerprints for real-time risk score uplift.
+
+![Watchlist Registry](docs/screenshots/watchlist.png)
+
+---
+
 ## 🏗️ Architecture Overview
 
 MuleNet combines a distributed, event-driven streaming pipeline with a dual-path Machine Learning inference engine:
@@ -48,16 +85,6 @@ graph TD
 
 ---
 
-## ⚡ Core Features
-
-- **Mule Flow Explorer**: Interactive ReactFlow canvas visualizing money dispersal pathways with custom glowing HTML edge badges showing transfer amounts in Indian Rupees (`₹`), compact Lakh chips (`1.18 L`), and hop velocities.
-- **Cash Flow Dynamics & Dossier**: Inflow vs. Outflow breakdown cards, real-time pass-through laundering velocity gauge (`% funds drained immediately`), and direct hop ledger.
-- **Real-Time Stream Monitor**: Server-Sent Events (SSE) live feed delivering transaction events with instant ML scoring, risk badges, and auto-freeze controls.
-- **External Watchlist Registry**: Real-time integration with I4C (Indian Cybercrime Coordination Centre), NCRP suspect registries, and blacklisted device fingerprints.
-- **Cyber-Fintech Dark UI**: Built with accessible contrast, glassmorphism, animated glowing brand identity, and role-based access control (Supervisors, Investigators, Fraud Analysts).
-
----
-
 ## ⚙️ Tech Stack
 
 | Domain | Technologies |
@@ -72,33 +99,92 @@ graph TD
 
 ---
 
-## 🚀 Quick Start Guide
+## 💻 How to Run on Local Server
 
-### Prerequisites
-- [Docker & Docker Compose](https://www.docker.com/) (Recommended: 8 GB RAM allocated to Docker).
-- *(Optional for local development)*: JDK 17+, Python 3.10+, Node.js 18+.
+You can run MuleNet locally either **as standalone native services** (fastest for development) or **via Docker Compose** (full stack containerization).
 
-### 1. Environment Configuration
+### Option A: Running Standalone on Local Server (Without Docker)
+
+#### Prerequisites
+- **Python 3.10+**
+- **Java 17+ (JDK)** & Maven
+- **Node.js 18+** & npm
+- *(Optional)* PostgreSQL running locally on port `5432`
+
+#### 1. Start the Machine Learning Service (FastAPI)
+Open a terminal:
+```bash
+cd ml_service
+
+# Install Python requirements
+pip install -r requirements.txt
+
+# Launch FastAPI on port 8000
+python -m uvicorn main:app --host 127.0.0.1 --port 8000 --reload
+```
+*ML service will be live at: [http://127.0.0.1:8000](http://127.0.0.1:8000) (Swagger docs at `/docs`)*
+
+#### 2. Start the Backend Service (Spring Boot)
+Open a second terminal:
+```bash
+cd backend
+
+# Run with Maven wrapper
+./mvnw spring-boot:run
+```
+*(On Windows cmd/powershell, run `mvnw.cmd spring-boot:run`)*  
+*Backend will be live at: [http://localhost:8080](http://localhost:8080)*
+
+#### 3. Start the Frontend Dashboard (React + Vite)
+Open a third terminal:
+```bash
+cd frontend
+
+# Install UI dependencies
+npm install
+
+# Launch Vite development server
+npm run dev
+```
+*Frontend will be live at: **[http://localhost:5173](http://localhost:5173)** (or `http://127.0.0.1:5173`)*
+
+#### 4. Instant Demo Seeding
+To populate realistic multi-hop fraud cases and watchlists instantly:
+- In the browser, open **Graph Explorer** and click **"Generate demo case"**, or
+- Run via terminal:
+```bash
+curl -X POST http://localhost:8080/api/demo/seed
+```
+
+---
+
+### Option B: Running with Docker Compose (All Services)
+
+#### Prerequisites
+- [Docker Desktop](https://www.docker.com/) installed and running (allocate at least 8 GB RAM).
+
+#### 1. Configure Environment
 ```bash
 cp .env.example .env
 ```
-*(Default test credentials are provided in `.env` for immediate local verification).*
 
-### 2. Start Full Stack with Docker
-Launch the unified stack in detached mode:
+#### 2. Start All Services
 ```bash
 docker compose up -d
 ```
-*Or on Windows, simply double-click:* **`run_all.bat`**
+*Or on Windows, simply double-click **`run_all.bat`**.*
 
-### 3. Access the Services
-Once containers initialize:
-- **Frontend Dashboard**: [http://localhost:3000](http://localhost:3000)
-  - **Username**: `investigator1`
-  - **Password**: `password`
-- **Backend API & Swagger**: [http://localhost:8080/api/health](http://localhost:8080/api/health)
+#### 3. Access the System
+- **Frontend UI**: [http://localhost:3000](http://localhost:3000)
+  - **Login**: `investigator1` / **Password**: `password`
+- **Backend API**: [http://localhost:8080/api/health](http://localhost:8080/api/health)
 - **ML Engine Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
 - **Keycloak Admin**: [http://localhost:8081](http://localhost:8081)
+
+To stop the containers:
+```bash
+docker compose down
+```
 
 ---
 
