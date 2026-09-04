@@ -13,6 +13,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import jakarta.annotation.PostConstruct;
+import com.mulenet.api.model.CaseComment;
+import com.mulenet.api.repository.CaseCommentRepository;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -42,6 +44,9 @@ public class PolicyEngine {
 
     @Autowired
     private PolicyConfigRepository configRepository;
+
+    @Autowired
+    private CaseCommentRepository caseCommentRepository;
 
     @PostConstruct
     public void init() {
@@ -195,6 +200,11 @@ public class PolicyEngine {
                 case FREEZE_IMMEDIATE:
                     c.setStatus(Case.CaseStatus.FROZEN);
                     action.setRiskScoreAtAction(c.getRiskScore());
+                    // Auto-append diary entry for freeze action
+                    caseCommentRepository.save(new CaseComment(caseId, performedBy,
+                        "[FREEZE] Case frozen. Risk score at action: " +
+                        String.format("%.2f", c.getRiskScore()) +
+                        ". Recomputed risk applied. Account: " + accountId));
                     break;
                 case ESCALATE:
                     c.setStatus(Case.CaseStatus.ESCALATED);

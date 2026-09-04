@@ -1,0 +1,14 @@
+{
+  "feature_count": 8,
+  "feature_names": [
+    "out_degree",
+    "in_degree",
+    "log_total_sent",
+    "log_total_recv",
+    "receive_send_ratio",
+    "counterparty_ratio",
+    "entropy_normalized",
+    "flow_normalized"
+  ],
+  "dtype": "float64"
+}

@@ -26,7 +26,7 @@
 
   --text-primary: #f1f5f9;
   --text-secondary: #94a3b8;
-  --text-muted: #4b6280;
+  --text-muted: #8da2bf;
   --text-accent: #7eb3ff;
 
   --font-sans: 'Inter', system-ui, sans-serif;
@@ -51,6 +51,69 @@ html, body, #root {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+}
+
+/* Base typography defaults adhering to MuleNet dark theme */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--text-primary);
+}
+
+p, span, label {
+  color: inherit;
+}
+
+table {
+  color: var(--text-primary);
+}
+
+th {
+  color: var(--text-secondary);
+}
+
+td {
+  color: var(--text-primary);
+}
+
+input, select, textarea {
+  color: var(--text-primary);
+}
+
+/* Material-UI text contrast guarantees */
+.MuiTypography-root {
+  color: var(--text-primary);
+}
+.MuiTypography-colorTextSecondary,
+.MuiTypography-secondary {
+  color: var(--text-secondary) !important;
+}
+.MuiInputBase-root {
+  color: var(--text-primary) !important;
+}
+.MuiInputBase-input {
+  color: var(--text-primary) !important;
+}
+.MuiFormLabel-root {
+  color: var(--text-secondary) !important;
+}
+.MuiSelect-select {
+  color: var(--text-primary) !important;
+}
+.MuiMenuItem-root {
+  color: var(--text-primary) !important;
+}
+.MuiTableCell-root {
+  color: var(--text-primary) !important;
+}
+.MuiTableCell-head {
+  color: var(--text-secondary) !important;
+}
+.MuiPaper-root {
+  color: var(--text-primary);
+}
+.MuiCard-root {
+  color: var(--text-primary);
 }
 
 /* Noise texture overlay disabled for clean MUI look */
@@ -776,3 +839,454 @@ tbody tr {
 tbody tr:hover {
   background: rgba(91, 141, 239, 0.04);
 }
+
+/* ═══════════════════════════════════════════════════════
+   ENHANCED UI ANIMATIONS — MuleNet v2 Design System
+   ═══════════════════════════════════════════════════════ */
+
+/* ── Floating entry ── */
+@keyframes floatUp {
+  0%   { opacity: 0; transform: translateY(24px) scale(0.97); }
+  100% { opacity: 1; transform: translateY(0)   scale(1); }
+}
+.float-up { animation: floatUp 0.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.float-up-delay-1 { animation-delay: 0.08s; }
+.float-up-delay-2 { animation-delay: 0.16s; }
+.float-up-delay-3 { animation-delay: 0.24s; }
+
+/* ── Glow pulse ── */
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(91, 141, 239, 0); }
+  50%       { box-shadow: 0 0 18px 4px rgba(91, 141, 239, 0.22); }
+}
+.glow-pulse { animation: glowPulse 2.5s ease-in-out infinite; }
+
+/* ── Shimmer skeleton ── */
+@keyframes skeletonShimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg,
+    rgba(15,22,38,0.6) 25%,
+    rgba(91,141,239,0.08) 50%,
+    rgba(15,22,38,0.6) 75%
+  );
+  background-size: 800px 100%;
+  animation: skeletonShimmer 1.6s infinite linear;
+  border-radius: var(--radius-sm);
+}
+
+/* ── Button shine sweep ── */
+@keyframes shineSweep {
+  0%   { left: -100%; }
+  60%  { left: 120%; }
+  100% { left: 120%; }
+}
+.btn-shine { position: relative; overflow: hidden; }
+.btn-shine::after {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 60%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+  transform: skewX(-20deg);
+  animation: shineSweep 3s ease-in-out infinite;
+}
+
+/* ── Count up ── */
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.count-animate { animation: countUp 0.4s ease-out both; }
+
+/* ── Badge ping ── */
+@keyframes ping {
+  75%, 100% { transform: scale(2); opacity: 0; }
+}
+.badge-ping { position: relative; }
+.badge-ping::before {
+  content: '';
+  position: absolute; inset: 0;
+  border-radius: inherit;
+  background: currentColor;
+  animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+  opacity: 0.4;
+}
+
+/* ── Gradient text ── */
+.gradient-text {
+  background: linear-gradient(90deg, #fff 0%, #5b8def 50%, #a855f7 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Glassmorphism card ── */
+.card-glass {
+  background: rgba(15, 22, 38, 0.55) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(91, 141, 239, 0.14) !important;
+}
+
+/* ── Hover lift ── */
+.hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4), 0 0 24px rgba(91, 141, 239, 0.08);
+}
+
+/* ── Sidebar drawer accent line ── */
+.MuiDrawer-paper::after {
+  content: '';
+  position: absolute;
+  right: 0; top: 15%; bottom: 15%;
+  width: 1px;
+  background: linear-gradient(to bottom,
+    transparent,
+    rgba(91, 141, 239, 0.18) 30%,
+    rgba(168, 85, 247, 0.12) 70%,
+    transparent
+  );
+  pointer-events: none;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: var(--bg-base); }
+::-webkit-scrollbar-thumb { background: rgba(91, 141, 239, 0.22); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(91, 141, 239, 0.45); }
+
+/* ── Graph Explorer Flow Telemetry Bar ── */
+.flow-telemetry-bar {
+  padding: 10px 20px;
+  background: linear-gradient(180deg, rgba(13, 20, 36, 0.95) 0%, rgba(9, 14, 26, 0.90) 100%);
+  border-bottom: 1px solid rgba(91, 141, 239, 0.15);
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 10;
+}
+
+.hero-amount-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.14) 0%, rgba(6, 182, 212, 0.08) 100%);
+  border: 1.5px solid rgba(52, 211, 153, 0.45);
+  border-radius: 10px;
+  padding: 6px 14px;
+  box-shadow: 0 0 24px rgba(16, 185, 129, 0.15);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.hero-amount-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 30px rgba(16, 185, 129, 0.25);
+}
+
+.hero-icon-wrap {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: rgba(16, 185, 129, 0.22);
+  border: 1px solid rgba(52, 211, 153, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #34d399;
+  flex-shrink: 0;
+}
+
+.hero-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.hero-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  color: #6ee7b7;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+.hero-value-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hero-amount {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: 0.3px;
+  text-shadow: 0 0 12px rgba(52, 211, 153, 0.5);
+}
+
+.hero-compact-pill {
+  background: rgba(16, 185, 129, 0.25);
+  color: #a7f3d0;
+  border: 1px solid rgba(52, 211, 153, 0.5);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 4px;
+}
+
+.flow-metric-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 10px;
+  border-left: 1px solid rgba(91, 141, 239, 0.15);
+}
+
+.flow-metric-item .metric-label {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+.flow-metric-item .metric-val {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.flow-metric-item .text-amber { color: #fbbf24; }
+.flow-metric-item .text-blue { color: #60a5fa; }
+.flow-metric-item .text-green { color: #34d399; }
+.flow-metric-item .text-red { color: #f87171; }
+
+.flow-legend-pills {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 11px;
+  flex-wrap: wrap;
+}
+
+.legend-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.legend-chip .dot {
+  font-size: 13px;
+  line-height: 1;
+}
+
+.legend-chip.legend-critical .dot { color: #ef4444; }
+.legend-chip.legend-mule .dot { color: #f97316; }
+.legend-chip.legend-normal .dot { color: #38bdf8; }
+.legend-chip.legend-device .dot { color: #06b6d4; }
+
+/* ── Graph Explorer Custom Edge Badges ── */
+.flow-edge-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  user-select: none;
+  background: rgba(6, 11, 25, 0.94);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.7);
+}
+
+.flow-edge-badge:hover,
+.flow-edge-badge.is-selected {
+  transform: scale(1.1);
+  z-index: 50;
+}
+
+.flow-edge-badge.money-badge.risk-high {
+  border: 1.5px solid #ef4444;
+  color: #fee2e2;
+  box-shadow: 0 0 16px rgba(239, 68, 68, 0.5), 0 4px 12px rgba(0, 0, 0, 0.8);
+}
+.flow-edge-badge.money-badge.risk-high .currency-symbol {
+  color: #f87171;
+  font-weight: 800;
+}
+.flow-edge-badge.money-badge.risk-high .compact-chip {
+  background: rgba(239, 68, 68, 0.25);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.5);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 9px;
+}
+
+.flow-edge-badge.money-badge.risk-medium {
+  border: 1.5px solid #f97316;
+  color: #ffedd5;
+  box-shadow: 0 0 14px rgba(249, 115, 22, 0.45), 0 4px 12px rgba(0, 0, 0, 0.8);
+}
+.flow-edge-badge.money-badge.risk-medium .currency-symbol {
+  color: #fb923c;
+  font-weight: 800;
+}
+.flow-edge-badge.money-badge.risk-medium .compact-chip {
+  background: rgba(249, 115, 22, 0.25);
+  color: #fdba74;
+  border: 1px solid rgba(249, 115, 22, 0.5);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 9px;
+}
+
+.flow-edge-badge.money-badge.risk-low {
+  border: 1.5px solid #38bdf8;
+  color: #e0f2fe;
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.4), 0 4px 12px rgba(0, 0, 0, 0.8);
+}
+.flow-edge-badge.money-badge.risk-low .currency-symbol {
+  color: #38bdf8;
+  font-weight: 800;
+}
+.flow-edge-badge.money-badge.risk-low .compact-chip {
+  background: rgba(56, 189, 248, 0.22);
+  color: #7dd3fc;
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 9px;
+}
+
+.flow-edge-badge.device-badge {
+  border: 1.5px solid #06b6d4;
+  color: #cffafe;
+  font-size: 10px;
+}
+.flow-edge-badge.case-badge {
+  border: 1.5px solid #eab308;
+  color: #fef08a;
+  font-size: 10px;
+}
+
+/* ── Node Cash Flow Dynamics Sidebar ── */
+.flow-card {
+  background: rgba(15, 23, 42, 0.7);
+  border-radius: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--border-subtle);
+  transition: border-color 0.2s ease;
+}
+.flow-card.flow-card-in {
+  border-color: rgba(34, 197, 94, 0.35);
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.08) 0%, rgba(15, 23, 42, 0.6) 100%);
+}
+.flow-card.flow-card-out {
+  border-color: rgba(249, 115, 22, 0.35);
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.08) 0%, rgba(15, 23, 42, 0.6) 100%);
+}
+.flow-card-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+.flow-icon.in { color: #22c55e; }
+.flow-icon.out { color: #f97316; }
+.flow-card-val {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 800;
+}
+.flow-card-val.in { color: #4ade80; }
+.flow-card-val.out { color: #fb923c; }
+
+.passthrough-gauge-wrap {
+  background: rgba(15, 23, 42, 0.55);
+  border-radius: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--border-subtle);
+}
+.passthrough-track {
+  width: 100%;
+  height: 6px;
+  background: rgba(30, 41, 59, 0.8);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.passthrough-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.5s ease;
+}
+
+.hop-ledger-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 7px 10px;
+  border-radius: 6px;
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid var(--border-subtle);
+  font-size: 11px;
+  transition: background 0.15s ease;
+}
+.hop-ledger-item:hover {
+  background: rgba(22, 33, 58, 0.8);
+}
+.hop-ledger-item.hop-in {
+  border-left: 3px solid #22c55e;
+}
+.hop-ledger-item.hop-out {
+  border-left: 3px solid #f97316;
+}
+.hop-amt {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 11px;
+}
+.hop-amt.amt-in { color: #4ade80; }
+.hop-amt.amt-out { color: #fb923c; }
+
+/* ── Edge Inspector Card ── */
+.edge-inspector-amount-box {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(6, 182, 212, 0.08) 100%);
+  border: 1.5px solid rgba(52, 211, 153, 0.4);
+  border-radius: 10px;
+  padding: 14px;
+  text-align: center;
+  margin-bottom: 16px;
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.12);
+}
+.edge-inspector-amount-val {
+  font-family: var(--font-mono);
+  font-size: 26px;
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+  text-shadow: 0 0 12px rgba(52, 211, 153, 0.5);
+}
+
