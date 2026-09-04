@@ -161,7 +161,7 @@ export default function Dashboard() {
           <MenuItem value="LOW">Low</MenuItem>
         </Select>
         <Box sx={{ display: 'flex', alignItems: 'center', minWidth: 200, px: 2 }}>
-          <Typography variant="body2" sx={{ mr: 2, whiteSpace: 'nowrap' }}>Min Risk: {minRisk}%</Typography>
+          <Typography variant="body2" color="text.primary" sx={{ mr: 2, whiteSpace: 'nowrap' }}>Min Risk: {minRisk}%</Typography>
           <Slider
             value={minRisk}
             onChange={(e, val) => setMinRisk(val)}
@@ -177,7 +177,7 @@ export default function Dashboard() {
         <Grid item xs={12} md={4}>
           <Card elevation={3} sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
             <CardContent>
-              <Typography variant="h6" gutterBottom display="flex" alignItems="center" gap={1}>
+              <Typography variant="h6" gutterBottom display="flex" alignItems="center" gap={1} color="text.primary">
                 <Zap size={20} /> Quick Analysis
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
@@ -202,11 +202,11 @@ export default function Dashboard() {
           <Card elevation={3} sx={{ height: '100%' }}>
             <CardContent>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                <Typography variant="h6" display="flex" alignItems="center" gap={1}>
+                <Typography variant="h6" display="flex" alignItems="center" gap={1} color="text.primary">
                   <FileText size={20} /> Case Queue
                 </Typography>
                 <Box display="flex" alignItems="center" gap={2}>
-                  <Typography variant="body2" fontWeight="bold">{cases.length} total</Typography>
+                  <Typography variant="body2" fontWeight="bold" color="text.primary">{cases.length} total</Typography>
                   {canExport && (
                     <Button variant="outlined" size="small" startIcon={<Download size={16} />} onClick={handleExportCSV}>
                       Export CSV
@@ -231,13 +231,15 @@ export default function Dashboard() {
                         alignItems: 'center', 
                         justifyContent: 'space-between', 
                         cursor: 'pointer',
-                        '&:hover': { bgcolor: 'action.hover' }
+                        bgcolor: 'rgba(15, 22, 38, 0.6)',
+                        border: '1px solid rgba(91, 141, 239, 0.12)',
+                        '&:hover': { bgcolor: 'rgba(91, 141, 239, 0.08)', borderColor: 'rgba(91, 141, 239, 0.25)' }
                       }}
                       onClick={() => navigate(`/cases/${c.caseId || c.id}`)}
                     >
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                         <Typography variant="body2" color="text.secondary">#{i + 1}</Typography>
-                        <Typography variant="body1" fontWeight="bold">{c.caseId || c.id}</Typography>
+                        <Typography variant="body1" fontWeight="bold" color="text.primary">{c.caseId || c.id}</Typography>
                         <Typography variant="body2" color="text.secondary">{c.complaintId || c.title}</Typography>
                       </Box>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -245,7 +247,7 @@ export default function Dashboard() {
                         <Typography variant="body1" fontWeight="bold" color="error.main">
                           {c.riskScore?.toFixed(1)}
                         </Typography>
-                        <ChevronRight size={20} color="action" />
+                        <ChevronRight size={20} color="#94a3b8" />
                       </Box>
                     </Paper>
                   ))}

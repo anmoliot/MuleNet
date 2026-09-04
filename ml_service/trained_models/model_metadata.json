@@ -1,0 +1,25 @@
+{
+  "model": "XGBoost",
+  "model_type": "account_level_mule_detection",
+  "dataset": "PaySim",
+  "input_features": 8,
+  "features": [
+    "out_degree",
+    "in_degree",
+    "log_total_sent",
+    "log_total_recv",
+    "receive_send_ratio",
+    "counterparty_ratio",
+    "entropy_normalized",
+    "flow_normalized"
+  ],
+  "random_state": 42,
+  "train_accounts": 3094654,
+  "test_accounts": 251188,
+  "train_mule_accounts": 15336,
+  "test_mule_accounts": 1051,
+  "roc_auc": 0.7567,
+  "pr_auc": 0.0407,
+  "best_threshold": 0.9,
+  "trained_at": "2026-09-04T13:03:35.759963+00:00"
+}

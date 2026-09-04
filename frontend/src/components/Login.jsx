@@ -53,7 +53,7 @@ export default function Login({ onLoginSuccess }) {
   ];
   return (
     <Container component="main" maxWidth="xs" sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', bgcolor: 'background.default' }}>
-      <Card elevation={6} sx={{ p: 4, width: '100%', borderRadius: 3 }}>
+      <Card elevation={6} sx={{ p: 4, width: '100%', borderRadius: 3, border: '1px solid rgba(91, 141, 239, 0.15)', bgcolor: 'background.paper' }}>
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 3 }}>
           <Avatar sx={{ m: 1, bgcolor: 'primary.main', width: 56, height: 56 }}>
             <SecurityIcon fontSize="large" />

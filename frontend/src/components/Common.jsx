@@ -1,4 +1,112 @@
 import React from 'react';
+import { BaseEdge, EdgeLabelRenderer, getBezierPath } from 'reactflow';
+
+export function formatINR(val) {
+  const num = Number(val || 0);
+  return `₹${num.toLocaleString('en-IN')}`;
+}
+
+export function formatINRCompact(val) {
+  const num = Number(val || 0);
+  if (num >= 10000000) {
+    return `₹${(num / 10000000).toFixed(2)} Cr`;
+  }
+  if (num >= 100000) {
+    return `₹${(num / 100000).toFixed(2)} L`;
+  }
+  if (num >= 1000) {
+    return `₹${(num / 1000).toFixed(0)} K`;
+  }
+  return `₹${num}`;
+}
+
+export function MoneyFlowEdge({
+  id,
+  sourceX,
+  sourceY,
+  targetX,
+  targetY,
+  sourcePosition,
+  targetPosition,
+  style = {},
+  markerEnd,
+  data = {},
+  selected,
+}) {
+  const [edgePath, labelX, labelY] = getBezierPath({
+    sourceX,
+    sourceY,
+    sourcePosition,
+    targetX,
+    targetY,
+    targetPosition,
+  });
+
+  const amount = Number(data.amount || 0);
+  const isDevice = data.isDeviceLink;
+  const isCase = data.isCaseLink;
+  const prob = data.prob || 0;
+  const strokeColor = style.stroke || (prob >= 0.6 ? '#ef4444' : prob >= 0.3 ? '#f97316' : '#38bdf8');
+
+  let compact = '';
+  if (amount >= 10000000) {
+    compact = `${(amount / 10000000).toFixed(2)} Cr`;
+  } else if (amount >= 100000) {
+    compact = `${(amount / 100000).toFixed(2)} L`;
+  } else if (amount >= 1000) {
+    compact = `${(amount / 1000).toFixed(0)} K`;
+  }
+
+  return (
+    <>
+      <BaseEdge
+        id={id}
+        path={edgePath}
+        markerEnd={markerEnd}
+        style={{
+          ...style,
+          stroke: strokeColor,
+          strokeWidth: selected ? 3.5 : (style.strokeWidth || 2.4),
+          filter: selected ? `drop-shadow(0 0 8px ${strokeColor})` : undefined,
+        }}
+      />
+      <EdgeLabelRenderer>
+        <div
+          style={{
+            position: 'absolute',
+            transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
+            pointerEvents: 'all',
+            cursor: 'pointer',
+          }}
+          className="nodrag nopan"
+        >
+          {isDevice ? (
+            <div className="flow-edge-badge device-badge">
+              <span className="badge-icon">📱</span>
+              <span className="badge-text">Device Link</span>
+            </div>
+          ) : isCase ? (
+            <div className="flow-edge-badge case-badge">
+              <span className="badge-icon">🔗</span>
+              <span className="badge-text">Case Link</span>
+            </div>
+          ) : (
+            <div
+              className={`flow-edge-badge money-badge ${
+                prob >= 0.6 ? 'risk-high' : prob >= 0.3 ? 'risk-medium' : 'risk-low'
+              } ${selected ? 'is-selected' : ''}`}
+              title={`Dispersal Hop: ₹${amount.toLocaleString('en-IN')} (${data.from || 'Origin'} → ${data.to || 'Target'})`}
+            >
+              <span className="currency-symbol">₹</span>
+              <span className="amount-formatted">{amount.toLocaleString('en-IN')}</span>
+              {compact && <span className="compact-chip">{compact}</span>}
+            </div>
+          )}
+        </div>
+      </EdgeLabelRenderer>
+    </>
+  );
+}
 
 export const API = import.meta.env?.VITE_BACKEND_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:8080' : `http://${window.location.hostname}:8080`);
 export const ML_API = import.meta.env?.VITE_ML_SERVICE_URL || (window.location.hostname === 'localhost' ? 'http://localhost:8000' : `http://${window.location.hostname}:8000`);
@@ -306,29 +414,53 @@ export function buildFlowGraph(mlData) {
     
     if (isDeviceLink) {
       strokeColor = '#06b6d4';
-      label = 'uses device';
+      label = '📱 Device Linked';
       animated = true;
     } else if (isCaseLink) {
       strokeColor = '#eab308';
-      label = 'linked case';
+      label = '🔗 Case Linked';
       animated = true;
     } else {
       strokeColor = prob >= 0.6 ? '#ef4444' : prob >= 0.3 ? '#f97316' : '#3b82f6';
       animated = prob > 0.4;
-      label = `₹${edge.amount?.toLocaleString()}`;
+      const amt = Number(edge.amount || 0);
+      label = `₹${amt.toLocaleString('en-IN')}`;
     }
 
-    // ReactFlow expects edge configurations
-    // Adding ReactFlow dynamic markers
+    // ReactFlow edge configurations with custom HTML amount badges and fallback
     newEdges.push({
       id: `e-${edge.from}-${edge.to}-${i}`,
       source: edge.from,
       target: edge.to,
+      type: 'moneyFlow',
+      data: {
+        from: edge.from,
+        to: edge.to,
+        amount: edge.amount,
+        prob,
+        isDeviceLink,
+        isCaseLink,
+        edgeType: edge.edge_type,
+        strokeColor,
+      },
       label: label,
       animated: animated,
-      style: { stroke: strokeColor, strokeWidth: isDeviceLink ? 1.5 : 2.5 },
-      labelStyle: { fill: '#94a3b8', fontSize: 9, fontFamily: "'JetBrains Mono', monospace" },
-      labelBgStyle: { fill: '#0d1220', fillOpacity: 0.95 },
+      style: { stroke: strokeColor, strokeWidth: isDeviceLink ? 1.8 : 2.6 },
+      labelStyle: {
+        fill: '#f1f5f9',
+        fontSize: 10,
+        fontWeight: 800,
+        fontFamily: "'JetBrains Mono', monospace",
+        letterSpacing: '0.3px',
+      },
+      labelBgStyle: {
+        fill: '#080d1a',
+        fillOpacity: 0.95,
+        stroke: strokeColor,
+        strokeWidth: 1.2,
+      },
+      labelBgBorderRadius: 6,
+      labelBgPadding: [8, 4],
       markerEnd: { type: 'arrowclosed', color: strokeColor },
     });
   });

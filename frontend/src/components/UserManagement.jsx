@@ -48,7 +48,7 @@ export default function UserManagement() {
           </div>
           <span className="stat-chip">{users.length} registered accounts</span>
         </div>
-        <p style={{ color: 'var(--text-muted)', fontSize: '12px', marginBottom: '20px' }}>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '12px', marginBottom: '20px' }}>
           Fraud Admin Controls — Revoke, freeze, or restore investigator and compliance officer credentials across the MuleNet system.
         </p>
 
@@ -69,14 +69,14 @@ export default function UserManagement() {
         {loading ? (
           <Spinner />
         ) : users.length === 0 ? (
-          <p style={{ color: 'var(--text-muted)', fontSize: '13px', textAlign: 'center', padding: '20px 0' }}>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '13px', textAlign: 'center', padding: '20px 0' }}>
             No registered users found.
           </p>
         ) : (
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
               <thead>
-                <tr style={{ borderBottom: '1px solid var(--border-subtle)', textAlign: 'left', color: 'var(--text-muted)' }}>
+                <tr style={{ borderBottom: '1px solid var(--border-subtle)', textAlign: 'left', color: 'var(--text-secondary)' }}>
                   <th style={{ padding: '10px' }}>Full Name</th>
                   <th style={{ padding: '10px' }}>Username</th>
                   <th style={{ padding: '10px' }}>Role</th>
@@ -113,7 +113,7 @@ export default function UserManagement() {
                       <div style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>{user.badgeNumber || '—'}</div>
                       <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{user.department || '—'}</div>
                     </td>
-                    <td style={{ padding: '10px', color: 'var(--text-muted)' }}>
+                    <td style={{ padding: '10px', color: 'var(--text-secondary)' }}>
                       {user.email}
                     </td>
                     <td style={{ padding: '10px', color: 'var(--text-secondary)' }}>

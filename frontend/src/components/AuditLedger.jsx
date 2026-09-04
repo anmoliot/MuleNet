@@ -57,21 +57,21 @@ export default function AuditLedger() {
             </button>
           </div>
         </div>
-        <p style={{ color: 'var(--text-muted)', fontSize: '12px', marginBottom: '16px' }}>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '12px', marginBottom: '16px' }}>
           Layer 10 Governance — Cryptographically-linked audit trail tracking all investigator overrides, policy updates, and critical system events.
         </p>
 
         {loading ? (
           <Spinner />
         ) : logs.length === 0 ? (
-          <p style={{ color: 'var(--text-muted)', fontSize: '13px', textAlign: 'center', padding: '20px 0' }}>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '13px', textAlign: 'center', padding: '20px 0' }}>
             No audit logs found. Ensure you are logged in as Supervisor or Compliance Officer.
           </p>
         ) : (
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
               <thead>
-                <tr style={{ borderBottom: '1px solid var(--border-subtle)', textAlign: 'left', color: 'var(--text-muted)' }}>
+                <tr style={{ borderBottom: '1px solid var(--border-subtle)', textAlign: 'left', color: 'var(--text-secondary)' }}>
                   <th style={{ padding: '10px' }}>Timestamp</th>
                   <th style={{ padding: '10px' }}>Actor</th>
                   <th style={{ padding: '10px' }}>Role</th>
@@ -98,7 +98,7 @@ export default function AuditLedger() {
                         {log.role}
                       </span>
                     </td>
-                    <td style={{ padding: '10px', fontWeight: 600 }}>{log.action}</td>
+                    <td style={{ padding: '10px', fontWeight: 600, color: 'var(--text-primary)' }}>{log.action}</td>
                     <td style={{ padding: '10px', color: 'var(--text-secondary)' }}>{log.details}</td>
                   </tr>
                 ))}

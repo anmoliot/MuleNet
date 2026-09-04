@@ -184,7 +184,7 @@ export default function WatchlistManager({ role }) {
             ) : (
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
                 <thead>
-                  <tr style={{ borderBottom: '1px solid var(--border-subtle)', color: 'var(--text-muted)', textAlign: 'left' }}>
+                  <tr style={{ borderBottom: '1px solid var(--border-subtle)', color: 'var(--text-secondary)', textAlign: 'left' }}>
                     <th style={{ padding: '12px' }}>Indicator Value</th>
                     <th style={{ padding: '12px' }}>Type</th>
                     <th style={{ padding: '12px' }}>Intel Source</th>
@@ -223,10 +223,10 @@ export default function WatchlistManager({ role }) {
                       <td style={{ padding: '12px', textAlign: 'right', fontWeight: 800, color: 'var(--accent-orange)' }}>
                         +{item.riskUplift?.toFixed(1)}
                       </td>
-                      <td style={{ padding: '12px', textAlign: 'right', fontFamily: 'var(--font-mono)' }}>
+                      <td style={{ padding: '12px', textAlign: 'right', fontFamily: 'var(--font-mono)', color: 'var(--text-primary)' }}>
                         {(item.confidence * 100).toFixed(0)}%
                       </td>
-                      <td style={{ padding: '12px', color: 'var(--text-muted)' }}>{item.details}</td>
+                      <td style={{ padding: '12px', color: 'var(--text-secondary)' }}>{item.details}</td>
                       <td style={{ padding: '12px', color: 'var(--text-muted)', fontSize: '11px', whiteSpace: 'nowrap' }}>
                         {item.createdAt ? new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Active'}
                       </td>
@@ -279,7 +279,7 @@ export default function WatchlistManager({ role }) {
 
             <form onSubmit={handleAdd} style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '12px' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <label style={{ color: 'var(--text-muted)' }}>IOC Value (Account/Device ID)</label>
+                <label style={{ color: 'var(--text-secondary)' }}>IOC Value (Account/Device ID)</label>
                 <input
                   type="text"
                   value={accountId}
@@ -297,7 +297,7 @@ export default function WatchlistManager({ role }) {
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <label style={{ color: 'var(--text-muted)' }}>Intel Source</label>
+                <label style={{ color: 'var(--text-secondary)' }}>Intel Source</label>
                 <select
                   value={source}
                   onChange={(e) => setSource(e.target.value)}
@@ -319,7 +319,7 @@ export default function WatchlistManager({ role }) {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <label style={{ color: 'var(--text-muted)' }}>Risk Weight</label>
+                  <label style={{ color: 'var(--text-secondary)' }}>Risk Weight</label>
                   <input
                     type="number"
                     step="0.5"
@@ -339,7 +339,7 @@ export default function WatchlistManager({ role }) {
                 </div>
                 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <label style={{ color: 'var(--text-muted)' }}>Match Type</label>
+                  <label style={{ color: 'var(--text-secondary)' }}>Match Type</label>
                   <select
                     value={matchType}
                     onChange={(e) => setMatchType(e.target.value)}
@@ -359,7 +359,7 @@ export default function WatchlistManager({ role }) {
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <label style={{ color: 'var(--text-muted)' }}>Confidence Score (0-1)</label>
+                <label style={{ color: 'var(--text-secondary)' }}>Confidence Score (0-1)</label>
                 <input
                   type="number"
                   step="0.01"
@@ -379,7 +379,7 @@ export default function WatchlistManager({ role }) {
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <label style={{ color: 'var(--text-muted)' }}>Details / Context</label>
+                <label style={{ color: 'var(--text-secondary)' }}>Details / Context</label>
                 <textarea
                   value={details}
                   onChange={(e) => setDetails(e.target.value)}

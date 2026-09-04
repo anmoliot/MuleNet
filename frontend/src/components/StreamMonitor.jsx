@@ -88,10 +88,10 @@ export default function StreamMonitor() {
       <div className="card">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <h2 style={{ fontSize: '18px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+            <h2 style={{ fontSize: '18px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '8px', margin: 0, color: 'var(--text-primary)' }}>
               <Activity size={20} className="metric-accent" /> Real-Time UPI Stream Monitor
             </h2>
-            <p style={{ color: 'var(--text-muted)', fontSize: '12px', marginTop: '4px', marginBottom: 0 }}>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '12px', marginTop: '4px', marginBottom: 0 }}>
               Continuous Flink Sliding Aggregations & ML Risk scoring on live Kafka messaging queue.
             </p>
           </div>
@@ -184,7 +184,7 @@ export default function StreamMonitor() {
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
               <thead>
-                <tr style={{ borderBottom: '1px solid var(--border-subtle)', textAlign: 'left', color: 'var(--text-muted)' }}>
+                <tr style={{ borderBottom: '1px solid var(--border-subtle)', textAlign: 'left', color: 'var(--text-secondary)' }}>
                   <th style={{ padding: '8px' }}>Account ID</th>
                   <th style={{ padding: '8px' }}>5m Senders</th>
                   <th style={{ padding: '8px' }}>30m Inflow</th>
@@ -195,7 +195,7 @@ export default function StreamMonitor() {
               <tbody>
                 {Object.keys(flinkWindows).length === 0 ? (
                   <tr>
-                    <td colSpan="5" style={{ padding: '20px 0', textAlign: 'center', color: 'var(--text-muted)' }}>
+                    <td colSpan="5" style={{ padding: '20px 0', textAlign: 'center', color: 'var(--text-secondary)' }}>
                       No active Flink windows. Start ingestion to stream data.
                     </td>
                   </tr>
@@ -204,11 +204,11 @@ export default function StreamMonitor() {
                     const ratio = win.inflow30m > 0 ? (win.outflow60m / win.inflow30m).toFixed(2) : '0.00';
                     return (
                       <tr key={win.accountId} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                        <td style={{ padding: '10px', fontFamily: 'var(--font-mono)', fontWeight: 700 }}>{win.accountId}</td>
+                        <td style={{ padding: '10px', fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--text-primary)' }}>{win.accountId}</td>
                         <td style={{ padding: '10px' }}>
                           <span className="stat-chip">{win.sender5mCount.size} senders</span>
                         </td>
-                        <td style={{ padding: '10px', fontWeight: 600 }}>₹{win.inflow30m.toLocaleString(undefined, {maximumFractionDigits: 0})}</td>
+                        <td style={{ padding: '10px', fontWeight: 600, color: 'var(--text-primary)' }}>₹{win.inflow30m.toLocaleString(undefined, {maximumFractionDigits: 0})}</td>
                         <td style={{ padding: '10px' }}>
                           <span className="stat-chip" style={{
                             borderColor: ratio > 0.8 ? 'rgba(239,68,68,0.3)' : 'var(--border-subtle)',
