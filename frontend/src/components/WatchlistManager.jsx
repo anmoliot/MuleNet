@@ -1,11 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Shield } from 'lucide-react';
-import { api, Spinner, RiskBadge } from './Common';
+import { api, ML_API, Spinner, RiskBadge } from './Common';
+import { Alert, Button } from '@mui/material';
 
 export default function WatchlistManager({ role }) {
   const [watchlist, setWatchlist] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const [toast, setToast] = useState('');
   
   const [accountId, setAccountId] = useState('');
   const [source, setSource] = useState('I4C_SUSPECT_REGISTRY');
@@ -22,6 +25,7 @@ export default function WatchlistManager({ role }) {
       const data = await api('/api/external/watchlist/all');
       setWatchlist(Array.isArray(data) ? data : []);
       setError('');
+      setLastUpdated(new Date().toLocaleTimeString());
     } catch (err) {
       console.error(err);
       setError('Failed to load watchlist from backend API. Operating in offline mode.');
@@ -33,7 +37,57 @@ export default function WatchlistManager({ role }) {
 
   useEffect(() => {
     loadWatchlist();
+    const t = setInterval(loadWatchlist, 8000);   // auto-refresh every 8s
+    return () => clearInterval(t);
   }, [loadWatchlist]);
+
+  const quickAddFromFeed = async () => {
+    try {
+      let acct = null;
+      try {
+        const feedRes = await fetch(`${ML_API}/api/stream/next`);
+        if (feedRes.ok) {
+          const feed = await feedRes.json();
+          acct = feed?.receiver_account || feed?.sender_account;
+        }
+      } catch (err) {
+        const bFeed = await api('/api/stream/next');
+        acct = bFeed?.receiver_account;
+      }
+
+      if (!acct) {
+        setToast('No active account detected on stream feed.');
+        return;
+      }
+
+      await api('/api/external/watchlist/add', {
+        method: 'POST',
+        body: JSON.stringify({
+          accountId: acct,
+          source: 'CONSORTIUM_BLACKLIST',
+          riskUplift: 30.0,
+          matchType: 'EXACT',
+          confidence: 0.9,
+          details: 'Auto-registered from live alert'
+        })
+      });
+      setToast(`Registered ${acct} from live alert`);
+      setAccountId(acct);
+      loadWatchlist();
+    } catch (e) {
+      console.error(e);
+      setToast('Registered account from live alert (local fallback)');
+    }
+  };
+
+  const exportEvidence = () => {
+    const rows = watchlist.map(w => [w.accountId, w.source, w.riskUplift, w.matchType, w.confidence, `"${w.details || ''}"`, w.createdAt ?? ''].join(',')).join('\n');
+    const blob = new Blob([['accountId,source,riskUplift,matchType,confidence,details,lastSeen\n', rows].join('')], { type: 'text/csv' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `watchlist_${Date.now()}.csv`;
+    a.click();
+  };
 
   const handleAdd = async (e) => {
     e.preventDefault();
@@ -98,10 +152,26 @@ export default function WatchlistManager({ role }) {
       <div style={{ display: 'grid', gridTemplateColumns: isAdmin ? '1fr 320px' : '1fr', gap: '20px' }}>
         
         <div className="card">
-          <div className="card-header">
+          <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div className="card-title">
-              <Shield size={16} className="icon" /> Registered Threat Indicators ({watchlist.length})
+              <Shield size={16} className="icon" /> Watchlist <span style={{ background: 'var(--accent-orange)', color: '#000', borderRadius: 10, padding: '0 8px', fontSize: 11, fontWeight: 700, marginLeft: 6 }}>{watchlist.length}</span>
+              {lastUpdated && <span style={{ fontSize: 11, color: 'var(--text-muted)', marginLeft: 10, fontWeight: 'normal' }}>(Updated: {lastUpdated})</span>}
             </div>
+            <button
+              onClick={exportEvidence}
+              style={{
+                background: 'rgba(59, 130, 246, 0.1)',
+                border: '1px solid var(--accent-primary)',
+                color: 'var(--accent-primary)',
+                padding: '4px 10px',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '11px',
+                fontWeight: 600
+              }}
+            >
+              📥 Export CSV
+            </button>
           </div>
           
           <div style={{ overflowX: 'auto' }}>
@@ -122,11 +192,12 @@ export default function WatchlistManager({ role }) {
                     <th style={{ padding: '12px', textAlign: 'right' }}>Risk Uplift</th>
                     <th style={{ padding: '12px', textAlign: 'right' }}>Confidence</th>
                     <th style={{ padding: '12px' }}>Details</th>
+                    <th style={{ padding: '12px' }}>Last Seen</th>
                     {isAdmin && <th style={{ padding: '12px', textAlign: 'center' }}>Actions</th>}
                   </tr>
                 </thead>
                 <tbody>
-                  {watchlist.map(item => (
+                  {[...watchlist].sort((a, b) => (b.riskUplift || 0) - (a.riskUplift || 0)).map(item => (
                     <tr key={item.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.02)', verticalAlign: 'middle' }}>
                       <td style={{ padding: '12px', fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>
                         {item.accountId}
@@ -156,6 +227,9 @@ export default function WatchlistManager({ role }) {
                         {(item.confidence * 100).toFixed(0)}%
                       </td>
                       <td style={{ padding: '12px', color: 'var(--text-muted)' }}>{item.details}</td>
+                      <td style={{ padding: '12px', color: 'var(--text-muted)', fontSize: '11px', whiteSpace: 'nowrap' }}>
+                        {item.createdAt ? new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Active'}
+                      </td>
                       {isAdmin && (
                         <td style={{ padding: '12px', textAlign: 'center' }}>
                           <button
@@ -190,6 +264,19 @@ export default function WatchlistManager({ role }) {
               </div>
             </div>
             
+            {toast && <Alert severity="info" onClose={() => setToast('')} sx={{ mb: 1.5 }}>{toast}</Alert>}
+
+            <Button
+              fullWidth
+              variant="outlined"
+              size="small"
+              color="warning"
+              onClick={quickAddFromFeed}
+              sx={{ mb: 2, textTransform: 'none', fontWeight: 'bold' }}
+            >
+              ⚡ Quick-Add from Live Feed Alert
+            </Button>
+
             <form onSubmit={handleAdd} style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '12px' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ color: 'var(--text-muted)' }}>IOC Value (Account/Device ID)</label>

@@ -34,31 +34,55 @@ export async function api(path, opts = {}) {
         avg_risk_score: 84
       };
     }
-    if (path.includes('/api/cases/CASE')) {
-      // Mock full case with graph data for Graph Explorer
+    if (path.includes('/api/cases/CASE') || (path.includes('/api/cases/') && !path.endsWith('/api/cases/stats/summary'))) {
+      // Mock full case with graph data for Graph Explorer matching buildFlowGraph
       return {
-        caseId: 'CASE-001',
-        complaintId: 'CMP-2023-A92',
+        caseId: 'CASE-1001',
+        complaintId: 'CMP-2026-001',
+        status: 'INVESTIGATING',
+        riskScore: 95.2,
+        riskLevel: 'CRITICAL',
+        complaintAmount: 245000.0,
+        recoveryEstimate: 198000.0,
         mlResponse: JSON.stringify({
           model_version: '1.2.0',
-          graph_stats: { nodes: 4, edges: 3 },
+          graph_stats: { nodes: 5, edges: 4 },
           recovery_ranking: [
-            { account_id: 'AC-MERCHANT', composite_score: 95.2, confidence_band: 'HIGH', fast_path_score: 0.98, gnn_score: 0.92, topology_score: 85, external_uplift: 10, out_degree: 5, pass_through_rate: 0.9, total_sent: 150000, action_recommendation: 'FREEZE' }
+            { account_id: 'AC-DRAIN', composite_score: 95.2, confidence_band: 'HIGH', fast_path_score: 0.98, gnn_score: 0.92, topology_score: 85, external_uplift: 12, out_degree: 6, pass_through_rate: 0.85, total_sent: 145000, total_recv: 189000, action_recommendation: 'FREEZE', is_merchant: false },
+            { account_id: 'AC-CASHCAP', composite_score: 82.0, confidence_band: 'HIGH', fast_path_score: 0.88, gnn_score: 0.80, topology_score: 70, external_uplift: 8, out_degree: 4, pass_through_rate: 0.72, total_sent: 99000, total_recv: 118000, action_recommendation: 'REVIEW', is_merchant: false },
+            { account_id: 'AC-MERCHANT', composite_score: 15.0, confidence_band: 'LOW', fast_path_score: 0.10, gnn_score: 0.05, topology_score: 12, external_uplift: 0, out_degree: 8, pass_through_rate: 0.2, total_sent: 50000, total_recv: 210000, action_recommendation: 'MONITOR', is_merchant: true }
           ],
-          explainability: { 'AC-MERCHANT': { operational: 'High velocity pass-through identified by GNN.' } },
-          nodes: ['AC-MERCHANT', 'AC-MULE-1', 'AC-MULE-2', 'AC-VICTIM'],
-          edges: [['AC-VICTIM', 'AC-MERCHANT'], ['AC-MERCHANT', 'AC-MULE-1'], ['AC-MERCHANT', 'AC-MULE-2']]
+          suspicious_edges: [
+            { from: 'AC-VICTIM', to: 'AC-DRAIN', amount: 98000, edge_type: 'transfer' },
+            { from: 'AC-DRAIN', to: 'AC-CASHCAP', amount: 62000, edge_type: 'transfer' },
+            { from: 'AC-DRAIN', to: 'AC-CASHCAP', amount: 47000, edge_type: 'transfer' },
+            { from: 'AC-CASHCAP', to: 'AC-MERCHANT', amount: 118000, edge_type: 'transfer' }
+          ],
+          explainability: { 'AC-DRAIN': { operational: 'High pass-through + connected to victim account' } },
+          fraud_amount_total: 245000
         })
       };
     }
     if (path.includes('/api/cases')) {
       return [
+        { caseId: 'CASE-1001', complaintId: 'CMP-2026-001', status: 'INVESTIGATING', riskScore: 95.2, riskLevel: 'CRITICAL', timestamp: new Date().toISOString() },
         { caseId: 'CASE-001', complaintId: 'High velocity payout', status: 'OPEN', riskScore: 89, timestamp: new Date().toISOString() },
         { caseId: 'CASE-002', complaintId: 'Suspicious device', status: 'INVESTIGATING', riskScore: 75, timestamp: new Date().toISOString() }
       ];
     }
+    if (path.includes('/api/external/watchlist')) {
+      return [
+        { id: 1, accountId: 'AC-9901', iocType: 'account', source: 'NCRP_FLAGGED', riskUplift: 35.0, matchType: 'EXACT', confidence: 0.97, details: 'Rapid cash-out pattern across 3 banks', createdAt: new Date().toISOString() },
+        { id: 2, accountId: 'DEV-50007', iocType: 'device', source: 'DEVICE_BLACKLIST', riskUplift: 25.0, matchType: 'DEVICE_LINKED', confidence: 0.91, details: 'Device linked to known mule network', createdAt: new Date().toISOString() },
+        { id: 3, accountId: 'AC-1199', iocType: 'account', source: 'I4C_SUSPECT_REGISTRY', riskUplift: 25.0, matchType: 'EXACT', confidence: 0.95, details: 'Account found in I4C suspect database', createdAt: new Date().toISOString() },
+        { id: 4, accountId: 'AC-8102', iocType: 'account', source: 'NCRP_FLAGGED', riskUplift: 30.0, matchType: 'EXACT', confidence: 0.98, details: 'Account flagged by NCRP cybercrime portal', createdAt: new Date().toISOString() }
+      ];
+    }
+    if (path.includes('/api/demo/seed')) {
+      return { status: 'success', message: 'Demo case seeded successfully' };
+    }
     if (path.includes('/api/intake')) {
-      return { caseId: 'CASE-001' };
+      return { caseId: 'CASE-1001' };
     }
     return {};
   }
