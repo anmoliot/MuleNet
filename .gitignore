@@ -49,3 +49,10 @@ Thumbs.db
 
 mulenet_for_kaggle.zip
 processed_paysim.csv
+
+# Local Demo & Voiceover (kept locally, not committed)
+docs/demo/
+docs/voiceover/
+scripts/generate_voiceover.ps1
+scripts/record_live_demo.py
+
