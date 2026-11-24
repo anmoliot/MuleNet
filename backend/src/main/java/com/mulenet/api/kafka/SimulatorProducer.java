@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.HashMap;
 import java.time.Instant;
 
+@org.springframework.context.annotation.Profile("legacy")
 @Service
 public class SimulatorProducer {
     private static final Logger logger = LoggerFactory.getLogger(SimulatorProducer.class);

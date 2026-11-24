@@ -15,6 +15,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.Collections;
 
+@org.springframework.context.annotation.Profile("legacy")
 @Component
 public class JwtFilter extends OncePerRequestFilter {
 

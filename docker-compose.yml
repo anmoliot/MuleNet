@@ -1,127 +1,129 @@
-# docker-compose version omitted (Docker v2+)
-
+name: mulenet
 services:
   postgres:
-    image: postgres:15-alpine
-    container_name: mulenet-postgres
-    ports:
-      - "5432:5432"
+    image: postgres:17.7-alpine
     environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:?Generate .env first}
+      POSTGRES_USER: ${POSTGRES_USER:?Generate .env first}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Generate .env first}
+      MULENET_DB_PASSWORD: ${MULENET_DB_PASSWORD:?Generate .env first}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-
+      - ./database/init-runtime.sh:/docker-entrypoint-initdb.d/10-runtime.sh:ro
+    networks: [backplane]
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
+      interval: 3s
+      timeout: 2s
+      retries: 30
   redis:
-    image: redis:7-alpine
-    container_name: mulenet-redis
-    ports:
-      - "6379:6379"
-
-  zookeeper:
-    image: confluentinc/cp-zookeeper:7.3.0
-    container_name: mulenet-zookeeper
+    image: redis:7.4.7-alpine
+    command: [redis-server, --requirepass, '${REDIS_PASSWORD:?Generate .env first}', --maxmemory, 256mb, --maxmemory-policy, allkeys-lru]
     environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
-
+      REDISCLI_AUTH: ${REDIS_PASSWORD:?Generate .env first}
+    networks: [backplane]
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 3s
+      timeout: 2s
+      retries: 30
   kafka:
-    image: confluentinc/cp-kafka:7.3.0
-    container_name: mulenet-kafka
-    ports:
-      - "9092:9092"
+    image: apache/kafka:4.1.1
     environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      CLUSTER_ID: ${KAFKA_CLUSTER_ID:?Generate .env first}
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'false'
+    networks: [backplane]
+    healthcheck:
+      test: [CMD-SHELL, '/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server kafka:9092 >/dev/null 2>&1']
+      interval: 5s
+      timeout: 5s
+      retries: 30
+  migrate:
+    image: mulenet/backend:local
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      SPRING_PROFILES_ACTIVE: migrate
+      SPRING_MAIN_WEB_APPLICATION_TYPE: none
+      DB_HOST: postgres
+      DB_NAME: ${POSTGRES_DB}
+      DB_USER: ${POSTGRES_USER}
+      DB_PASS: ${POSTGRES_PASSWORD}
+    networks: [backplane]
     depends_on:
-      - zookeeper
-
-  neo4j:
-    image: neo4j:5.12-community
-    container_name: mulenet-neo4j
-    ports:
-      - "7474:7474"
-      - "7687:7687"
-    environment:
-      - NEO4J_AUTH=${NEO4J_USER}/${NEO4J_PASSWORD}
-    volumes:
-      - neo4j_data:/data
-
-  keycloak:
-    image: quay.io/keycloak/keycloak:22.0.5
-    container_name: mulenet-keycloak
-    ports:
-      - "8081:8080"
-    environment:
-      - KEYCLOAK_ADMIN=${KEYCLOAK_ADMIN}
-      - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD}
-    volumes:
-      - ./KeycloakRealm.json:/opt/keycloak/data/import/realm.json
-    command: start-dev --import-realm
-
+      postgres: {condition: service_healthy}
   backend:
-    build: ./backend
-    container_name: mulenet-backend
-    ports:
-      - "8080:8080"
+    image: mulenet/backend:local
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    ports: ['127.0.0.1:8080:8080']
     environment:
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - DB_NAME=${POSTGRES_DB}
-      - DB_USER=${POSTGRES_USER}
-      - DB_PASS=${POSTGRES_PASSWORD}
-      - OAUTH2_ENABLED=${OAUTH2_ENABLED}
-      - ML_SERVICE_URL=http://ml_service:8000
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-platform}
+      SPRING_FLYWAY_ENABLED: 'false'
+      DB_HOST: postgres
+      DB_NAME: ${POSTGRES_DB}
+      DB_USER: mulenet_runtime
+      DB_PASS: ${MULENET_DB_PASSWORD}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      MULENET_ML_URL: http://ml_service:8000
+      MULENET_SERVICE_SECRET: ${MULENET_SERVICE_SECRET:?Generate .env first}
+      MULENET_TOKEN_KEY: ${MULENET_TOKEN_KEY:?Generate .env first}
+      MULENET_ENCRYPTION_KEY: ${MULENET_ENCRYPTION_KEY:?Generate .env first}
+      MULENET_DEMO_JWT_SECRET: ${MULENET_DEMO_JWT_SECRET}
+      MULENET_DEMO_ANALYST_PASSWORD: ${MULENET_DEMO_ANALYST_PASSWORD}
+      MULENET_DEMO_SUPERVISOR_PASSWORD: ${MULENET_DEMO_SUPERVISOR_PASSWORD}
+      MULENET_DEMO_ADMIN_PASSWORD: ${MULENET_DEMO_ADMIN_PASSWORD}
+      MULENET_DEMO_AUDITOR_PASSWORD: ${MULENET_DEMO_AUDITOR_PASSWORD}
+      MULENET_OIDC_ISSUER: ${MULENET_OIDC_ISSUER:-}
+      MULENET_CORS_ORIGINS: ${MULENET_CORS_ORIGINS:-http://localhost:3000}
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    networks: [backplane, gateway]
     depends_on:
-      - postgres
-      - kafka
-
+      migrate: {condition: service_completed_successfully}
+      kafka: {condition: service_healthy}
   ml_service:
-    build: ./ml_service
-    container_name: mulenet-ml-service
-    ports:
-      - "8000:8000"
+    image: mulenet/ml:local
+    build:
+      context: .
+      dockerfile: ml_service/Dockerfile
     environment:
-      - BACKEND_API_URL=http://backend:8080
-      - REDIS_HOST=redis
-      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
-      - NEO4J_URI=bolt://neo4j:7687
-      - NEO4J_USER=${NEO4J_USER}
-      - NEO4J_PASSWORD=${NEO4J_PASSWORD}
+      MULENET_SERVICE_SECRET: ${MULENET_SERVICE_SECRET:?Generate .env first}
+      MULENET_MODEL_DIR: /models
+      MULENET_ALLOW_SYNTHETIC: ${MULENET_ALLOW_SYNTHETIC:-false}
+      MULENET_REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/0
+      PYTHONDONTWRITEBYTECODE: '1'
+    volumes:
+      - ./artifacts/${MULENET_ACTIVE_MODEL:?Select a verified model}:/models:ro
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    networks: [backplane]
     depends_on:
-      - redis
-      - neo4j
-      - kafka
-
-  celery_worker:
-    build: ./ml_service
-    container_name: mulenet-celery-worker
-    command: celery -A celery_app.celery worker --loglevel=info
-    environment:
-      - BACKEND_API_URL=http://backend:8080
-      - REDIS_HOST=redis
-      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
-      - NEO4J_URI=bolt://neo4j:7687
-      - NEO4J_USER=${NEO4J_USER}
-      - NEO4J_PASSWORD=${NEO4J_PASSWORD}
-    depends_on:
-      - redis
-      - ml_service
-
+      redis: {condition: service_healthy}
   frontend:
     build: ./frontend
-    container_name: mulenet-frontend
-    ports:
-      - "3000:80"
-    depends_on:
-      - backend
-      - ml_service
-
+    ports: ['127.0.0.1:3000:80']
+    networks: [gateway]
+    depends_on: [backend]
+networks:
+  backplane: {internal: true}
+  gateway: {}
 volumes:
-  postgres_data:
-  neo4j_data:
+  postgres_data: {}

@@ -1,0 +1,133 @@
+{
+  "cases": [
+    {
+      "name": "test_no_credentials_or_missing_cli_never_falls_back",
+      "status": "passed"
+    },
+    {
+      "name": "test_download_receipt_hashes_output_and_propagates_failures",
+      "status": "passed"
+    },
+    {
+      "name": "test_public_download_checks_supplier_license_and_pins_version",
+      "status": "passed"
+    },
+    {
+      "name": "test_generator_reproducibility_typologies_and_adversarial_knobs",
+      "status": "passed"
+    },
+    {
+      "name": "test_amlworld_duplicate_headers_banks_times_and_multiedges",
+      "status": "passed"
+    },
+    {
+      "name": "test_paysim_balance_fields_and_strict_labels",
+      "status": "passed"
+    },
+    {
+      "name": "test_metric_point_estimates_match_sklearn_with_ties_and_bootstrap_repeats",
+      "status": "passed"
+    },
+    {
+      "name": "test_unknown_metrics_are_null_and_anomaly_not_claimed_calibrated",
+      "status": "passed"
+    },
+    {
+      "name": "test_pretransfer_features_ignore_outcome_balances",
+      "status": "passed"
+    },
+    {
+      "name": "test_terminal_paths_cannot_travel_backwards_in_time",
+      "status": "passed"
+    },
+    {
+      "name": "test_calibration_bounds_only_roundoff_not_arbitrary_bad_values",
+      "status": "passed"
+    },
+    {
+      "name": "test_offline_online_parity_for_1000_random_asof_points",
+      "status": "passed"
+    },
+    {
+      "name": "test_feature_http_contract_is_authenticated_and_matches_offline",
+      "status": "passed"
+    },
+    {
+      "name": "test_hand_computed_ratios_entropy_dwell_and_repeated_edges",
+      "status": "passed"
+    },
+    {
+      "name": "test_future_edges_labels_and_typologies_cannot_change_features",
+      "status": "passed"
+    },
+    {
+      "name": "test_boundary_cold_start_sharing_cycles_and_balances",
+      "status": "passed"
+    },
+    {
+      "name": "test_strict_schema_duplicate_conflict_and_resource_budget",
+      "status": "passed"
+    },
+    {
+      "name": "test_additional_feature_oracles_and_metadata_absence",
+      "status": "passed"
+    },
+    {
+      "name": "test_real_gnn_uses_edges_and_exports_dynamic_shapes",
+      "status": "passed"
+    },
+    {
+      "name": "test_safe_bundle_calibration_explanation_and_schema",
+      "status": "passed"
+    },
+    {
+      "name": "test_integrity_rejected_before_loading_and_skops_never_trusts_all",
+      "status": "passed"
+    },
+    {
+      "name": "test_threshold_uses_only_supplied_validation_arrays",
+      "status": "passed"
+    },
+    {
+      "name": "test_drift_is_measured_and_missing_samples_fail",
+      "status": "passed"
+    },
+    {
+      "name": "test_internal_auth_scope_tenant_and_cache_hash",
+      "status": "passed"
+    },
+    {
+      "name": "test_gnn_failure_is_explicit_graph_fallback_not_fake_component",
+      "status": "passed"
+    },
+    {
+      "name": "test_gnn_hard_timeout_terminates_worker",
+      "status": "passed"
+    },
+    {
+      "name": "test_missing_configuration_never_starts_demo",
+      "status": "passed"
+    },
+    {
+      "name": "test_actual_evaluated_registry_shadow_canary_and_rollback",
+      "status": "passed"
+    },
+    {
+      "name": "test_temporal_split_purges_overlapping_windows",
+      "status": "passed"
+    },
+    {
+      "name": "test_entity_disjoint_components_and_ring_union",
+      "status": "passed"
+    },
+    {
+      "name": "test_leakage_checks_reject_injected_test_edges_and_entity_overlap",
+      "status": "passed"
+    }
+  ],
+  "exit_code": 0,
+  "failed": 0,
+  "passed": 31,
+  "phase": "locked-runtime",
+  "skipped": 0
+}

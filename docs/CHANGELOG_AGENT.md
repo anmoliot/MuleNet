@@ -273,3 +273,70 @@ labelled and fit without overlap. This is report QA, not a performance assertion
 The supplied older attachment requested preserving legacy components; the newer
 phased security/evaluation specification supersedes those preservation requests
 where they conflict with safe model serving and platform hardening.
+
+## Phase 4: Tested Platform Checkpoint
+
+Changed: strict internal scoring API and exported OpenAPI, generated Java client,
+deadline-isolated GNN fallback, content-addressed Redis snapshots, Spring JDBC
+ledger/decisions, versioned policy, durable outbox, keyed KRaft ingestion, encrypted
+DLQ/replay, review workflow/expiry, audit chain, tokenization/encryption, scoped
+SSE and explicit per-install demo authentication. Legacy controllers, consumers,
+initializers and security chains are excluded from the default platform profile.
+Deployment support now uses non-root service images, separate migration/runtime
+DB credentials and internal-only Redis/ML/Kafka. See PLATFORM_CONTRACT.md for limits.
+
+```text
+python scripts/record_tests.py --phase serving ml_service/tests/test_serving.py
+PASS: reports/serving-tests.json; actual artifact-backed HTTP tests, tenant/scope rejection, hard-process timeout, registry shadow/canary/rollback.
+uv run --isolated --frozen --all-groups python scripts/record_tests.py --phase platform-python ml_service/tests
+PASS: reports/platform-python-tests.json; no inherited packages or skipped tests, source unchanged during the run.
+python scripts/record_tests.py --phase feedback ml_service/tests/test_feedback.py
+PASS: reports/feedback-tests.json; disagreement, missing independent review and immature adjudication quarantined.
+python scripts/record_tests.py --phase platform-tools ml_service/tests/test_platform_tools.py
+PASS: reports/platform-tools-tests.json; exclusive unique secret generation, audit tamper/order/truncation rejection.
+python scripts/export_openapi.py --models artifacts/demo-temporal-v3 --allow-synthetic
+PASS: actual application schema exported to contracts/ml-openapi.json; generated sources are not edited.
+python scripts/record_maven_tests.py --wsl
+PASS: reports/platform-tests.json; BUILD SUCCESS, no failed/skipped checks, source unchanged.
+sh scripts/bootstrap_secrets.sh --demo --out .tools/bootstrap-smoke.env
+PASS: wrapper executed without overwriting installation secrets or printing passwords.
+```
+
+The Maven recorder executes Maven with Java from the installed WSL runtime and
+derives outcomes only from newly written Surefire XML. It does not count stale
+test files after a compilation failure. Its integration scenario runs actual
+Kafka, PostgreSQL, Redis and artifact-backed ML containers: healthy decisions,
+duplicate/conflicting delivery, encrypted DLQ, injected ML outage, null degraded
+probability, authorization, manual/automatic release, cross-tenant reads and
+immutable audit/policy storage all assert successfully. The API client regression
+also verifies long timestamps and nonempty strict request serialization.
+
+Executed registry commands from ml_service, all with explicit --allow-synthetic:
+
+```text
+python -m model_registry init --root ../artifacts --version demo-temporal-v3 --allow-synthetic
+python -m model_registry shadow --root ../artifacts --version demo-entity-v2 --allow-synthetic
+python -m model_registry canary --root ../artifacts --version demo-entity-v2 --percentage 25 --allow-synthetic
+python -m model_registry promote --root ../artifacts --version demo-entity-v2 --allow-synthetic
+python -m model_registry rollback --root ../artifacts --allow-synthetic
+PASS: active pointer restored to demo-temporal-v3; shadow does not affect policy.
+```
+
+Failures found, not hidden: the previous Mockito agent could not self-attach;
+subclass mocks expose two existing fixture errors, repaired in the tests. Docker
+rejected the old Testcontainers API client; a compatible release fixes it without
+weakening Docker. Real scoring then exposed the old generator's empty-map
+serialization bug. Official normalization and a compatible Spring patch fix it;
+the closed server schemas remain strict. A premature manual Spring shutdown
+caused teardown failure and was removed. A killed GNN could leave a queue feeder
+blocked; cancellation now permits clean process exit. The log recorder's Windows
+text decoding failure is fixed with explicit UTF-8, not by dropping failed tests.
+
+Acceptance scope: the real-stack core replay/degradation gate passes. This is not
+completion of every platform requirement: large-network adjacency scalability,
+automatic verified-evidence feedback retraining and multi-version neural rollout
+remain open. Case adjudication is quality-gated but never silently converted to
+transaction truth. India signals unsupported by the schema are not invented.
+Claims downgraded: no bank freeze execution, regulatory certification, actual
+government watchlist access, exactly-once distributed transport or production
+readiness. Container rebuild and broader security/CI/UI checks continue next.

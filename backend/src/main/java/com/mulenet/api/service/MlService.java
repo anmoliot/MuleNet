@@ -14,6 +14,7 @@ import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.retry.annotation.Recover;
 
+@org.springframework.context.annotation.Profile("legacy")
 @Service
 public class MlService {
 

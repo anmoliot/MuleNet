@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.util.UUID;
 
+@org.springframework.context.annotation.Profile("legacy")
 @Component
 public class RequestLoggingFilter implements Filter {
 
