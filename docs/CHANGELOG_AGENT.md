@@ -147,3 +147,76 @@ Both executions passed the entire foundation suite. No wall-clock timing or
 temporary path is embedded in the receipt. Baseline source-quotation verification
 was rerun and all audit quotations still resolve. No phase acceptance beyond
 this documented reference-foundation scope is implied.
+
+## Phase 2: Candidate Models and Public Data Acquisition
+
+Branch: phase-2-models. Changed files: new mulenet_core/artifacts.py and models.py;
+training/train_tabular.py, train_gnn.py, experiment.py; explain.py and drift.py;
+model/downloader tests; public downloader mode; bounded graph-stat caching;
+scripts/record_tests.py; dataset receipts; data notes and decisions. Model binaries
+and raw data are ignored. The active legacy serving path is not yet migrated.
+
+Commands actually executed:
+
+```text
+python -m venv .venv --system-site-packages
+.venv\Scripts\python.exe -m pip install uv skops torch-geometric shap ruff mypy types-networkx pytest-cov pip-audit
+.venv\Scripts\python.exe -m pip install --only-binary=:all: pyg_lib torch_scatter torch_sparse -f https://data.pyg.org/whl/torch-2.12.0+cpu.html
+PASS: project-local dependencies installed; inherited host packages remain a reproducibility limitation until the locked setup phase.
+```
+
+The direct NeighborLoader probe produced a sampled PyG Data batch, not a stub.
+The public notebook API was read without executing notebook cells; its random
+split and post-transfer balance features are documented in data/README.md.
+Public supplier metadata confirmed licenses and versioned anonymous download URLs.
+
+```text
+.venv\Scripts\python.exe scripts/download_data.py --dataset paysim --variant default --license-acknowledged CC-BY-SA-4.0 --public
+.venv\Scripts\python.exe scripts/download_data.py --dataset amlworld --variant HI-Small --license-acknowledged CDLA-Sharing-1.0 --public
+.venv\Scripts\python.exe scripts/download_data.py --dataset amlworld --variant LI-Small --license-acknowledged CDLA-Sharing-1.0 --public
+PASS: requested files downloaded; supplier metadata, version, license and content hashes recorded in reports/data-*.json. No raw data committed.
+.venv\Scripts\python.exe -m pytest ml_service/tests/test_models.py ml_service/tests/test_data_download.py -q
+PASS: model/loader checks after fixing two failures described below.
+.venv\Scripts\python.exe scripts/record_tests.py --phase models ml_service/tests
+PASS: measured outcomes are in reports/models-tests.json; no skipped tests accepted as passing.
+```
+
+From ml_service, explicit demo training:
+
+```text
+..\.venv\Scripts\python.exe -m training.experiment --dataset sim --data ../data/generated/training-demo.json --split temporal --out ../artifacts/demo-temporal-v2 --allow-synthetic --epochs 20
+..\.venv\Scripts\python.exe -m training.experiment --dataset sim --data ../data/generated/training-demo.json --split entity --out ../artifacts/demo-entity --allow-synthetic --epochs 20
+PASS: actual XGBoost + edge-aware GATv2/JumpingKnowledge models trained; early stopping, calibration/thresholds and OOF meta fitting use validation only.
+```
+
+The input was generated through the repository generator with seed/configuration
+recorded in its JSON, using a small development fixture. Training reports are
+script-written reports/training-sim-*.json, not external benchmark claims.
+Both runs chose tabular-plus-graph as the default deep path on validation; no
+test-set comparison was used for that choice. Final low-FPR test performance is
+pending Phase 3, not inferred from training or validation.
+
+Failures found and fixed: NeighborLoader attempted to index string account IDs;
+tensor-only training batches now keep IDs outside the sampler. skops correctly
+rejected sklearn.tree._tree.Tree; only that expected tree type and the reviewed
+isotonic interpolator are explicitly permitted, never the entire unknown-type
+list. Integrity/schema tests reject tampered artifacts before parser invocation.
+Dynamic empty-edge inference, TreeSHAP, actual GNNExplainer edge masks, cold
+reference features and drift-shift tests ran. Initial ruff findings are not yet
+a passing lint gate; formatting/strict typing are part of the CI phase.
+
+Known warnings: inherited requests dependency mismatch; PyTorch TorchScript and
+PyG annotation deprecations; the host TestClient transport deprecation. These are
+disclosed, not suppressed or represented as a clean supply-chain scan.
+
+Acceptance scope: candidate training, export/reload, explicit data opt-in and
+artifact rejection checks pass. Full report/ablation/robustness acceptance is
+performed in Phase 3; production service replacement and old pickle retirement
+remain required. Claims downgraded: a real GNN is now implemented, but it is not
+assumed to improve results or earn serving latency. Dataset acquisition no longer
+depends on missing credentials; every downloaded benchmark is still simulated.
+
+After adding explicit manifest metrics-file/hash consistency, both training
+commands were repeated into new immutable directories demo-temporal-v3 and
+demo-entity-v2. Those candidates replace the earlier development bundles for
+subsequent evaluation; no manifest fields or model metrics were hand-edited.

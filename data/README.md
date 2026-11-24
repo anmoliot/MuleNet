@@ -3,8 +3,10 @@
 No raw/generated/processed datasets are committed. The new loaders never fall
 back to a simulator. Missing files, invalid rows, currencies, labels and timestamps
 raise errors. Dataset bytes and supplier metadata are hashed in download receipts
-under reports/. No authorized benchmark files were available for this execution;
-the user will provide them later. No benchmark/model performance is reported.
+under reports/. The initial checkout lacked data; public versioned supplier
+endpoints were later verified and the requested files downloaded without account
+credentials. Generated receipts record supplier versions, licenses and hashes.
+Acquisition alone establishes no predictive performance.
 
 ## IBM AMLworld
 
@@ -16,14 +18,15 @@ license from the repository's Apache code license. Review the actual supplier
 terms before use or redistribution; this is a provenance note, not legal advice.
 
 ```text
-python scripts/download_data.py --dataset amlworld --variant HI-Small --license-acknowledged CDLA-Sharing-1.0
-python scripts/download_data.py --dataset amlworld --variant LI-Small --license-acknowledged CDLA-Sharing-1.0
+python scripts/download_data.py --dataset amlworld --variant HI-Small --license-acknowledged CDLA-Sharing-1.0 --public
+python scripts/download_data.py --dataset amlworld --variant LI-Small --license-acknowledged CDLA-Sharing-1.0 --public
 ```
 
-Authenticate the official Kaggle CLI locally. No tokens go in commands, reports,
-chat or the repository. The downloader refuses missing credentials, metadata and
-empty output, stages incomplete downloads, and never overwrites an existing CSV.
-Actual authenticated download remains untested until credentials are supplied.
+The public mode verifies supplier visibility/license metadata and pins its version
+in the download URL. It enforces response/decompression size limits and stages
+incomplete files. The optional authenticated CLI mode requires local credentials.
+No tokens go in commands, reports, chat or the repository. Neither mode overwrites
+an existing CSV or substitutes synthetic fixtures on error.
 CLI syntax follows [Kaggle's documentation](https://github.com/Kaggle/kaggle-cli/blob/main/docs/datasets.md).
 
 Loader semantics: preserve every transaction with its timestamp and row ID;
@@ -40,16 +43,15 @@ Secondary transaction benchmark only, from
 [the author's linked dataset](https://www.kaggle.com/datasets/ealaxi/paysim1).
 The [simulator author](https://github.com/EdgarLopezPhD/PaySim) describes simulated
 mobile-money data. Do not call it real bank ground truth. The simulator's GPL
-license is not automatically the dataset license. The rendered Kaggle page did
-not expose readable license metadata during this execution; verify the current
-dataset terms there and pass the license ID you actually accept to the downloader:
+license is not automatically the dataset license. Kaggle's public supplier API
+identifies the data license as CC BY-SA 4.0; the actual response is retained
+locally and hashed in the download receipt. Review the supplier terms before use:
 
 ```text
-python scripts/download_data.py --dataset paysim --variant default --license-acknowledged LICENSE_ID_FROM_SUPPLIER
+python scripts/download_data.py --dataset paysim --variant default --license-acknowledged CC-BY-SA-4.0 --public
 ```
 
-No claim that dataset licensing has been cleared is made. Metadata is retained
-locally and hashed. Currency is XXX (unspecified simulated units), not INR. Steps
+This provenance record is not a legal opinion. Currency is XXX (unspecified simulated units), not INR. Steps
 are treated as event-hour offsets. Balance-delta errors on already observed past
 events are available with missingness indicators; never use future transaction
 balances to predict their own labels. A later transaction-level diagnostic must
@@ -57,6 +59,12 @@ separately disclose any contemporaneous/post-transfer balances. Originator
 repetition must be measured from the supplied file; near-unique originators are a
 known dataset limitation, NOT a measured statistic in this checkout. PaySim alone
 cannot validate generalization to multi-hop laundering topology.
+
+The [user-supplied notebook](https://www.kaggle.com/code/kartik2112/fraud-detection-on-paysim-dataset)
+was inspected, not executed. It uses a random transaction split and balance-error
+features containing post-transfer balances. Its reported result is not imported
+into MuleNet. Pre-transfer evaluation and retrospective balance diagnostics must
+remain separately labelled protocols, with thresholds fitted on validation only.
 
 ## Own Simulator
 

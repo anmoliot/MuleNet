@@ -9,6 +9,9 @@ import os
 import shutil
 import subprocess
 import tempfile
+import urllib.parse
+import urllib.request
+import zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -78,14 +81,73 @@ def download(dataset: str, variant: str, license_id: str) -> dict[str, str]:
     return receipt
 
 
+def download_public(dataset: str, variant: str, license_id: str) -> dict:
+    slug, files = DATASETS[dataset]
+    if variant not in files:
+        raise ValueError("Unsupported dataset variant")
+    aliases = {"CC-BY-SA-4.0": "CC BY-SA 4.0", "CDLA-Sharing-1.0": "Community Data License Agreement - Sharing - Version 1.0"}
+    if license_id not in aliases:
+        raise ValueError("Explicit supported supplier-license acknowledgment required")
+    with urllib.request.urlopen(f"https://www.kaggle.com/api/v1/datasets/view/{slug}", timeout=60) as response:
+        metadata = json.load(response)
+    if metadata.get("isPrivate") or metadata.get("licenseName") != aliases[license_id]:
+        raise ValueError("Supplier visibility/license differs from the acknowledged terms")
+    filename = files[variant]
+    directory = ROOT / "data/raw" / dataset
+    directory.mkdir(parents=True, exist_ok=True)
+    target = directory / filename
+    if target.exists():
+        raise FileExistsError(f"Refusing to overwrite {target}")
+    version = metadata["currentVersionNumber"]
+    query = urllib.parse.urlencode({"fileName": filename, "datasetVersionNumber": version})
+    url = f"https://www.kaggle.com/api/v1/datasets/download/{slug}?{query}"
+    with tempfile.TemporaryDirectory(prefix="public-download-", dir=directory) as temporary:
+        staging = Path(temporary)
+        raw = staging / "response"
+        with urllib.request.urlopen(url, timeout=120) as response, raw.open("wb") as output:
+            size = 0
+            while chunk := response.read(1024 * 1024):
+                size += len(chunk)
+                if size > 1024**3:
+                    raise ValueError("Download exceeds single-small-file byte budget")
+                output.write(chunk)
+        if zipfile.is_zipfile(raw):
+            with zipfile.ZipFile(raw) as archive:
+                member = archive.getinfo(filename)
+                if member.file_size > 1024**3:
+                    raise ValueError("Uncompressed dataset exceeds byte budget")
+                with archive.open(member) as source, (staging / filename).open("wb") as output:
+                    shutil.copyfileobj(source, output)
+            incoming = staging / filename
+        else:
+            incoming = raw
+        if incoming.stat().st_size == 0:
+            raise ValueError("Empty download")
+        with incoming.open("rb") as stream:
+            if b"," not in stream.readline(4096):
+                raise ValueError("Provider response is not a CSV")
+        metadata_bytes = (json.dumps(metadata, sort_keys=True) + "\n").encode()
+        (directory / f"{variant}-supplier-metadata.json").write_bytes(metadata_bytes)
+        receipt = {"dataset": dataset, "variant": variant, "source": slug, "supplier_version": version,
+                   "data_provenance": "synthetic", "license": license_id, "sha256": file_hash(incoming),
+                   "supplier_metadata_sha256": hashlib.sha256(metadata_bytes).hexdigest(), "bytes": incoming.stat().st_size}
+        incoming.replace(target)
+    report = ROOT / "reports" / f"data-{dataset}-{variant}.json"
+    report.parent.mkdir(exist_ok=True)
+    report.write_text(json.dumps(receipt, sort_keys=True, indent=2) + "\n", encoding="utf-8")
+    return receipt
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--dataset", choices=DATASETS, required=True)
     parser.add_argument("--variant", required=True)
     parser.add_argument("--license-acknowledged", required=True, metavar="LICENSE_ID")
+    parser.add_argument("--public", action="store_true", help="Use the supplier's public versioned endpoint without credentials")
     args = parser.parse_args()
     try:
-        print(json.dumps(download(args.dataset, args.variant, args.license_acknowledged), sort_keys=True))
+        method = download_public if args.public else download
+        print(json.dumps(method(args.dataset, args.variant, args.license_acknowledged), sort_keys=True))
     except (ValueError, RuntimeError, OSError, subprocess.SubprocessError) as exc:
         parser.exit(1, f"Download refused: {exc}\n")
 
