@@ -1,0 +1,23 @@
+{
+  "accounts": 9073900,
+  "currencies": {
+    "XXX": 6362620
+  },
+  "data_provenance": "synthetic",
+  "file": "PS_20174392719_1491204439457_log.csv",
+  "flagged_transactions": 8213,
+  "kinds": {
+    "CASH_IN": 1399284,
+    "CASH_OUT": 2237500,
+    "DEBIT": 41432,
+    "PAYMENT": 2151495,
+    "TRANSFER": 532909
+  },
+  "maximum_time": 743,
+  "minimum_time": 1,
+  "originator_unique_per_transaction": 0.9985362947967975,
+  "sha256": "16910f90577b0d981bf8ff289714510bb89bc71bff7d3f220f024e287e4eea6b",
+  "transactions": 6362620,
+  "unique_destinations": 2722362,
+  "unique_originators": 6353307
+}

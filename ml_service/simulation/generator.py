@@ -41,7 +41,7 @@ class SimulationConfig(StrictModel):
         return self
 
 
-def generate(config: SimulationConfig = SimulationConfig()) -> Dataset:
+def generate(config: SimulationConfig = SimulationConfig(), cashout_ledger: list[dict] | None = None) -> Dataset:
     rng = random.Random(config.seed)
     transactions: list[Transaction] = []
     accounts = []
@@ -59,13 +59,16 @@ def generate(config: SimulationConfig = SimulationConfig()) -> Dataset:
         value = round(max(0.01, amount * rng.uniform(1 - config.amount_noise, 1 + config.amount_noise)), 2)
         if typology == "structuring" and 47500 <= amount < 50000:
             value = min(49999.99, max(47500.0, value))
-        transactions.append(Transaction(
+        transaction = Transaction(
             transaction_id=f"t{len(transactions):09d}", source=source, target=target,
             ts=ts, amount=value, kind="TRANSFER", fraud=fraud, typology=typology,
             ring_id=ring_id,
             device_id=f"d{rng.randrange(8):02d}" if rng.random() < 0.7 else None,
             ip_address=f"192.0.2.{rng.randrange(1, 30)}" if rng.random() < 0.7 else None,
-        ))
+        )
+        transactions.append(transaction)
+        if cashout_ledger is not None and target == collector and fraud:
+            cashout_ledger.append({"transaction_id": transaction.transaction_id, "source": source, "target": target, "ts": ts, "amount": value, "currency": "INR", "simulation_definition": "terminal collector credit, not verified bank cash-out"})
         tags[source].add(typology)
         tags[target].add(typology)
 
@@ -143,11 +146,22 @@ def main() -> None:
     parser.add_argument("--delay-seconds", type=int, default=120)
     parser.add_argument("--split-count", type=int, default=3)
     parser.add_argument("--merchant-hop", action="store_true")
+    parser.add_argument("--components", type=int, default=12)
+    parser.add_argument("--accounts-per-component", type=int, default=12)
+    parser.add_argument("--days", type=int, default=30)
+    parser.add_argument("--noise-events-per-day", type=int, default=4)
+    parser.add_argument("--cashout-ledger", type=Path)
     args = parser.parse_args()
     if not args.allow_synthetic:
         parser.error("Synthetic generation requires explicit --allow-synthetic")
-    config = SimulationConfig(seed=args.seed, delay_seconds=args.delay_seconds, split_count=args.split_count, merchant_hop=args.merchant_hop)
-    print(write_dataset(generate(config), args.out))
+    config = SimulationConfig(seed=args.seed, delay_seconds=args.delay_seconds, split_count=args.split_count, merchant_hop=args.merchant_hop, components=args.components, accounts_per_component=args.accounts_per_component, days=args.days, noise_events_per_day=args.noise_events_per_day)
+    ledger = []
+    digest = write_dataset(generate(config, ledger), args.out)
+    if args.cashout_ledger:
+        from mulenet_core.io import canonical_json
+        args.cashout_ledger.parent.mkdir(parents=True, exist_ok=True)
+        args.cashout_ledger.write_bytes(canonical_json({"data_hash": digest, "data_provenance": "synthetic", "config": config.model_dump(mode="json"), "events": ledger}))
+    print(digest)
 
 
 if __name__ == "__main__":

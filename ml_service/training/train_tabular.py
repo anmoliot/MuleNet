@@ -10,6 +10,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import StratifiedKFold, cross_val_predict
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
+from mulenet_core.calibration import calibrated_probabilities
 
 
 def train_xgb(x_train, y_train, x_val, y_val, seed=42):
@@ -57,4 +58,4 @@ def train_stack(validation_components, y_val, seed=42):
     oof = cross_val_predict(meta, validation_components, y_val, cv=cv, method="predict_proba")[:, 1]
     calibration = fit_calibrator(oof, y_val)
     meta.fit(validation_components, y_val)
-    return meta, calibration, calibration.predict(oof)
+    return meta, calibration, calibrated_probabilities(calibration, oof)

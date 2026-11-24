@@ -220,3 +220,56 @@ After adding explicit manifest metrics-file/hash consistency, both training
 commands were repeated into new immutable directories demo-temporal-v3 and
 demo-entity-v2. Those candidates replace the earlier development bundles for
 subsequent evaluation; no manifest fields or model metrics were hand-edited.
+
+## Phase 3: Evaluation Evidence (In Progress)
+
+Changed: deterministic bootstrap metrics, frozen-candidate evaluation, robustness,
+terminal-credit lead-time diagnostics, calibrated probability validation, full
+PaySim temporal evaluation, source inventories and label-independent AML cohorts.
+All report values are written by scripts, including non-estimability diagnostics.
+
+Commands executed from ml_service unless prefixed scripts/:
+
+```text
+python ../scripts/profile_datasets.py --help
+python -m eval.run_eval --dataset sim --split temporal --data ../data/generated/training-demo.json --models ../artifacts/demo-temporal-v3 --out ../reports/metrics-sim-temporal.json --allow-synthetic
+python -m eval.run_eval --dataset sim --split entity --data ../data/generated/training-demo.json --models ../artifacts/demo-entity-v2 --out ../reports/metrics-sim-entity.json --allow-synthetic
+python -m eval.paysim --data ../data/raw/paysim/PS_20174392719_1491204439457_log.csv --models ../artifacts/paysim-temporal-v2 --train
+python -m eval.paysim --data ../data/raw/paysim/PS_20174392719_1491204439457_log.csv --models ../artifacts/paysim-temporal-v2
+python -m eval.amlworld --variant HI-Small
+python -m eval.amlworld --variant LI-Small
+python scripts/aggregate_reports.py
+python scripts/record_tests.py --phase evaluation ml_service/tests
+python scripts/bench_latency.py --mode model --models artifacts/demo-temporal-v3 --allow-synthetic
+```
+
+Output summary: candidate evaluations and full PaySim temporal evaluation exit
+successfully; reports contain bootstrap confidence intervals and scope warnings.
+AML reports explicitly say not_estimable with null performance, not fabricated
+AUCs. Aggregator retains production_approved=false. Test receipt is
+reports/evaluation-tests.json; latency receipt reports individual calls, not
+batch-time/row. It explicitly excludes features, HTTP, Kafka, policy and SSE.
+
+Initial full PaySim evaluation failed on isotonic interpolation outside the
+unit interval; a shared, tested roundoff-only bound fixes representation error.
+The report includes correction diagnostics. Larger invalid probabilities fail.
+Expensive initial AML feature builds were cancelled, not called passing runs;
+label-only preflight now diagnoses insufficient classes before model fitting.
+
+Acceptance remains OPEN: full connected-network AMLworld evaluation and complete
+Kafka-to-SSE latency are not implemented. Frozen-report repeatability is checked
+separately; a model-only latency result is never described as end-to-end.
+Claims downgraded: the supplied PaySim notebook is not topology evidence;
+terminal-credit coverage is not money recovered; a clean bootstrap interval at
+zero false alarms does not prove zero population risk (exact intervals included).
+
+```text
+python scripts/verify_evaluation.py
+PASS: reports/evaluation-reproducibility.json records byte-identical temporal and entity numerical reports.
+```
+
+Visual check: the generated PaySim pre-transfer PR plot is nonblank, axes are
+labelled and fit without overlap. This is report QA, not a performance assertion.
+The supplied older attachment requested preserving legacy components; the newer
+phased security/evaluation specification supersedes those preservation requests
+where they conflict with safe model serving and platform hardening.

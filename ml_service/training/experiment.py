@@ -13,10 +13,11 @@ import skops.io as sio
 import torch
 
 from mulenet_core.artifacts import write_manifest
+from mulenet_core.calibration import calibrated_probabilities
 from mulenet_core.io import canonical_json, read_dataset, load_amlworld, load_paysim
-from mulenet_core.labels import materialize
+from mulenet_core.labels import Example, future_label, materialize
 from mulenet_core.schema import Dataset, FeatureConfig, feature_names
-from mulenet_core.splits import temporal_split, entity_split, entity_partitions, partition_events
+from mulenet_core.splits import Split, temporal_split, entity_split, entity_partitions, partition_events
 from training.train_gnn import export_gnn, predict_graphs, snapshot_graph, train_gnn
 from training.train_tabular import fit_calibrator, select_threshold, train_anomaly, train_stack, train_xgb
 
@@ -24,16 +25,47 @@ from training.train_tabular import fit_calibrator, select_threshold, train_anoma
 def load_input(dataset, path, allow_synthetic=False):
     if dataset == "sim":
         return read_dataset(path, allow_synthetic=allow_synthetic)
+    if dataset == "amlworld" and path.suffix == ".json":
+        receipt = json.loads(path.with_suffix(".receipt.json").read_bytes())
+        if hashlib.sha256(path.read_bytes()).hexdigest() != receipt["cohort_sha256"]:
+            raise ValueError("Cohort hash differs from its preparation receipt")
+        result = Dataset.model_validate_json(path.read_bytes())
+        if not result.source.startswith("amlworld-whole-component-cohort:"):
+            raise ValueError("JSON is not a declared external benchmark cohort")
+        return result
     events = load_amlworld(path) if dataset == "amlworld" else load_paysim(path)
     return Dataset(source=dataset, transactions=events)
 
 
-def prepare(dataset: Dataset, split_name: str, config: FeatureConfig, horizon=21600, seed=42):
-    start, end = min(e.ts for e in dataset.transactions), max(e.ts for e in dataset.transactions)
-    nodes = sorted({e.source for e in dataset.transactions} | {e.target for e in dataset.transactions})
-    first = {node: min(e.ts for e in dataset.transactions if node in (e.source, e.target)) for node in nodes}
+def preflight_splits(dataset, split_name, horizon=21600, seed=42, observation_bounds=None, currency="INR"):
+    start, end = observation_bounds or (min(e.ts for e in dataset.transactions), max(e.ts for e in dataset.transactions))
+    scoped = [event for event in dataset.transactions if event.currency == currency]
+    nodes = sorted({e.source for e in scoped} | {e.target for e in scoped})
+    first, related = {}, defaultdict(list)
+    for event in scoped:
+        first[event.source] = min(first.get(event.source, event.ts), event.ts)
+        first[event.target] = min(first.get(event.target, event.ts), event.ts)
+        related[event.source].append(event)
+        if event.source != event.target:
+            related[event.target].append(event)
     times = range(start + 86400 + 7200, end - horizon, 86400)
     points = [(node, ts) for ts in times for node in nodes if first[node] <= ts]
+    assignment = entity_partitions(dataset.transactions, seed) if split_name == "entity" else None
+    rows = []
+    for account, as_of in points:
+        label, ids = future_label(related[account], account, as_of, horizon, end, currency)
+        rows.append(Example(account, as_of, as_of + horizon, label, {}, (), ids))
+    if split_name == "temporal":
+        return temporal_split(rows, int(start + (end - start) * .6), int(start + (end - start) * .8)), points, (start, end)
+    if split_name == "entity":
+        return Split(*(tuple(row for row in rows if assignment[row.account_id] == part) for part in ("train", "val", "test"))), points, (start, end)
+    raise ValueError("Unknown split")
+
+
+def prepare(dataset: Dataset, split_name: str, config: FeatureConfig, horizon=21600, seed=42, observation_bounds=None):
+    _, points, (start, end) = preflight_splits(dataset, split_name, horizon, seed, observation_bounds, config.currency)
+    if len({account for account, _ in points}) > config.max_graph_nodes:
+        raise ValueError("Dataset exceeds full-snapshot node budget; select and disclose a whole-component cohort, never sample raw edges")
     if split_name == "temporal":
         rows = materialize(dataset.transactions, points, horizon, end, config, dataset.accounts)
         split = temporal_split(rows, int(start + (end - start) * .6), int(start + (end - start) * .8))
@@ -53,11 +85,14 @@ def prepare(dataset: Dataset, split_name: str, config: FeatureConfig, horizon=21
     return split, graphs
 
 
-def train_experiment(dataset, dataset_name, split_name, directory, config, seed=42, epochs=30):
+def train_experiment(dataset, dataset_name, split_name, directory, config, seed=42, epochs=30, horizon=21600, observation_bounds=None):
     if directory.exists() and any(directory.iterdir()):
         raise FileExistsError("Train into a new immutable version directory")
     directory.mkdir(parents=True, exist_ok=True)
-    split, graphs = prepare(dataset, split_name, config, seed=seed)
+    preflight, _, bounds = preflight_splits(dataset, split_name, horizon, seed, observation_bounds, config.currency)
+    if any(sum(row.label for row in getattr(preflight, part)) < 2 for part in ("train", "val")):
+        raise ValueError("Statistically insufficient training/validation positives; refusing to train or resample labels")
+    split, graphs = prepare(dataset, split_name, config, horizon=horizon, seed=seed, observation_bounds=bounds)
     names = feature_names(config)
     matrices = {part: np.asarray([[row.features[name] for name in names] for row in getattr(split, part)]) for part in ("train", "val")}
     labels = {part: np.asarray([row.label for row in getattr(split, part)]) for part in ("train", "val")}
@@ -74,17 +109,18 @@ def train_experiment(dataset, dataset_name, split_name, directory, config, seed=
     meta_components = np.column_stack([raw["tabular_graph"], raw["gnn"], -anomaly.score_samples(matrices["val"])])
     stack, fusion_calibration, fusion_oof = train_stack(meta_components, labels["val"], seed)
     calibrators = {name: fit_calibrator(scores, labels["val"]) for name, scores in raw.items()}
-    thresholds = {name: select_threshold(labels["val"], calibrators[name].predict(scores)) for name, scores in raw.items()}
+    thresholds = {name: select_threshold(labels["val"], calibrated_probabilities(calibrators[name], scores)) for name, scores in raw.items()}
     calibrators["fusion"] = fusion_calibration
     thresholds["fusion"] = select_threshold(labels["val"], fusion_oof)
     # The default deep path is decided on VAL only; the test cannot change it.
-    recalls = {name: float(np.mean((calibrators[name].predict(raw[name]) >= thresholds[name])[labels["val"] == 1])) for name in ("tabular_graph", "gnn")}
+    recalls = {name: float(np.mean((calibrated_probabilities(calibrators[name], raw[name]) >= thresholds[name])[labels["val"] == 1])) for name in ("tabular_graph", "gnn")}
     default_deep = "gnn" if recalls["gnn"] > recalls["tabular_graph"] else "tabular_graph"
     training = {"dataset": dataset_name, "data_provenance": dataset.data_provenance,
-                "split": split_name, "seed": seed, "threshold_selection": "VAL only; maximize recall at empirical FPR <= 0.001",
+                "split": split_name, "seed": seed, "label_horizon_seconds": horizon, "observation_bounds": list(bounds), "threshold_selection": "VAL only; maximize recall at empirical FPR <= 0.001",
                 "thresholds": thresholds, "tabular_indices": tabular_indices, "default_deep_path": default_deep,
                 "gnn": gnn_training, "rows": {part: len(getattr(split, part)) for part in ("train", "val", "test")},
                 "stacking": "Base models fit on TRAIN; stratified out-of-fold meta predictions on VAL; isotonic on VAL OOF",
+                "probability_numerics": "Only <=4 float32 ULP representation error is bounded to [0,1]; larger violations fail",
                 "limitations": ["Synthetic data cannot establish bank effectiveness", "Small VAL has coarse FPR resolution", "Validation calibration and threshold reuse can overfit; TEST remains untouched during fitting"]}
     tabular.save_model(directory / "tabular.ubj")
     graph_tabular.save_model(directory / "tabular_graph.ubj")
@@ -108,9 +144,10 @@ def main():
     parser.add_argument("--currency", default="INR")
     parser.add_argument("--allow-synthetic", action="store_true")
     parser.add_argument("--epochs", type=int, default=30)
+    parser.add_argument("--horizon", type=int, default=21600)
     args = parser.parse_args()
     dataset = load_input(args.dataset, args.data, args.allow_synthetic)
-    report = train_experiment(dataset, args.dataset, args.split, args.out, FeatureConfig(currency=args.currency), epochs=args.epochs)
+    report = train_experiment(dataset, args.dataset, args.split, args.out, FeatureConfig(currency=args.currency), epochs=args.epochs, horizon=args.horizon)
     reports = Path(__file__).resolve().parents[2] / "reports"
     reports.mkdir(exist_ok=True)
     (reports / f"training-{args.dataset}-{args.split}.json").write_bytes(canonical_json(report))

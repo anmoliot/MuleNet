@@ -1,0 +1,17 @@
+{
+  "experiments": [
+    {
+      "after_sha256": "7168a7ef3f2edf42c3b86b93089054818dc8ab89aa1b08a93ff90752e0f2b223",
+      "before_sha256": "7168a7ef3f2edf42c3b86b93089054818dc8ab89aa1b08a93ff90752e0f2b223",
+      "identical": true,
+      "split": "temporal"
+    },
+    {
+      "after_sha256": "11fadc00668dc77019fb225493f248822d1b47121d5b572b2e0a3058a2147e24",
+      "before_sha256": "11fadc00668dc77019fb225493f248822d1b47121d5b572b2e0a3058a2147e24",
+      "identical": true,
+      "split": "entity"
+    }
+  ],
+  "scope": "Frozen weights and input, repeat numerical evaluation; not proof of cross-platform training identity"
+}

@@ -1,0 +1,38 @@
+{
+  "burst": {
+    "completed_per_second": 1122.759113120471,
+    "concurrency": 8,
+    "elapsed_seconds": 0.17813260000548325,
+    "p50_ms": 6.02065,
+    "p95_ms": 10.132259999999993,
+    "p99_ms": 17.351504999999992,
+    "requests": 200
+  },
+  "data_provenance": "synthetic",
+  "end_to_end": {
+    "reason": "Requires Kafka-to-SSE correlation harness; model/HTTP timings are not end-to-end latency",
+    "status": "not_measured"
+  },
+  "identity": {
+    "excludes": [
+      "feature extraction",
+      "Redis",
+      "HTTP",
+      "Kafka",
+      "policy",
+      "SSE"
+    ],
+    "model": "tabular_graph",
+    "model_version": "dbfc0bf88743bb80"
+  },
+  "mode": "model",
+  "steady": {
+    "completed_per_second": 1048.237257945847,
+    "concurrency": 1,
+    "elapsed_seconds": 0.19079650001367554,
+    "p50_ms": 0.85985,
+    "p95_ms": 1.2082249999999997,
+    "p99_ms": 1.3810519999999997,
+    "requests": 200
+  }
+}
