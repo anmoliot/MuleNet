@@ -13,6 +13,7 @@ import org.springframework.web.client.RestTemplate;
 import java.util.HashMap;
 import java.util.Map;
 
+@org.springframework.context.annotation.Profile("legacy")
 @RestController
 public class HealthController {
 

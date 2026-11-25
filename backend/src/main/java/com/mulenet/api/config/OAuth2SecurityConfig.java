@@ -21,6 +21,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@org.springframework.context.annotation.Profile("legacy")
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity

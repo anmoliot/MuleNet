@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 
+@org.springframework.context.annotation.Profile("legacy")
 @Component
 public class DataSeeder implements CommandLineRunner {
 

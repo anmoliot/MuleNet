@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 
+@org.springframework.context.annotation.Profile("legacy")
 @Service
 public class NotificationService {
 

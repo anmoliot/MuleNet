@@ -1,18 +1,20 @@
-FROM python:3.11-slim
+FROM python:3.13.7-slim
 
 WORKDIR /app
 
-# Install system dependencies for building C/C++ libraries if needed
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
     libgomp1 \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir uv==0.13.9
+COPY pyproject.toml uv.lock ./
+RUN --mount=type=cache,target=/root/.cache/uv uv sync --frozen --no-dev --no-install-project
 
-COPY . .
+COPY ml_service/ ./
+RUN useradd --uid 10001 --no-create-home --shell /usr/sbin/nologin app
+USER 10001
+ENV HOME=/tmp PYTHONDONTWRITEBYTECODE=1
 
 EXPOSE 8000
 
-CMD ["sh", "-c", "sleep 60 && uvicorn main:app --host 0.0.0.0 --port 8000"]
+CMD ["/app/.venv/bin/uvicorn", "serving:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000", "--no-access-log", "--limit-concurrency", "16"]

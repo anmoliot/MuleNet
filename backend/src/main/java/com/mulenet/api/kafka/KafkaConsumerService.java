@@ -24,6 +24,7 @@ import java.time.ZoneId;
 import java.util.Collections;
 import java.util.Map;
 
+@org.springframework.context.annotation.Profile("legacy")
 @Service
 public class KafkaConsumerService {
 

@@ -25,6 +25,7 @@ import java.util.*;
  * Translates ML risk scores into actionable policy decisions.
  * Configurable thresholds, audit logging, and intervention orchestration.
  */
+@org.springframework.context.annotation.Profile("legacy")
 @Service
 public class PolicyEngine {
 

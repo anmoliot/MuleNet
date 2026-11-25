@@ -1,0 +1,36 @@
+[project]
+name = "mulenet"
+version = "0.1.0"
+requires-python = ">=3.13,<3.14"
+dependencies = [
+  "fastapi==0.136.3", "uvicorn==0.49.0", "pydantic==2.13.4",
+  "networkx==3.6.1", "numpy==2.4.4", "scikit-learn==1.6.1",
+  "xgboost==3.4.1", "torch==2.12.1", "torch-geometric==2.8.1",
+  "skops==0.16.0", "PyJWT==2.13.0", "redis==5.0.4",
+  "prometheus-client==0.24.1", "httpx==0.28.1", "scipy==1.17.1",
+  "filelock==4.3.1",
+]
+
+[dependency-groups]
+dev = ["pytest==9.0.3", "pytest-cov==7.1.0", "ruff==0.17.6", "mypy==2.4.1", "types-networkx==3.6.1.20261122", "pip-audit==2.10.1"]
+evaluation = ["matplotlib==3.10.9", "shap==0.54.1"]
+training = ["pyg-lib==0.9.0+pt212cpu", "torch-scatter==2.1.2+pt212cpu", "torch-sparse==0.6.18+pt212cpu"]
+
+[tool.uv]
+find-links = ["https://data.pyg.org/whl/torch-2.12.0+cpu.html"]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
+
+[tool.pytest.ini_options]
+pythonpath = ["ml_service"]
+testpaths = ["ml_service/tests"]
+
+[tool.ruff]
+target-version = "py313"
+line-length = 120

@@ -19,6 +19,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import java.util.Arrays;
 import java.util.Collections;
 
+@org.springframework.context.annotation.Profile("legacy")
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity

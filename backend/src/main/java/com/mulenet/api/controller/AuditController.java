@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@org.springframework.context.annotation.Profile("legacy")
 @RestController
 @RequestMapping("/api/audit-logs")
 @CrossOrigin(origins = "*")

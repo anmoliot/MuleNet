@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
+@org.springframework.context.annotation.Profile("legacy")
 @RestController
 @RequestMapping("/api/demo")
 @CrossOrigin(origins = "*")

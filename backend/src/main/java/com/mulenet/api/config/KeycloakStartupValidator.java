@@ -10,6 +10,7 @@ import org.springframework.web.client.RestTemplate;
 import jakarta.annotation.PostConstruct;
 import java.net.URI;
 
+@org.springframework.context.annotation.Profile("legacy")
 @Component
 @ConditionalOnProperty(name = "app.security.oauth2.enabled", havingValue = "true")
 public class KeycloakStartupValidator {

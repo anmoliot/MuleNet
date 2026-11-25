@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.UUID;
 
+@org.springframework.context.annotation.Profile("legacy")
 @Component
 public class DataInitializer implements CommandLineRunner {
 

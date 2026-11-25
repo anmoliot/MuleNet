@@ -30,6 +30,9 @@ public class PolicyEngineTest {
     @Mock
     private PolicyConfigRepository configRepository;
 
+    @Mock
+    private com.mulenet.api.repository.CaseCommentRepository caseCommentRepository;
+
     @InjectMocks
     private PolicyEngine policyEngine;
 
@@ -38,6 +41,7 @@ public class PolicyEngineTest {
         MockitoAnnotations.openMocks(this);
         when(configRepository.findById(anyString())).thenReturn(Optional.empty());
         policyEngine.init();
+        clearInvocations(configRepository);
     }
 
     @Test

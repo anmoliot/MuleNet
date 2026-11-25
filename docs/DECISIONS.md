@@ -77,3 +77,21 @@ Status: Accepted for the candidate serving migration.
 Context: Neither simulated split selected the GNN at the specified low-FPR operating point.
 Decision: Keep graph-tabular as the selected path; retain GNN/fusion as measured ablations.
 Consequence: Do not spend GNN latency or invent missing component values just to market a neural path.
+
+## ADR-013: JDBC Decision Boundary and Durable Transport
+Status: Accepted for the platform migration; acceptance remains test-gated.
+Context: Legacy JPA controllers and consumers implement competing, non-atomic decision paths.
+Decision: Isolate them in legacy; use Flyway plus a tenant-locked JDBC ledger, decisions, audit and outbox.
+Consequence: Transport is at-least-once with business-key deduplication, not distributed exactly-once.
+
+## ADR-014: No Automatic Bank Freeze or Feedback Promotion
+Status: Accepted for a non-production research platform.
+Context: False freezes are harmful and case status is not independently verified fraud evidence.
+Decision: Bounded review holds, supervisory actions, appeals and independent cooled adjudication.
+Consequence: No bank intervention, recovered-funds claim or automatic case-to-transaction label conversion.
+
+## ADR-015: Generated Client Must Survive a Real Contract Check
+Status: Accepted after the first real-stack test exposed empty request serialization.
+Context: The old generator mishandles closed OpenAPI objects; its compile success was insufficient.
+Decision: Use official OpenAPI normalization, a compatible Spring Boot patch and serialization regression tests.
+Consequence: Strict server schemas remain intact; generated files are never manually patched.

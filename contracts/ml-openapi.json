@@ -1,0 +1,654 @@
+{
+  "components": {
+    "schemas": {
+      "Account": {
+        "additionalProperties": false,
+        "properties": {
+          "account_id": {
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "Account Id",
+            "type": "string"
+          },
+          "created_at": {
+            "minimum": 0.0,
+            "title": "Created At",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "account_id",
+          "created_at"
+        ],
+        "title": "Account",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "ScoreRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "account_id": {
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "Account Id",
+            "type": "string"
+          },
+          "as_of": {
+            "format": "int64",
+            "minimum": 0.0,
+            "title": "As Of",
+            "type": "integer"
+          },
+          "correlation_id": {
+            "pattern": "^[a-zA-Z0-9-]{1,64}$",
+            "title": "Correlation Id",
+            "type": "string"
+          },
+          "snapshot_id": {
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Snapshot Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "account_id",
+          "as_of",
+          "snapshot_id",
+          "correlation_id"
+        ],
+        "title": "ScoreRequest",
+        "type": "object"
+      },
+      "ScoreResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "account_id": {
+            "title": "Account Id",
+            "type": "string"
+          },
+          "alert": {
+            "title": "Alert",
+            "type": "boolean"
+          },
+          "as_of": {
+            "format": "int64",
+            "minimum": 0.0,
+            "title": "As Of",
+            "type": "integer"
+          },
+          "correlation_id": {
+            "title": "Correlation Id",
+            "type": "string"
+          },
+          "data_provenance": {
+            "const": "synthetic",
+            "title": "Data Provenance",
+            "type": "string"
+          },
+          "degradation_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Degradation Reason"
+          },
+          "degraded": {
+            "title": "Degraded",
+            "type": "boolean"
+          },
+          "durations_ms": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "title": "Durations Ms",
+            "type": "object"
+          },
+          "evidence": {
+            "additionalProperties": true,
+            "title": "Evidence",
+            "type": "object"
+          },
+          "feature_schema_hash": {
+            "title": "Feature Schema Hash",
+            "type": "string"
+          },
+          "model": {
+            "enum": [
+              "tabular_graph",
+              "gnn",
+              "fusion"
+            ],
+            "title": "Model",
+            "type": "string"
+          },
+          "model_version": {
+            "title": "Model Version",
+            "type": "string"
+          },
+          "probability": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Probability",
+            "type": "number"
+          },
+          "reason_codes": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Reason Codes",
+            "type": "array"
+          },
+          "score_components": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "title": "Score Components",
+            "type": "object"
+          },
+          "shadow_results": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Shadow Results",
+            "type": "array"
+          },
+          "simulated_watchlist": {
+            "additionalProperties": true,
+            "title": "Simulated Watchlist",
+            "type": "object"
+          },
+          "snapshot_id": {
+            "title": "Snapshot Id",
+            "type": "string"
+          },
+          "validation_threshold": {
+            "title": "Validation Threshold",
+            "type": "number"
+          }
+        },
+        "required": [
+          "account_id",
+          "as_of",
+          "correlation_id",
+          "snapshot_id",
+          "model_version",
+          "feature_schema_hash",
+          "data_provenance",
+          "model",
+          "probability",
+          "validation_threshold",
+          "alert",
+          "degraded",
+          "degradation_reason",
+          "score_components",
+          "reason_codes",
+          "evidence",
+          "simulated_watchlist",
+          "durations_ms"
+        ],
+        "title": "ScoreResponse",
+        "type": "object"
+      },
+      "Snapshot": {
+        "additionalProperties": false,
+        "properties": {
+          "accounts": {
+            "items": {
+              "$ref": "#/components/schemas/Account"
+            },
+            "maxItems": 4096,
+            "title": "Accounts",
+            "type": "array"
+          },
+          "complete_from": {
+            "format": "int64",
+            "minimum": 0.0,
+            "title": "Complete From",
+            "type": "integer"
+          },
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/Transaction"
+            },
+            "maxItems": 8192,
+            "title": "Events",
+            "type": "array"
+          },
+          "snapshot_id": {
+            "anyOf": [
+              {
+                "pattern": "^[a-f0-9]{64}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Snapshot Id"
+          },
+          "watermark": {
+            "format": "int64",
+            "minimum": 0.0,
+            "title": "Watermark",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "complete_from",
+          "watermark",
+          "events",
+          "accounts"
+        ],
+        "title": "Snapshot",
+        "type": "object"
+      },
+      "Transaction": {
+        "additionalProperties": false,
+        "properties": {
+          "amount": {
+            "minimum": 0.0,
+            "title": "Amount",
+            "type": "number"
+          },
+          "currency": {
+            "default": "INR",
+            "pattern": "^[A-Z]{3}$",
+            "title": "Currency",
+            "type": "string"
+          },
+          "device_id": {
+            "anyOf": [
+              {
+                "maxLength": 256,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Device Id"
+          },
+          "fraud": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fraud"
+          },
+          "ip_address": {
+            "anyOf": [
+              {
+                "maxLength": 256,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ip Address"
+          },
+          "kind": {
+            "default": "TRANSFER",
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "Kind",
+            "type": "string"
+          },
+          "receiver_balance_after": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Receiver Balance After"
+          },
+          "receiver_balance_before": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Receiver Balance Before"
+          },
+          "ring_id": {
+            "anyOf": [
+              {
+                "maxLength": 256,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ring Id"
+          },
+          "sender_balance_after": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sender Balance After"
+          },
+          "sender_balance_before": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sender Balance Before"
+          },
+          "source": {
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "Source",
+            "type": "string"
+          },
+          "target": {
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "Target",
+            "type": "string"
+          },
+          "transaction_id": {
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "Transaction Id",
+            "type": "string"
+          },
+          "ts": {
+            "minimum": 0.0,
+            "title": "Ts",
+            "type": "integer"
+          },
+          "typology": {
+            "anyOf": [
+              {
+                "maxLength": 256,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Typology"
+          }
+        },
+        "required": [
+          "transaction_id",
+          "source",
+          "target",
+          "ts",
+          "amount"
+        ],
+        "title": "Transaction",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "scheme": "bearer",
+        "type": "http"
+      }
+    }
+  },
+  "info": {
+    "title": "MuleNet internal scoring API",
+    "version": "1.0.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/health": {
+      "get": {
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Health"
+      }
+    },
+    "/metrics": {
+      "get": {
+        "operationId": "metrics_metrics_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Metrics"
+      }
+    },
+    "/openapi.json": {
+      "get": {
+        "operationId": "contract_openapi_json_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Contract"
+      }
+    },
+    "/ready": {
+      "get": {
+        "operationId": "ready_ready_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Ready"
+      }
+    },
+    "/v1/score": {
+      "post": {
+        "operationId": "score",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScoreRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScoreResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Score"
+      }
+    },
+    "/v1/snapshots": {
+      "post": {
+        "operationId": "cacheSnapshot",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Snapshot"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Put Snapshot"
+      }
+    }
+  }
+}
