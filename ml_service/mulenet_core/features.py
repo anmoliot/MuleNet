@@ -6,11 +6,20 @@ import math
 import statistics
 from collections import defaultdict, deque
 from collections.abc import Iterable, Mapping
+from functools import lru_cache
 
 import networkx as nx
 
 from .graph import amount_graph, bounded_cycle_counts, canonical_events, hop_flows, transaction_graph
 from .schema import Account, FeatureConfig, Transaction, feature_names
+
+
+@lru_cache(maxsize=4)
+def _window_context(events: tuple[Transaction, ...], config: FeatureConfig):
+    graph = amount_graph(transaction_graph(events, config))
+    cycles = bounded_cycle_counts(graph, config)
+    ranks = nx.pagerank(graph, alpha=0.85, weight="weight", tol=1e-12, max_iter=1000) if graph else {}
+    return graph, cycles, ranks
 
 
 def _entropy(incoming: list[Transaction]) -> float:
@@ -102,7 +111,7 @@ def extract_features(
     result = {"account_age_seconds": float(as_of - first_seen), "account_age_known": float(registry_account is not None)}
     for window in config.windows:
         selected = tuple(e for e in past if e.ts > as_of - window)
-        graph = amount_graph(transaction_graph(selected, config))
+        graph, cycles, ranks = _window_context(selected, config)
         incoming = [e for e in related if e.ts > as_of - window and e.target == account_id]
         outgoing = [e for e in related if e.ts > as_of - window and e.source == account_id]
         activity = [e for e in related if e.ts > as_of - window]
@@ -113,8 +122,6 @@ def extract_features(
         device_degree, device_observed = _sharing(selected, outgoing, "device_id", account_id)
         ip_degree, ip_observed = _sharing(selected, outgoing, "ip_address", account_id)
         balance_error, balance_observed = _balance_error(activity, account_id)
-        cycles = bounded_cycle_counts(graph, config)
-        ranks = nx.pagerank(graph, alpha=0.85, weight="weight", tol=1e-12, max_iter=1000) if graph else {}
         values = {
             "in_degree": float(len(incoming)), "out_degree": float(len(outgoing)),
             "log_recv": math.log1p(received), "log_sent": math.log1p(sent),

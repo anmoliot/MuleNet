@@ -37,7 +37,7 @@ Decision: Test a feature-only API and batch adapter; do not silently project int
 Consequence: Legacy application paths remain unsafe/unmigrated until Phase 2 replacement.
 
 ## ADR-006: Do Not Substitute Data for Blocked Benchmarks
-Status: Blocked pending user-supplied authorized datasets/authentication.
+Status: Superseded for acquisition by ADR-008; still prohibits substituted benchmark claims.
 Context: CSVs/credentials are absent; user said they will provide inputs later.
 Decision: Finish isolated foundation checks; do not replace primary benchmark evaluation with demo claims.
 Consequence: Model/benchmark phases and overall acceptance remain incomplete.
@@ -47,3 +47,15 @@ Status: Accepted for reference feature extraction.
 Context: PaySim balances may describe outcomes; AMLworld clocks have no explicit timezone.
 Decision: Use past-event balances only; treat simulation timestamps as a documented UTC clock convention.
 Consequence: No current-transaction balance leakage or claim of real-world temporal availability.
+
+## ADR-008: Public Versioned Benchmark Acquisition
+Status: Accepted after successful supplier API/license checks and downloads.
+Context: Public endpoints make account credentials unnecessary for the requested files.
+Decision: Explicit public mode checks terms/visibility, pins provider versions and hashes bytes.
+Consequence: Acquisition blocker is removed; data remain local and evaluation still must run.
+
+## ADR-009: Safe Formats and Validation-Only Model Selection
+Status: Accepted for candidate training; serving migration remains a later phase.
+Context: Baseline pickles and hand-weighted pseudo-GNN cannot establish trustworthy scores.
+Decision: Native XGBoost, allowlisted skops, edge-aware PyG/NeighborLoader and OOF validation stacking.
+Consequence: Hash/schema mismatch fails; no implicit training, model substitution or synthetic data.

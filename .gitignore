@@ -58,6 +58,8 @@ processed_paysim.csv
 /.pytest_cache/
 /.ruff_cache/
 /.mypy_cache/
+/artifacts/
+/.tools/
 
 # Local Demo & Voiceover (kept locally, not committed)
 docs/demo/

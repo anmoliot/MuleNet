@@ -1,5 +1,6 @@
 import json
 import subprocess
+import io
 
 import pytest
 
@@ -51,3 +52,22 @@ def test_download_receipt_hashes_output_and_propagates_failures(monkeypatch, tmp
     with pytest.raises(subprocess.CalledProcessError):
         download_data.download("amlworld", "LI-Small", "CDLA-Sharing-1.0")
     assert not (tmp_path / "reports/data-amlworld-LI-Small.json").exists()
+
+
+def test_public_download_checks_supplier_license_and_pins_version(monkeypatch, tmp_path):
+    monkeypatch.setattr(download_data, "ROOT", tmp_path)
+    requested = []
+
+    def public_response(url, **kwargs):
+        requested.append(url)
+        if "/view/" in url:
+            return io.BytesIO(json.dumps({"isPrivate": False, "licenseName": "CC BY-SA 4.0", "currentVersionNumber": 2}).encode())
+        return io.BytesIO(b"step,type,amount\n1,TRANSFER,10\n")
+
+    monkeypatch.setattr(download_data.urllib.request, "urlopen", public_response)
+    receipt = download_data.download_public("paysim", "default", "CC-BY-SA-4.0")
+    assert receipt["supplier_version"] == 2
+    assert "datasetVersionNumber=2" in requested[-1]
+    assert receipt["sha256"] == download_data.file_hash(tmp_path / "data/raw/paysim/PS_20174392719_1491204439457_log.csv")
+    with pytest.raises(ValueError, match="license"):
+        download_data.download_public("paysim", "default", "CDLA-Sharing-1.0")

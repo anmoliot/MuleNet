@@ -1,8 +1,9 @@
 # Definition of Done: Not Complete
 
 Do not treat feature-foundation unit tests as production readiness. The work is
-blocked on authorized benchmark inputs for training/evaluation; the user will
-provide these later. Main is unchanged and its CI health is not established.
+still implementing and verifying the remaining phases. Public benchmark inputs
+have now been downloaded with supplier metadata/hash receipts; credentials are
+no longer an acquisition blocker. Main is unchanged; its CI health is not established.
 
 - [ ] Clean-checkout setup/data/train/eval/bench/test/lint: no full pipeline yet.
 - [ ] Safe model loading and manifest/schema verification: legacy pickle loaders remain.

@@ -1,0 +1,11 @@
+{
+  "bytes": 475664283,
+  "data_provenance": "synthetic",
+  "dataset": "amlworld",
+  "license": "CDLA-Sharing-1.0",
+  "sha256": "b19d39f515523373f991b689c07e11e7b0b95c17a2c27a87d91584ae16c5b040",
+  "source": "ealtman2019/ibm-transactions-for-anti-money-laundering-aml",
+  "supplier_metadata_sha256": "dc8c75fec9227572e085a8487c28613ba2627012a74b5bc65d9d8ca10a649803",
+  "supplier_version": 8,
+  "variant": "HI-Small"
+}
