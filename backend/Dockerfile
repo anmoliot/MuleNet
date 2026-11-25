@@ -7,7 +7,7 @@ COPY contracts /app/contracts
 RUN --mount=type=cache,target=/root/.m2 mvn -B -ntp clean package -DskipTests
 
 # Run stage
-FROM eclipse-temurin:17-jre-alpine@sha256:2b4113ae80e31f103b284dd3bc3e008add670cf8555417b5b289fa1128f2f0a3
+FROM eclipse-temurin:25-jre-alpine@sha256:69c2a26e9894016e274c880fa542956d005b3755f84db765145185e87405bd89
 WORKDIR /app
 RUN apk upgrade --no-cache
 COPY --from=build /app/backend/target/*.jar app.jar
