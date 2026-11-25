@@ -50,6 +50,15 @@ Thumbs.db
 mulenet_for_kaggle.zip
 processed_paysim.csv
 
+# Raw and generated data stay local; metadata/reports are tracked separately.
+/data/raw/
+/data/generated/
+/data/processed/
+/.venv/
+/.pytest_cache/
+/.ruff_cache/
+/.mypy_cache/
+
 # Local Demo & Voiceover (kept locally, not committed)
 docs/demo/
 docs/voiceover/
