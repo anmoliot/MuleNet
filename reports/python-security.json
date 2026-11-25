@@ -1,0 +1,13 @@
+{
+  "cpu_variant_mappings": [
+    {
+      "installed": "torch==2.14.0+cpu",
+      "source": "official PyTorch CPU index; version advisory coverage is not a binary audit",
+      "upstream": "torch==2.14.0"
+    }
+  ],
+  "hashed_wheels_checked": 349,
+  "scope": "Runtime and explicitly mapped upstream Python version advisories; native image/SBOM and sampler provenance checked separately",
+  "uncovered_packages": [],
+  "vulnerabilities": []
+}

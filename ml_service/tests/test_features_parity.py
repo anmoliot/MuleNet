@@ -37,11 +37,14 @@ def test_feature_http_contract_is_authenticated_and_matches_offline(monkeypatch)
     from fastapi.testclient import TestClient
     from feature_service import create_app
 
-    monkeypatch.delenv("MULENET_FEATURE_SERVICE_TOKEN", raising=False)
-    with pytest.raises(RuntimeError, match="unique"):
+    monkeypatch.delenv("MULENET_SERVICE_SECRET", raising=False)
+    with pytest.raises(RuntimeError, match="SERVICE_SECRET"):
         create_app()
-    token = "test-only-not-a-deployment-credential-12345"
-    monkeypatch.setenv("MULENET_FEATURE_SERVICE_TOKEN", token)
+    import jwt
+    import time
+    secret = "unit-test-only-" + "s" * 64
+    monkeypatch.setenv("MULENET_SERVICE_SECRET", secret)
+    token = jwt.encode({"iss": "mulenet-backend", "aud": "mulenet-ml", "sub": "backend", "tenant": "fixture", "scope": "features", "iat": int(time.time()), "exp": int(time.time()) + 30, "jti": "fixture-request"}, secret, algorithm="HS256")
     with TestClient(create_app()) as client:
         payload = {"events": [event("1", "a", "b", 100, 10).model_dump()], "account_id": "b", "as_of": 100}
         assert client.post("/features", json=payload).status_code == 401

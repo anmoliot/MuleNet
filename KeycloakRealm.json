@@ -1,59 +1,28 @@
 {
-  "id": "mule-realm",
-  "realm": "mule-realm",
+  "realm": "mulenet",
   "enabled": true,
-  "users": [
-    {
-      "username": "investigator1",
-      "enabled": true,
-      "credentials": [
-        {
-          "type": "password",
-          "value": "password",
-          "temporary": false
-        }
-      ],
-      "realmRoles": ["user", "investigator"]
-    },
-    {
-      "username": "admin1",
-      "enabled": true,
-      "credentials": [
-        {
-          "type": "password",
-          "value": "password",
-          "temporary": false
-        }
-      ],
-      "realmRoles": ["admin", "investigator"]
-    }
-  ],
-  "roles": {
-    "realm": [
-      {
-        "name": "user"
-      },
-      {
-        "name": "investigator"
-      },
-      {
-        "name": "admin"
-      }
-    ]
-  },
+  "registrationAllowed": false,
+  "resetPasswordAllowed": true,
+  "bruteForceProtected": true,
+  "accessTokenLifespan": 120,
+  "sslRequired": "external",
+  "users": [],
+  "roles": {"realm": [{"name": "analyst"}, {"name": "supervisor"}, {"name": "admin"}, {"name": "auditor"}]},
   "clients": [
     {
-      "clientId": "mulenet-app",
+      "clientId": "mulenet-ui",
       "enabled": true,
       "publicClient": true,
-      "directAccessGrantsEnabled": true,
-      "redirectUris": [
-        "*"
-      ],
-      "webOrigins": [
-        "*"
-      ],
-      "protocol": "openid-connect"
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "implicitFlowEnabled": false,
+      "redirectUris": ["http://localhost:3000/auth/callback", "http://localhost:5173/auth/callback"],
+      "webOrigins": ["http://localhost:3000", "http://localhost:5173"],
+      "attributes": {"pkce.code.challenge.method": "S256", "post.logout.redirect.uris": "http://localhost:3000/##http://localhost:5173/"},
+      "protocolMappers": [
+        {"name": "backend-audience", "protocol": "openid-connect", "protocolMapper": "oidc-audience-mapper", "config": {"included.custom.audience": "mulenet-api", "access.token.claim": "true", "id.token.claim": "false"}},
+        {"name": "tenant", "protocol": "openid-connect", "protocolMapper": "oidc-usermodel-attribute-mapper", "config": {"user.attribute": "tenant", "claim.name": "tenant", "jsonType.label": "String", "access.token.claim": "true", "id.token.claim": "false", "userinfo.token.claim": "false"}}
+      ]
     }
   ]
 }

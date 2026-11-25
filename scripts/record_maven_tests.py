@@ -13,13 +13,13 @@ ROOT = Path(__file__).resolve().parents[1]
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--wsl", action="store_true")
-    parser.add_argument("--tests", default="PlatformIntegrationTest,PrivacyCodecTest,ClientContractTest")
+    parser.add_argument("--tests", default="PlatformIntegrationTest,PrivacyCodecTest,ClientContractTest,SecurityBoundaryTest")
     args = parser.parse_args()
     paths = sorted([p for p in (ROOT / "backend/src").rglob("*") if p.is_file() and p.suffix in {".java", ".properties", ".sql"}] + [ROOT / "backend/pom.xml", ROOT / "contracts/ml-openapi.json"])
     hashes = {str(path.relative_to(ROOT)).replace("\\", "/"): hashlib.sha256(path.read_bytes()).hexdigest() for path in paths}
     report_directory = ROOT / "backend/target/surefire-reports"
     prior = {p.name: (p.stat().st_mtime_ns, hashlib.sha256(p.read_bytes()).hexdigest()) for p in report_directory.glob("TEST-*.xml")}
-    command = ["mvn", "-B", "-ntp", f"-Dtest={args.tests}", "test"]
+    command = ["mvn", "-B", "-ntp", f"-Dtest={args.tests}", "clean", "test"]
     if args.wsl:
         drive = ROOT.drive[0].lower()
         location = f"/mnt/{drive}" + ROOT.as_posix()[2:] + "/backend"

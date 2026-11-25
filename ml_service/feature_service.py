@@ -1,14 +1,13 @@
 """Feature-only migration API; never imports unsafe legacy model loaders."""
 
 import os
-import secrets
 
 from fastapi import Depends, FastAPI, HTTPException
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import Field
 
 from mulenet_core.features import OnlineFeatureStore
 from mulenet_core.schema import Account, Epoch, FeatureConfig, Identifier, StrictModel, Transaction, feature_schema_hash
+from internal_auth import service_authorizer
 
 
 class FeatureRequest(StrictModel):
@@ -28,17 +27,9 @@ def online_snapshot(events: list[Transaction], account_id: str, as_of: int, conf
 
 def create_app() -> FastAPI:
     """Run with uvicorn feature_service:create_app --factory --host 127.0.0.1."""
-    service_token = os.environ.get("MULENET_FEATURE_SERVICE_TOKEN", "")
-    if len(service_token) < 32:
-        raise RuntimeError("Set a unique MULENET_FEATURE_SERVICE_TOKEN of at least 32 characters")
+    require = service_authorizer(os.environ.get("MULENET_SERVICE_SECRET", ""))
     app = FastAPI(title="MuleNet as-of feature migration API")
-    bearer = HTTPBearer(auto_error=False)
-
-    def authorize(credentials: HTTPAuthorizationCredentials | None = Depends(bearer)) -> None:
-        if credentials is None or not secrets.compare_digest(credentials.credentials, service_token):
-            raise HTTPException(401, "Invalid service credential")
-
-    @app.post("/features", dependencies=[Depends(authorize)])
+    @app.post("/features", dependencies=[Depends(require("features"))])
     def features(request: FeatureRequest) -> dict:
         try:
             values = online_snapshot(request.events, request.account_id, request.as_of, request.config, tuple(request.accounts))

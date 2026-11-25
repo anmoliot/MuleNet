@@ -5,8 +5,8 @@ import jakarta.validation.constraints.*;
 public record ReviewPolicy(
     @Positive @Max(86400) int maxHoldSeconds,
     @DecimalMin("0") @DecimalMax("1") Double reviewThreshold,
-    @Positive double falseFreezeCostInr,
-    @Positive double missedRiskCostInr
+    @Positive @DecimalMax("1000000000000") double falseFreezeCostInr,
+    @Positive @DecimalMax("1000000000000") double missedRiskCostInr
 ) {
     public static ReviewPolicy initial() { return new ReviewPolicy(900, null, 1000, 10000); }
     public double threshold(double validationThreshold) {

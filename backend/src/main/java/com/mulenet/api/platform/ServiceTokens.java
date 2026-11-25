@@ -17,9 +17,17 @@ import org.springframework.stereotype.Component;
 @Profile("platform")
 public class ServiceTokens {
     private final Key key;
-    public ServiceTokens(@Value("${mulenet.service-secret}") String secret) {
-        if (secret.getBytes(StandardCharsets.UTF_8).length < 48) throw new IllegalArgumentException("Unique service secret required");
+    private final Key streamKey;
+    private final Key ingestionKey;
+    public ServiceTokens(@Value("${mulenet.service-secret}") String secret,
+                          @Value("${mulenet.stream-secret}") String streamSecret,
+                          @Value("${mulenet.ingestion-secret}") String ingestionSecret) {
+        if (new java.util.HashSet<>(java.util.List.of(secret, streamSecret, ingestionSecret)).size() != 3 ||
+            java.util.List.of(secret, streamSecret, ingestionSecret).stream().anyMatch(s -> s.getBytes(StandardCharsets.UTF_8).length < 48))
+            throw new IllegalArgumentException("Independent unique purpose-separated signing secrets required");
         key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        streamKey = Keys.hmacShaKeyFor(streamSecret.getBytes(StandardCharsets.UTF_8));
+        ingestionKey = Keys.hmacShaKeyFor(ingestionSecret.getBytes(StandardCharsets.UTF_8));
     }
     public String ml(String tenant) {
         Instant now = Instant.now();
@@ -31,10 +39,10 @@ public class ServiceTokens {
         Instant now = Instant.now();
         return Jwts.builder().setIssuer("mulenet-backend").setAudience("mulenet-ingestion").setSubject("ingestion")
             .setId(eventId).setIssuedAt(Date.from(now)).setExpiration(Date.from(now.plusSeconds(86400)))
-            .claim("tenant", tenant).claim("body", body).signWith(key, io.jsonwebtoken.SignatureAlgorithm.HS256).compact();
+            .claim("tenant", tenant).claim("body", body).signWith(ingestionKey, io.jsonwebtoken.SignatureAlgorithm.HS256).compact();
     }
     public Claims verifyIngestion(String token) {
-        var parsed = Jwts.parserBuilder().setSigningKey(key).requireIssuer("mulenet-backend")
+        var parsed = Jwts.parserBuilder().setSigningKey(ingestionKey).requireIssuer("mulenet-backend")
             .requireAudience("mulenet-ingestion").requireSubject("ingestion").build().parseClaimsJws(token);
         if (!parsed.getHeader().getAlgorithm().equals("HS256")) throw new IllegalArgumentException("Unsupported ingestion signature");
         Claims claims = parsed.getBody();
@@ -48,6 +56,6 @@ public class ServiceTokens {
         return Jwts.builder().setIssuer("mulenet-backend").setAudience("mulenet-sse").setSubject(subject)
             .setId(UUID.randomUUID().toString()).setIssuedAt(Date.from(now)).setExpiration(Date.from(expires))
             .claim("tenant", tenant).claim("roles", roles).claim("scope", "sse")
-            .signWith(key, io.jsonwebtoken.SignatureAlgorithm.HS256).compact();
+            .signWith(streamKey, io.jsonwebtoken.SignatureAlgorithm.HS256).compact();
     }
 }

@@ -28,6 +28,8 @@ public class PlatformService {
                            ServiceTokens tokens, CandidateClient ml, MeterRegistry meters, jakarta.validation.Validator validator) {
         this.db = db;
         this.json = json.copy().configure(com.fasterxml.jackson.databind.SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true);
+        // Persisted audit JSON can contain encrypted text larger than an input scalar.
+        this.json.getFactory().setStreamReadConstraints(com.fasterxml.jackson.core.StreamReadConstraints.builder().maxNestingDepth(64).maxStringLength(2_000_000).maxNumberLength(40).build());
         this.privacy = privacy;
         this.tokens = tokens;
         this.ml = ml;
@@ -236,14 +238,17 @@ public class PlatformService {
     }
 
     public List<Map<String, Object>> auditEntries(String tenant) {
-        return db.queryForList("SELECT sequence,previous_hash,entry_hash,payload FROM platform_audit WHERE tenant=? ORDER BY sequence", tenant);
+        return auditEntries(tenant, 0, 100);
+    }
+    public List<Map<String, Object>> auditEntries(String tenant, long after, int limit) {
+        return db.queryForList("SELECT sequence,previous_hash,entry_hash,payload FROM platform_audit WHERE tenant=? AND sequence>? ORDER BY sequence LIMIT ?", tenant, after, limit);
     }
     public String circuitState() { return ml.circuitState(); }
 
     public List<Map<String, Object>> notes(String tenant, String id) {
         decision(tenant, id);
         List<Map<String, Object>> notes = new ArrayList<>();
-        for (Map<String, Object> row : auditEntries(tenant)) {
+        for (Map<String, Object> row : db.queryForList("SELECT payload FROM platform_audit WHERE tenant=? AND payload::jsonb->'detail'->'before'->>'decision_id'=? AND payload::jsonb->>'action' LIKE 'CASE_%' ORDER BY sequence DESC LIMIT 100", tenant, id)) {
             JsonNode payload = decode((String) row.get("payload"));
             if (payload.path("action").asText().startsWith("CASE_") && payload.path("detail").path("before").path("decision_id").asText().equals(id)) {
                 notes.add(Map.of("actor", payload.path("actor").asText(), "time", payload.path("time").asLong(),

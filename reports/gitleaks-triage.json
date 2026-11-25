@@ -1,0 +1,208 @@
+{
+  "current_control": "Legacy signer removed; independent generated per-install signing keys required; old IDP users must be revoked by existing operators",
+  "external_installation_rotation_verified": false,
+  "findings": [
+    {
+      "Commit": "93c4fab467c79151190e4dc37690460152a65f1b",
+      "File": "reports/feedback-tests.json",
+      "Fingerprint": "93c4fab467c79151190e4dc37690460152a65f1b:reports/feedback-tests.json:generic-api-key:45",
+      "RuleID": "generic-api-key",
+      "StartLine": 45,
+      "status": "verified_source_checksum_false_positive"
+    },
+    {
+      "Commit": "93c4fab467c79151190e4dc37690460152a65f1b",
+      "File": "reports/feedback-tests.json",
+      "Fingerprint": "93c4fab467c79151190e4dc37690460152a65f1b:reports/feedback-tests.json:generic-api-key:97",
+      "RuleID": "generic-api-key",
+      "StartLine": 97,
+      "status": "verified_source_checksum_false_positive"
+    },
+    {
+      "Commit": "93c4fab467c79151190e4dc37690460152a65f1b",
+      "File": "reports/feedback-tests.json",
+      "Fingerprint": "93c4fab467c79151190e4dc37690460152a65f1b:reports/feedback-tests.json:generic-api-key:101",
+      "RuleID": "generic-api-key",
+      "StartLine": 101,
+      "status": "verified_source_checksum_false_positive"
+    },
+    {
+      "Commit": "93c4fab467c79151190e4dc37690460152a65f1b",
+      "File": "reports/feedback-tests.json",
+      "Fingerprint": "93c4fab467c79151190e4dc37690460152a65f1b:reports/feedback-tests.json:generic-api-key:103",
+      "RuleID": "generic-api-key",
+      "StartLine": 103,
+      "status": "verified_source_checksum_false_positive"
+    },
+    {
+      "Commit": "93c4fab467c79151190e4dc37690460152a65f1b",
+      "File": "reports/platform-tools-tests.json",
+      "Fingerprint": "93c4fab467c79151190e4dc37690460152a65f1b:reports/platform-tools-tests.json:generic-api-key:49",
+      "RuleID": "generic-api-key",
+      "StartLine": 49,
+      "status": "verified_source_checksum_false_positive"
+    },
+    {
+      "Commit": "93c4fab467c79151190e4dc37690460152a65f1b",
+      "File": "reports/platform-tools-tests.json",
+      "Fingerprint": "93c4fab467c79151190e4dc37690460152a65f1b:reports/platform-tools-tests.json:generic-api-key:102",
+      "RuleID": "generic-api-key",
+      "StartLine": 102,
+      "status": "verified_source_checksum_false_positive"
+    },
+    {
+      "Commit": "93c4fab467c79151190e4dc37690460152a65f1b",
+      "File": "reports/platform-tools-tests.json",
+      "Fingerprint": "93c4fab467c79151190e4dc37690460152a65f1b:reports/platform-tools-tests.json:generic-api-key:106",
+      "RuleID": "generic-api-key",
+      "StartLine": 106,
+      "status": "verified_source_checksum_false_positive"
+    },
+    {
+      "Commit": "93c4fab467c79151190e4dc37690460152a65f1b",
+      "File": "reports/platform-tools-tests.json",
+      "Fingerprint": "93c4fab467c79151190e4dc37690460152a65f1b:reports/platform-tools-tests.json:generic-api-key:108",
+      "RuleID": "generic-api-key",
+      "StartLine": 108,
+      "status": "verified_source_checksum_false_positive"
+    },
+    {
+      "Commit": "93c4fab467c79151190e4dc37690460152a65f1b",
+      "File": "reports/serving-tests.json",
+      "Fingerprint": "93c4fab467c79151190e4dc37690460152a65f1b:reports/serving-tests.json:generic-api-key:61",
+      "RuleID": "generic-api-key",
+      "StartLine": 61,
+      "status": "verified_source_checksum_false_positive"
+    },
+    {
+      "Commit": "93c4fab467c79151190e4dc37690460152a65f1b",
+      "File": "reports/serving-tests.json",
+      "Fingerprint": "93c4fab467c79151190e4dc37690460152a65f1b:reports/serving-tests.json:generic-api-key:114",
+      "RuleID": "generic-api-key",
+      "StartLine": 114,
+      "status": "verified_source_checksum_false_positive"
+    },
+    {
+      "Commit": "93c4fab467c79151190e4dc37690460152a65f1b",
+      "File": "reports/serving-tests.json",
+      "Fingerprint": "93c4fab467c79151190e4dc37690460152a65f1b:reports/serving-tests.json:generic-api-key:118",
+      "RuleID": "generic-api-key",
+      "StartLine": 118,
+      "status": "verified_source_checksum_false_positive"
+    },
+    {
+      "Commit": "93c4fab467c79151190e4dc37690460152a65f1b",
+      "File": "reports/serving-tests.json",
+      "Fingerprint": "93c4fab467c79151190e4dc37690460152a65f1b:reports/serving-tests.json:generic-api-key:120",
+      "RuleID": "generic-api-key",
+      "StartLine": 120,
+      "status": "verified_source_checksum_false_positive"
+    },
+    {
+      "Commit": "93c4fab467c79151190e4dc37690460152a65f1b",
+      "File": "reports/platform-tests.json",
+      "Fingerprint": "93c4fab467c79151190e4dc37690460152a65f1b:reports/platform-tests.json:generic-api-key:45",
+      "RuleID": "generic-api-key",
+      "StartLine": 45,
+      "status": "verified_source_checksum_false_positive"
+    },
+    {
+      "Commit": "93c4fab467c79151190e4dc37690460152a65f1b",
+      "File": "reports/platform-tests.json",
+      "Fingerprint": "93c4fab467c79151190e4dc37690460152a65f1b:reports/platform-tests.json:generic-api-key:51",
+      "RuleID": "generic-api-key",
+      "StartLine": 51,
+      "status": "verified_source_checksum_false_positive"
+    },
+    {
+      "Commit": "93c4fab467c79151190e4dc37690460152a65f1b",
+      "File": "reports/platform-tests.json",
+      "Fingerprint": "93c4fab467c79151190e4dc37690460152a65f1b:reports/platform-tests.json:generic-api-key:55",
+      "RuleID": "generic-api-key",
+      "StartLine": 55,
+      "status": "verified_source_checksum_false_positive"
+    },
+    {
+      "Commit": "93c4fab467c79151190e4dc37690460152a65f1b",
+      "File": "reports/platform-tests.json",
+      "Fingerprint": "93c4fab467c79151190e4dc37690460152a65f1b:reports/platform-tests.json:generic-api-key:88",
+      "RuleID": "generic-api-key",
+      "StartLine": 88,
+      "status": "verified_source_checksum_false_positive"
+    },
+    {
+      "Commit": "93c4fab467c79151190e4dc37690460152a65f1b",
+      "File": "reports/platform-tests.json",
+      "Fingerprint": "93c4fab467c79151190e4dc37690460152a65f1b:reports/platform-tests.json:generic-api-key:98",
+      "RuleID": "generic-api-key",
+      "StartLine": 98,
+      "status": "verified_source_checksum_false_positive"
+    },
+    {
+      "Commit": "93c4fab467c79151190e4dc37690460152a65f1b",
+      "File": "reports/platform-tests.json",
+      "Fingerprint": "93c4fab467c79151190e4dc37690460152a65f1b:reports/platform-tests.json:generic-api-key:135",
+      "RuleID": "generic-api-key",
+      "StartLine": 135,
+      "status": "verified_source_checksum_false_positive"
+    },
+    {
+      "Commit": "93c4fab467c79151190e4dc37690460152a65f1b",
+      "File": "reports/platform-python-tests.json",
+      "Fingerprint": "93c4fab467c79151190e4dc37690460152a65f1b:reports/platform-python-tests.json:generic-api-key:177",
+      "RuleID": "generic-api-key",
+      "StartLine": 177,
+      "status": "verified_source_checksum_false_positive"
+    },
+    {
+      "Commit": "93c4fab467c79151190e4dc37690460152a65f1b",
+      "File": "reports/platform-python-tests.json",
+      "Fingerprint": "93c4fab467c79151190e4dc37690460152a65f1b:reports/platform-python-tests.json:generic-api-key:230",
+      "RuleID": "generic-api-key",
+      "StartLine": 230,
+      "status": "verified_source_checksum_false_positive"
+    },
+    {
+      "Commit": "93c4fab467c79151190e4dc37690460152a65f1b",
+      "File": "reports/platform-python-tests.json",
+      "Fingerprint": "93c4fab467c79151190e4dc37690460152a65f1b:reports/platform-python-tests.json:generic-api-key:234",
+      "RuleID": "generic-api-key",
+      "StartLine": 234,
+      "status": "verified_source_checksum_false_positive"
+    },
+    {
+      "Commit": "93c4fab467c79151190e4dc37690460152a65f1b",
+      "File": "reports/platform-python-tests.json",
+      "Fingerprint": "93c4fab467c79151190e4dc37690460152a65f1b:reports/platform-python-tests.json:generic-api-key:236",
+      "RuleID": "generic-api-key",
+      "StartLine": 236,
+      "status": "verified_source_checksum_false_positive"
+    },
+    {
+      "Commit": "b1bdec80c6abb0ccaf6a32cab1ba9dd86f5e3a57",
+      "File": ".env.example",
+      "Fingerprint": "b1bdec80c6abb0ccaf6a32cab1ba9dd86f5e3a57:.env.example:generic-api-key:15",
+      "RuleID": "generic-api-key",
+      "StartLine": 15,
+      "status": "historical_default_retired_rotate_existing_installations"
+    },
+    {
+      "Commit": "5fa54036f6a05a571f3c27e9fa1669bfac2d9fed",
+      "File": "backend/src/main/java/com/mulenet/api/config/JwtUtil.java",
+      "Fingerprint": "5fa54036f6a05a571f3c27e9fa1669bfac2d9fed:backend/src/main/java/com/mulenet/api/config/JwtUtil.java:generic-api-key:28",
+      "RuleID": "generic-api-key",
+      "StartLine": 28,
+      "status": "historical_default_retired_rotate_existing_installations"
+    },
+    {
+      "Commit": "5fa54036f6a05a571f3c27e9fa1669bfac2d9fed",
+      "File": "backend/src/test/resources/application.properties",
+      "Fingerprint": "5fa54036f6a05a571f3c27e9fa1669bfac2d9fed:backend/src/test/resources/application.properties:generic-api-key:21",
+      "RuleID": "generic-api-key",
+      "StartLine": 21,
+      "status": "historical_default_retired_rotate_existing_installations"
+    }
+  ],
+  "history_rewritten": false,
+  "untriaged": 0
+}

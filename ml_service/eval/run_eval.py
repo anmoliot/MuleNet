@@ -21,6 +21,7 @@ from eval.adversarial import evaluate_attacks
 from eval.metrics import recall_interval, summarize
 from eval.lead_time import terminal_coverage
 from mulenet_core.artifacts import write_manifest
+from mulenet_core.environment import package_version
 from mulenet_core.io import canonical_json
 from mulenet_core.models import ModelBundle
 from mulenet_core.schema import FeatureConfig
@@ -67,7 +68,7 @@ def evaluate(dataset_name, data_path, split_name, model_directory, output, allow
     metadata = {"dataset": dataset_name, "data_provenance": dataset.data_provenance, "data_hash": data_hash,
                 "split": split_name, "feature_schema_hash": bundle.manifest["feature_schema_hash"], "model_version": bundle.manifest["model_version"],
                 "operating_point": bundle.training["threshold_selection"], "default_deep_path_selected_on_val": bundle.training["default_deep_path"], "operating_model": operating_model,
-                "environment": {"python": platform.python_version(), "packages": {name: importlib.metadata.version(name) for name in ("numpy", "scikit-learn", "xgboost", "torch", "torch-geometric")}},
+                "environment": {"python": platform.python_version(), "packages": {name: package_version(name) for name in ("numpy", "scikit-learn", "xgboost", "torch", "torch-geometric")}},
                 "limitations": bundle.training["limitations"] + ["Row-bootstrap CIs ignore ring/account dependence", "Account-day forecast, not contemporaneous transaction classification", "Cash-out lead-time unavailable without cash-out annotations"]}
     typology = {}
     prediction = operating_scores >= operating_threshold

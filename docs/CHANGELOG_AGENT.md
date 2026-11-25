@@ -340,3 +340,103 @@ transaction truth. India signals unsupported by the schema are not invented.
 Claims downgraded: no bank freeze execution, regulatory certification, actual
 government watchlist access, exactly-once distributed transport or production
 readiness. Container rebuild and broader security/CI/UI checks continue next.
+
+## Phase 5: Security Checkpoint, Acceptance Still Open
+
+Changed: removed the retired Java/ML execution paths, pickle bundles and unpinned
+legacy installer files; preserved historical DB migrations but revoked runtime
+access to legacy tables. Added purpose-separated service/ingestion/SSE signing,
+strict JSON/input limits, bounded rate limits, encrypted bounded DLQ handling,
+OIDC transport validation, admin-only tenant profile configuration and positive
+tenant-scoped SSE assertions. Secrets are exclusive per-install values and never
+printed. Added threat/privacy/setup notes, history triage, dependency/image scan
+receipts, a fail-closed aggregate gate, pinned security workflow actions and
+dependency-update configuration. The README default credential was removed.
+
+Executed commands below use the clean uv-created runtime under .tools/runtime on
+Windows; the Java recorder uses the installed WSL Java/Maven/Docker environment.
+
+```text
+uv lock
+PASS: lock resolves the pinned scientific stack for the updated Python maintenance release.
+UV_PROJECT_ENVIRONMENT=.tools/runtime uv sync --frozen --all-groups
+PASS: clean runtime created without inherited system site packages.
+python scripts/record_tests.py --phase security-python
+PASS: reports/security-python-tests.json; no failures/skips and source/lock unchanged during the final run.
+python scripts/record_maven_tests.py --wsl
+PASS: reports/platform-tests.json; BUILD SUCCESS, actual patched ML container, no failed/skipped cases, source unchanged.
+python scripts/configure_keycloak.py
+PASS: reports/keycloak-configuration.json; admin-only tenant edit and disabled unmanaged attributes read back from the local running identity provider; no users created.
+python scripts/audit_python.py --uv .venv/Scripts/uv.exe
+PASS: reports/python-security.json; no known runtime/upstream-mapped advisories and no unhandled skipped packages.
+npm ci --ignore-scripts --no-fund --no-audit
+npm update --save --save-exact --ignore-scripts --no-fund --no-audit
+PASS: exact direct dependency pins and refreshed lockfile installed.
+python scripts/audit_frontend.py
+PASS: reports/npm-audit.json; no advisories after compatible updates.
+npm run build
+PASS: production bundle built; existing size/Tailwind/config warnings remain for frontend work.
+python scripts/check_unsafe_paths.py
+PASS: reports/unsafe-paths.json; no forbidden deserialization calls in current Python source.
+docker run --rm -v "$PWD:/repo:ro" -v "$PWD/reports:/reports" zricethezav/gitleaks:v8.30.1 git /repo --log-opts=--all --redact --report-format json --report-path /reports/gitleaks-history.json
+FINDINGS: historical public signing defaults and generated source checksum matches; raw report redacted.
+python scripts/triage_secrets.py
+PASS: no untriaged historical findings; external installation credential rotation remains unverified.
+mvn -B -ntp cyclonedx:makeAggregateBom
+PASS: reports/sbom-backend.json generated and validated from the Maven dependency graph.
+docker compose build backend ml_service
+PASS: updated Python/OS runtime image and backend image built; unused global pip removed.
+trivy image --timeout 30m --quiet --scanners vuln --format json --output reports/trivy-ml.json --exit-code 1 mulenet/ml:local
+FAIL: remaining vendor-unfixed Debian advisories; no available fixes or Python-package findings remain in that scan. No severity filters or ignore list used.
+python scripts/security_gate.py
+FAIL: reports/security-gate.json honestly retains unfinished or failed scan gates. This is not full Phase 5 acceptance.
+```
+
+Failures investigated: Keycloak rejects a literal DISABLED unmanaged-attribute
+enum; its actual API requires null, verified by read-back and a regression test.
+Intermediate test runs had passing assertions but their receipts rejected source
+edits made during execution; only the final unchanged-snapshot results count.
+The first backend Trivy run timed out downloading its Java database; a bounded
+longer retry uses the completed cache. OWASP's newer scanner had an anonymous-NVD
+key regression; a compatible pinned release was used without invented credentials.
+Initial Python/frontend scans found vulnerable pins. Compatible fixed releases,
+official matching sampler wheels and actual model/export tests address those
+findings; CPU wheel advisory mappings are explicit rather than silent skips.
+
+Claims not made: clean image scan, hosted CI green, complete risk remediation,
+remote credential rotation, production compliance or full project completion.
+Remaining distribution advisories are open in SECURITY_EXCEPTIONS.md, not waived.
+The local Keycloak verification service was stopped after its check completed.
+
+Final Java scan follow-up: `mvn dependency-check:check` completed using the cached
+database and failed with actual findings. Compatible explicit patch overrides
+were applied for Jackson, Tomcat, PostgreSQL, Log4j and Kafka compression
+libraries; the Alpine image packages were upgraded. The subsequent dependency
+scan reports only Spring Framework/Security findings. The operator confirmed
+that authorized enterprise repository access will be configured locally. Until
+then, no corresponding finding is suppressed and Phase 5 is not declared done.
+The SBOM goal is run separately because Maven correctly stops after the failed
+vulnerability goal. A regenerated image scan and integration checks verify the
+patched dependency graph; their generated receipts are the acceptance evidence.
+
+Publication checkpoint requested by the operator:
+
+```text
+trivy image --timeout 30m --scanners vuln --format json --output reports/trivy-backend.json --exit-code 1 mulenet/backend:local
+FAIL: completed scan; remaining Java findings concern spring-webmvc. The Alpine result has no listed vulnerabilities.
+python scripts/security_gate.py
+FAIL: Python, npm, unsafe-path, secret-triage and unchanged-source test receipts pass; OWASP and both container gates remain failed.
+git diff --cached --check
+PASS: no staged whitespace errors. Staged path review excludes local secrets, raw data, model artifacts and tool environments.
+```
+
+This is a publishable research checkpoint on the phase branch, not a declaration
+of security acceptance or production readiness. Main is not merged or modified.
+
+Pre-push verification found generated source checksums and the official Python
+image's public signing-key fingerprint, not a new installation secret. The
+fingerprint classification checks exact parsed metadata and has a negative test.
+`python -m pytest ml_service/tests/test_security_tools.py -q` passed; running
+`scripts/triage_secrets.py` on the full-history pre-push report then returned no
+untriaged findings. Historical public defaults remain disclosed and require
+rotation in any old installation. Local raw scanner output is redacted.
