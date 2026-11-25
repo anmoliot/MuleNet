@@ -38,7 +38,7 @@ jobs:
           test "$result" -eq 0 -o "$result" -eq 1
           uv run --frozen --all-groups python scripts/triage_secrets.py
       - run: uv run --frozen --all-groups python scripts/record_tests.py --phase security-python
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
         with:
           name: security-receipts
