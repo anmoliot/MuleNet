@@ -10,6 +10,7 @@ import xgboost as xgb
 
 from .artifacts import verify_manifest
 from .schema import FeatureConfig, feature_names
+from .calibration import calibrated_probabilities
 
 TRUSTED_TYPES = ["scipy.interpolate._interpolate.interp1d", "sklearn.tree._tree.Tree"]
 
@@ -57,7 +58,7 @@ class ModelBundle:
         components, raw = self.components(features, gnn_probabilities)
         fusion = self.stack.predict_proba(components)[:, 1]
         raw["fusion"] = fusion
-        return {name: self.calibration[name].predict(value) if name in self.calibration else value for name, value in raw.items()}
+        return {name: calibrated_probabilities(self.calibration[name], value) if name in self.calibration else value for name, value in raw.items()}
 
     def explain_tabular(self, feature, limit=5):
         matrix = self.matrix([feature])

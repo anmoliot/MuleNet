@@ -22,6 +22,25 @@ def _window_context(events: tuple[Transaction, ...], config: FeatureConfig):
     return graph, cycles, ranks
 
 
+class FeatureSnapshot:
+    """Share an identical as-of graph across batch accounts, never future edges."""
+
+    def __init__(self, events: Iterable[Transaction], as_of: int, config: FeatureConfig):
+        if isinstance(as_of, bool) or not isinstance(as_of, int) or as_of < 0:
+            raise ValueError("as_of must be a nonnegative integer UTC epoch second")
+        self.as_of, self.config = as_of, config
+        self.past = tuple(e for e in canonical_events(events) if e.ts <= as_of and e.currency == config.currency)
+        self.related = defaultdict(list)
+        for event in self.past:
+            self.related[event.source].append(event)
+            if event.target != event.source:
+                self.related[event.target].append(event)
+        self.windows = {}
+        for window in config.windows:
+            selected = tuple(e for e in self.past if e.ts > as_of - window)
+            self.windows[window] = (selected, *_window_context(selected, config))
+
+
 def _entropy(incoming: list[Transaction]) -> float:
     weights: dict[str, float] = defaultdict(float)
     for event in incoming:
@@ -78,6 +97,8 @@ def _burstiness(events: list[Transaction]) -> float:
 
 def _sharing(events: tuple[Transaction, ...], outgoing: list[Transaction], field: str, account_id: str) -> tuple[float, float]:
     identifiers = {getattr(e, field) for e in outgoing if getattr(e, field) is not None}
+    if not identifiers:
+        return 0.0, 0.0
     peers = {e.source for e in events if getattr(e, field) in identifiers and e.source != account_id}
     return float(len(peers)), float(bool(identifiers))
 
@@ -95,13 +116,16 @@ def _balance_error(events: list[Transaction], account_id: str) -> tuple[float, f
 def extract_features(
     events: Iterable[Transaction], account_id: str, as_of: int,
     config: FeatureConfig = FeatureConfig(), accounts: Mapping[str, Account] | None = None,
+    *, _snapshot: FeatureSnapshot | None = None,
 ) -> dict[str, float]:
     if isinstance(as_of, bool) or not isinstance(as_of, int) or as_of < 0:
         raise ValueError("as_of must be a nonnegative integer UTC epoch second")
     if not account_id:
         raise ValueError("account_id is required")
-    past = tuple(e for e in canonical_events(events) if e.ts <= as_of and e.currency == config.currency)
-    related = [e for e in past if e.source == account_id or e.target == account_id]
+    snapshot = _snapshot if _snapshot is not None else FeatureSnapshot(events, as_of, config)
+    if snapshot.as_of != as_of or snapshot.config != config:
+        raise ValueError("Batch snapshot time/configuration mismatch")
+    related = snapshot.related.get(account_id, [])
     registry_account = (accounts or {}).get(account_id)
     if registry_account and registry_account.created_at > as_of:
         raise ValueError("Account is not created at this as-of time")
@@ -110,8 +134,7 @@ def extract_features(
     first_seen = registry_account.created_at if registry_account else (related[0].ts if related else as_of)
     result = {"account_age_seconds": float(as_of - first_seen), "account_age_known": float(registry_account is not None)}
     for window in config.windows:
-        selected = tuple(e for e in past if e.ts > as_of - window)
-        graph, cycles, ranks = _window_context(selected, config)
+        selected, graph, cycles, ranks = snapshot.windows[window]
         incoming = [e for e in related if e.ts > as_of - window and e.target == account_id]
         outgoing = [e for e in related if e.ts > as_of - window and e.source == account_id]
         activity = [e for e in related if e.ts > as_of - window]

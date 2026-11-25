@@ -59,3 +59,21 @@ Status: Accepted for candidate training; serving migration remains a later phase
 Context: Baseline pickles and hand-weighted pseudo-GNN cannot establish trustworthy scores.
 Decision: Native XGBoost, allowlisted skops, edge-aware PyG/NeighborLoader and OOF validation stacking.
 Consequence: Hash/schema mismatch fails; no implicit training, model substitution or synthetic data.
+
+## ADR-010: Keep Non-Estimable Primary Results Visible
+Status: Accepted; full-network primary evaluation remains open.
+Context: Label-independent bounded AMLworld components contain insufficient future positives.
+Decision: Publish class counts and null performance; never select cohorts/seeds using test labels.
+Consequence: PaySim transaction performance cannot stand in for mule-topology generalization.
+
+## ADR-011: Numerical Calibration Bounds
+Status: Accepted after reproducing isotonic output beyond the unit interval.
+Context: The installed interpolator emits a small float32 representation overshoot.
+Decision: Share a narrow floating-point tolerance correction; record counts and reject larger violations.
+Consequence: Valid probabilities without changing ranking, labels, frozen models or operating thresholds.
+
+## ADR-012: Validation Determines the Serving Candidate
+Status: Accepted for the candidate serving migration.
+Context: Neither simulated split selected the GNN at the specified low-FPR operating point.
+Decision: Keep graph-tabular as the selected path; retain GNN/fusion as measured ablations.
+Consequence: Do not spend GNN latency or invent missing component values just to market a neural path.

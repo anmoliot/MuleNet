@@ -4,8 +4,9 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from dataclasses import dataclass
+from collections import defaultdict
 
-from .features import extract_features
+from .features import FeatureSnapshot, extract_features
 from .graph import canonical_events
 from .schema import Account, FeatureConfig, Transaction
 
@@ -36,11 +37,20 @@ def materialize(
 ) -> list[Example]:
     ordered = canonical_events(events)
     registry = {a.account_id: a for a in accounts}
+    by_account = defaultdict(list)
+    for event in ordered:
+        by_account[event.source].append(event)
+        if event.target != event.source:
+            by_account[event.target].append(event)
+    snapshots, dependencies = {}, {}
     rows = []
     for account_id, as_of in points:
-        label, label_ids = future_label(ordered, account_id, as_of, horizon, complete_through, config.currency)
+        label, label_ids = future_label(by_account[account_id], account_id, as_of, horizon, complete_through, config.currency)
         # Includes all graph dependencies, not just the focal account's edges.
-        dependency_ids = tuple(e.transaction_id for e in ordered if e.ts <= as_of and e.currency == config.currency)
+        if as_of not in snapshots:
+            snapshots[as_of] = FeatureSnapshot(ordered, as_of, config)
+            dependencies[as_of] = tuple(e.transaction_id for e in snapshots[as_of].past)
+        dependency_ids = dependencies[as_of]
         rows.append(Example(account_id, as_of, as_of + horizon, label,
-                            extract_features(ordered, account_id, as_of, config, registry), dependency_ids, label_ids))
+                            extract_features(ordered, account_id, as_of, config, registry, _snapshot=snapshots[as_of]), dependency_ids, label_ids))
     return rows

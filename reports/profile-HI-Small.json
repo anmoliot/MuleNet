@@ -1,0 +1,39 @@
+{
+  "accounts": 515088,
+  "currencies": {
+    "Australian Dollar": 136769,
+    "Bitcoin": 146066,
+    "Brazil Real": 70703,
+    "Canadian Dollar": 140042,
+    "Euro": 1168297,
+    "Mexican Peso": 110159,
+    "Ruble": 155178,
+    "Rupee": 190202,
+    "Saudi Riyal": 89014,
+    "Shekel": 192184,
+    "Swiss Franc": 234860,
+    "UK Pound": 180738,
+    "US Dollar": 1895172,
+    "Yen": 155209,
+    "Yuan": 213752
+  },
+  "data_provenance": "synthetic",
+  "file": "HI-Small_Trans.csv",
+  "flagged_transactions": 5177,
+  "kinds": {
+    "ACH": 600797,
+    "Bitcoin": 146091,
+    "Cash": 490891,
+    "Cheque": 1864331,
+    "Credit Card": 1323324,
+    "Reinvestment": 481056,
+    "Wire": 171855
+  },
+  "maximum_time": "2022/09/18 16:18",
+  "minimum_time": "2022/09/01 00:00",
+  "originator_unique_per_transaction": 0.09786633243704396,
+  "sha256": "b19d39f515523373f991b689c07e11e7b0b95c17a2c27a87d91584ae16c5b040",
+  "transactions": 5078345,
+  "unique_destinations": 420640,
+  "unique_originators": 496999
+}
