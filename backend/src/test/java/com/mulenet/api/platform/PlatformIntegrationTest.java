@@ -35,6 +35,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class PlatformIntegrationTest {
     private static final Network NETWORK = Network.newNetwork();
     private static final String SERVICE_SECRET = UUID.randomUUID().toString() + UUID.randomUUID();
+    private static final String STREAM_SECRET = UUID.randomUUID().toString() + UUID.randomUUID();
+    private static final String INGESTION_SECRET = UUID.randomUUID().toString() + UUID.randomUUID();
     private static final String KEY = Base64.getEncoder().encodeToString(java.security.SecureRandom.getSeed(32));
     private static final String RUNTIME_PASSWORD = UUID.randomUUID().toString();
     private static final Map<String, String> PASSWORDS = Map.of("analyst", UUID.randomUUID().toString(), "supervisor", UUID.randomUUID().toString(), "admin", UUID.randomUUID().toString(), "auditor", UUID.randomUUID().toString());
@@ -65,6 +67,8 @@ class PlatformIntegrationTest {
         registry.add("mulenet.token-key", () -> KEY);
         registry.add("mulenet.encryption-key", () -> KEY);
         registry.add("mulenet.service-secret", () -> SERVICE_SECRET);
+        registry.add("mulenet.stream-secret", () -> STREAM_SECRET);
+        registry.add("mulenet.ingestion-secret", () -> INGESTION_SECRET);
         registry.add("mulenet.ml-url", () -> "http://" + ml.getHost() + ":" + ml.getMappedPort(8000));
         registry.add("mulenet.demo-jwt-secret", () -> KEY);
         PASSWORDS.forEach((role, password) -> registry.add("mulenet.demo-passwords." + role, () -> password));
@@ -102,6 +106,17 @@ class PlatformIntegrationTest {
         assertEquals("tabular_graph", result.path("model").asText());
         assertEquals(64, result.path("feature_schema_hash").asText().length());
         assertFalse(result.toString().contains("raw-source"));
+        String scoped = json.readTree(http.perform(post("/api/v1/stream-token").header("Authorization", admin))
+            .andExpect(status().isOk()).andReturn().getResponse().getContentAsString()).path("access_token").asText();
+        var stream = http.perform(get("/api/v1/events").header("Authorization", "Bearer " + scoped).header("Last-Event-ID", "0"))
+            .andExpect(request().asyncStarted()).andReturn();
+        String other = tokens.stream("other-tenant", "isolated-reader", List.of("ANALYST"), Instant.now().plusSeconds(30));
+        var isolated = http.perform(get("/api/v1/events").header("Authorization", "Bearer " + other).header("Last-Event-ID", "0"))
+            .andExpect(request().asyncStarted()).andReturn();
+        await().atMost(Duration.ofSeconds(5)).until(() -> stream.getResponse().getContentAsString().contains("event:decision"));
+        assertFalse(isolated.getResponse().getContentAsString().contains("event:decision"));
+        stream.getRequest().getAsyncContext().complete();
+        isolated.getRequest().getAsyncContext().complete();
         assertFalse(db.queryForObject("SELECT payload FROM platform_ledger LIMIT 1", String.class).contains("raw-device"));
         assertThrows(org.springframework.dao.DataAccessException.class, () -> db.update("UPDATE platform_audit SET payload='tampered'"));
         assertThrows(org.springframework.dao.DataAccessException.class, () -> db.update("UPDATE platform_policies SET config='{}'"));

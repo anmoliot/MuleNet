@@ -1,0 +1,27 @@
+{
+  "checks": {
+    "dependency-check-report.json": "failed",
+    "gitleaks-triage.json": "passed",
+    "npm-audit.json": "passed",
+    "platform-tests.json": "passed",
+    "python-security.json": "passed",
+    "security-python-tests.json": "passed",
+    "trivy-backend.json": "failed",
+    "trivy-ml.json": "failed",
+    "unsafe-paths.json": "passed"
+  },
+  "input_sha256": {
+    "dependency-check-report.json": "bfcabc47064734c70ab78ebd3a455a8e13529f96645ecfd73419784b22fe1fd8",
+    "gitleaks-triage.json": "4ec29b4a108beb1ab57db2149464b5c35a0a2a66ebcdd08a866475b524cf01b5",
+    "npm-audit.json": "6854268587409ace3ec18ca8d81c1b16b262d8e05ff77451ae9c058c0ccecba2",
+    "platform-tests.json": "52ec3cee787eb431905a88a4c6133fabc2c0a0a1ea69fccd0acee512cb5a725d",
+    "python-security.json": "02993ea48a07107060ade664cdc8a1fa051ece29628b7376435c66f6c1584767",
+    "security-python-tests.json": "2d3634e9f9961ece80c2ee29ca0ea5ddd791cfc69dd0d85099d7f8bf755dc949",
+    "trivy-backend.json": "5134f421e68e90c186ff8a3527dcca051f4f671ef9ef682c7f9d5016b0ff69bd",
+    "trivy-ml.json": "b150d6a903c2ae1da97089ec7ab707833e5d99372a3c4b17cddfa691d98b8299",
+    "unsafe-paths.json": "330b6a9b6d0dd60057f99df9ed272793a1462396f0ec4481faf06067e087b089"
+  },
+  "passed": false,
+  "production_approved": false,
+  "scope": "Local receipt aggregation; not proof of hosted CI or production approval"
+}

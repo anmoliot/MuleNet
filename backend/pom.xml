@@ -20,10 +20,29 @@
 
     <properties>
         <java.version>17</java.version>
+        <jackson-bom.version>2.21.8</jackson-bom.version>
+        <tomcat.version>10.1.62</tomcat.version>
+        <postgresql.version>42.7.15</postgresql.version>
+        <log4j2.version>2.25.5</log4j2.version>
         <testcontainers.version>1.21.4</testcontainers.version>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
     </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>at.yawk.lz4</groupId>
+                <artifactId>lz4-java</artifactId>
+                <version>1.14.1</version>
+            </dependency>
+            <dependency>
+                <groupId>org.xerial.snappy</groupId>
+                <artifactId>snappy-java</artifactId>
+                <version>1.1.10.12</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
 
@@ -87,7 +106,7 @@
         <!-- JPA / Persistence -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-jpa</artifactId>
+            <artifactId>spring-boot-starter-jdbc</artifactId>
         </dependency>
 
         <!-- Validation -->
@@ -170,11 +189,6 @@
             <artifactId>spring-kafka</artifactId>
         </dependency>
 
-        <!-- Retry -->
-        <dependency>
-            <groupId>org.springframework.retry</groupId>
-            <artifactId>spring-retry</artifactId>
-        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-aop</artifactId>
@@ -214,6 +228,27 @@
             </plugin>
 
             <!-- Spring Boot plugin -->
+            <plugin>
+                <groupId>org.owasp</groupId>
+                <artifactId>dependency-check-maven</artifactId>
+                <version>12.1.9</version>
+                <configuration>
+                    <format>JSON</format>
+                    <outputDirectory>${project.basedir}/../reports</outputDirectory>
+                    <failBuildOnCVSS>0</failBuildOnCVSS>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.cyclonedx</groupId>
+                <artifactId>cyclonedx-maven-plugin</artifactId>
+                <version>2.9.3</version>
+                <configuration>
+                    <outputFormat>json</outputFormat>
+                    <outputName>sbom-backend</outputName>
+                    <outputDirectory>${project.basedir}/../reports</outputDirectory>
+                </configuration>
+            </plugin>
+
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>

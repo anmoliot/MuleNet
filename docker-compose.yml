@@ -80,6 +80,8 @@ services:
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       MULENET_ML_URL: http://ml_service:8000
       MULENET_SERVICE_SECRET: ${MULENET_SERVICE_SECRET:?Generate .env first}
+      MULENET_STREAM_SECRET: ${MULENET_STREAM_SECRET:?Upgrade installation keys}
+      MULENET_INGESTION_SECRET: ${MULENET_INGESTION_SECRET:?Upgrade installation keys}
       MULENET_TOKEN_KEY: ${MULENET_TOKEN_KEY:?Generate .env first}
       MULENET_ENCRYPTION_KEY: ${MULENET_ENCRYPTION_KEY:?Generate .env first}
       MULENET_DEMO_JWT_SECRET: ${MULENET_DEMO_JWT_SECRET}
@@ -104,12 +106,12 @@ services:
       dockerfile: ml_service/Dockerfile
     environment:
       MULENET_SERVICE_SECRET: ${MULENET_SERVICE_SECRET:?Generate .env first}
-      MULENET_MODEL_DIR: /models
+      MULENET_REGISTRY_DIR: /registry
       MULENET_ALLOW_SYNTHETIC: ${MULENET_ALLOW_SYNTHETIC:-false}
       MULENET_REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/0
       PYTHONDONTWRITEBYTECODE: '1'
     volumes:
-      - ./artifacts/${MULENET_ACTIVE_MODEL:?Select a verified model}:/models:ro
+      - ./artifacts:/registry:ro
     read_only: true
     tmpfs: [/tmp]
     cap_drop: [ALL]

@@ -1,12 +1,14 @@
 [project]
 name = "mulenet"
 version = "0.1.0"
-requires-python = ">=3.13,<3.14"
+requires-python = ">=3.13.18,<3.14"
 dependencies = [
   "fastapi==0.136.3", "uvicorn==0.49.0", "pydantic==2.13.4",
   "networkx==3.6.1", "numpy==2.4.4", "scikit-learn==1.6.1",
-  "xgboost==3.4.1", "torch==2.12.1", "torch-geometric==2.8.1",
-  "skops==0.16.0", "PyJWT==2.13.0", "redis==5.0.4",
+  "xgboost==3.4.1; sys_platform != 'linux' or platform_machine != 'x86_64'",
+  "xgboost-cpu==3.4.1; sys_platform == 'linux' and platform_machine == 'x86_64'",
+  "torch==2.14.0", "torch-geometric==2.8.1", "setuptools==84.2.1",
+  "skops==0.16.0", "PyJWT==2.15.1", "redis==5.0.4",
   "prometheus-client==0.24.1", "httpx==0.28.1", "scipy==1.17.1",
   "filelock==4.3.1",
 ]
@@ -14,10 +16,11 @@ dependencies = [
 [dependency-groups]
 dev = ["pytest==9.0.3", "pytest-cov==7.1.0", "ruff==0.17.6", "mypy==2.4.1", "types-networkx==3.6.1.20261122", "pip-audit==2.10.1"]
 evaluation = ["matplotlib==3.10.9", "shap==0.54.1"]
-training = ["pyg-lib==0.9.0+pt212cpu", "torch-scatter==2.1.2+pt212cpu", "torch-sparse==0.6.18+pt212cpu"]
+training = ["pyg-lib==0.9.0+pt214cpu"]
+deployment = ["python-dotenv==1.2.4"]
 
 [tool.uv]
-find-links = ["https://data.pyg.org/whl/torch-2.12.0+cpu.html"]
+environments = ["sys_platform == 'win32'", "sys_platform == 'linux' and platform_machine == 'x86_64'", "sys_platform == 'linux' and platform_machine == 'aarch64'"]
 
 [[tool.uv.index]]
 name = "pytorch-cpu"
@@ -26,6 +29,11 @@ explicit = true
 
 [tool.uv.sources]
 torch = { index = "pytorch-cpu" }
+pyg-lib = [
+  { url = "https://data.pyg.org/whl/torch-2.14.0%2Bcpu/pyg_lib-0.9.0%2Bpt214cpu-cp310-abi3-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", marker = "sys_platform == 'linux' and platform_machine == 'aarch64'" },
+  { url = "https://data.pyg.org/whl/torch-2.14.0%2Bcpu/pyg_lib-0.9.0%2Bpt214cpu-cp310-abi3-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", marker = "sys_platform == 'linux' and platform_machine == 'x86_64'" },
+  { url = "https://data.pyg.org/whl/torch-2.14.0%2Bcpu/pyg_lib-0.9.0%2Bpt214cpu-cp310-abi3-win_amd64.whl", marker = "sys_platform == 'win32'" },
+]
 
 [tool.pytest.ini_options]
 pythonpath = ["ml_service"]

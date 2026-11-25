@@ -16,7 +16,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<?> handleValidationExceptions(MethodArgumentNotValidException ex) {
         Map<String, String> errors = new HashMap<>();
         ex.getBindingResult().getAllErrors().forEach((error) -> {
-            String fieldName = ((FieldError) error).getField();
+            String fieldName = error instanceof FieldError field ? field.getField() : "request";
             String errorMessage = error.getDefaultMessage();
             errors.put(fieldName, errorMessage);
         });
@@ -26,5 +26,10 @@ public class GlobalExceptionHandler {
         responseBody.put("errors", errors);
         
         return ResponseEntity.badRequest().body(responseBody);
+    }
+
+    @ExceptionHandler(org.springframework.http.converter.HttpMessageNotReadableException.class)
+    public ResponseEntity<?> invalidJson(org.springframework.http.converter.HttpMessageNotReadableException error) {
+        return ResponseEntity.badRequest().body(Map.of("status", "invalid_request", "message", "Malformed or out-of-contract JSON"));
     }
 }

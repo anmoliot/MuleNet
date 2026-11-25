@@ -25,6 +25,14 @@ import org.springframework.web.cors.*;
 @EnableMethodSecurity
 public class PlatformSecurity {
     private static final Set<String> ROLES = Set.of("ANALYST", "SUPERVISOR", "ADMIN", "AUDITOR");
+    private final RequestGuards requestGuards = new RequestGuards();
+    private final IngestionRateGuard ingestionRateGuard = new IngestionRateGuard();
+
+    static OAuth2TokenValidator<Jwt> identityContract() {
+        return token -> token.getClaims().get("tenant") instanceof String tenant && tenant.matches("[a-zA-Z0-9_-]{1,64}") &&
+            token.getClaims().get("sub") instanceof String subject && !subject.isBlank() && subject.length() <= 256 && token.getExpiresAt() != null ?
+            OAuth2TokenValidatorResult.success() : OAuth2TokenValidatorResult.failure(new OAuth2Error("invalid_token", "Missing identity contract", null));
+    }
 
     static OAuth2TokenValidator<Jwt> audience(String value) {
         return token -> token.getAudience().contains(value) ? OAuth2TokenValidatorResult.success() :
@@ -43,9 +51,19 @@ public class PlatformSecurity {
 
     @Bean("platformDecoder")
     @Profile("!demo")
-    public JwtDecoder oidc(@Value("${mulenet.oidc-issuer}") String issuer, @Value("${mulenet.oidc-audience:mulenet-api}") String audience) {
-        NimbusJwtDecoder decoder = JwtDecoders.fromIssuerLocation(issuer);
-        decoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(JwtValidators.createDefaultWithIssuer(issuer), audience(audience)));
+    public JwtDecoder oidc(@Value("${mulenet.oidc-issuer}") String issuer, @Value("${mulenet.oidc-audience:mulenet-api}") String audience,
+                           @Value("${mulenet.oidc-jwks-uri:}") String jwksUri,
+                           @Value("${mulenet.allow-insecure-local-oidc:false}") boolean local) {
+        if (issuer.isBlank()) throw new IllegalArgumentException("An explicit OIDC issuer is required outside demo");
+        for (String endpoint : List.of(issuer, jwksUri)) {
+            if (endpoint.isBlank()) continue;
+            java.net.URI uri = java.net.URI.create(endpoint);
+            boolean permittedLocal = local && "http".equals(uri.getScheme()) && Set.of("localhost", "127.0.0.1", "keycloak").contains(uri.getHost());
+            if (uri.getHost() == null || uri.getUserInfo() != null || uri.getFragment() != null || !("https".equals(uri.getScheme()) || permittedLocal))
+                throw new IllegalArgumentException("OIDC requires HTTPS; the explicit local override only permits local fixture hosts");
+        }
+        NimbusJwtDecoder decoder = jwksUri.isBlank() ? JwtDecoders.fromIssuerLocation(issuer) : NimbusJwtDecoder.withJwkSetUri(jwksUri).build();
+        decoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(JwtValidators.createDefaultWithIssuer(issuer), audience(audience), identityContract()));
         return decoder;
     }
     @Bean("platformDecoder")
@@ -54,16 +72,16 @@ public class PlatformSecurity {
         byte[] key = Base64.getDecoder().decode(secret);
         if (key.length < 32) throw new IllegalArgumentException("Unique demo signing key required");
         NimbusJwtDecoder decoder = NimbusJwtDecoder.withSecretKey(new SecretKeySpec(key, "HmacSHA256")).macAlgorithm(MacAlgorithm.HS256).build();
-        decoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(JwtValidators.createDefaultWithIssuer("mulenet-demo"), audience("mulenet-api")));
+        decoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(JwtValidators.createDefaultWithIssuer("mulenet-demo"), audience("mulenet-api"), identityContract()));
         return decoder;
     }
     @Bean("streamDecoder")
-    public JwtDecoder streamDecoder(@Value("${mulenet.service-secret}") String secret) {
+    public JwtDecoder streamDecoder(@Value("${mulenet.stream-secret}") String secret) {
         NimbusJwtDecoder decoder = NimbusJwtDecoder.withSecretKey(new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256")).macAlgorithm(MacAlgorithm.HS256).build();
         OAuth2TokenValidator<Jwt> scope = token -> "sse".equals(token.getClaimAsString("scope")) && token.getExpiresAt() != null && token.getIssuedAt() != null &&
                 token.getExpiresAt().getEpochSecond() - token.getIssuedAt().getEpochSecond() <= 60 ? OAuth2TokenValidatorResult.success() :
             OAuth2TokenValidatorResult.failure(new OAuth2Error("invalid_token", "Invalid stream scope or lifetime", null));
-        decoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(JwtValidators.createDefaultWithIssuer("mulenet-backend"), audience("mulenet-sse"), scope));
+        decoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(JwtValidators.createDefaultWithIssuer("mulenet-backend"), audience("mulenet-sse"), scope, identityContract()));
         return decoder;
     }
 
@@ -78,6 +96,8 @@ public class PlatformSecurity {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", cors);
         http.cors(c -> c.configurationSource(source))
+            .addFilterBefore(requestGuards, org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter.class)
+            .addFilterAfter(ingestionRateGuard, org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter.class)
             // Bearer credentials are explicit headers; no session or authentication cookies.
             .csrf(csrf -> csrf.disable()).httpBasic(b -> b.disable()).formLogin(f -> f.disable())
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -99,7 +119,7 @@ public class PlatformSecurity {
         base(http, origins);
         return http.authorizeHttpRequests(a -> a
                 .dispatcherTypeMatchers(jakarta.servlet.DispatcherType.ASYNC).permitAll()
-                .requestMatchers("/api/health", "/api/v1/auth/login").permitAll()
+                .requestMatchers("/api/health", "/api/v1/auth/login", "/api/v1/auth/config").permitAll()
                 .requestMatchers("/actuator/prometheus").hasAnyRole("ADMIN", "AUDITOR")
                 .requestMatchers("/api/v1/**", "/api/demo/seed").authenticated()
                 .anyRequest().denyAll())

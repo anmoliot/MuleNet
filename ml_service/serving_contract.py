@@ -3,6 +3,7 @@
 from typing import Annotated, Literal
 
 from pydantic import Field, model_validator
+import re
 
 from mulenet_core.schema import Account, Epoch, Identifier, StrictModel, Transaction
 
@@ -28,11 +29,15 @@ class Snapshot(StrictModel):
             raise ValueError("Snapshot contains duplicate account IDs")
         if any(e.fraud is not None or e.typology or e.ring_id for e in self.events):
             raise ValueError("Training labels are forbidden in serving context")
+        identifiers = [identifier for e in self.events for identifier in (e.transaction_id, e.source, e.target, e.device_id, e.ip_address) if identifier is not None]
+        identifiers.extend(a.account_id for a in self.accounts)
+        if any(not re.fullmatch(r"[a-f0-9]{64}", identifier) for identifier in identifiers):
+            raise ValueError("Serving identifiers must be tokenized at the ingestion boundary")
         return self
 
 
 class ScoreRequest(StrictModel):
-    account_id: Identifier
+    account_id: Annotated[str, Field(pattern=r"^[a-f0-9]{64}$")]
     as_of: ServiceEpoch
     snapshot_id: Annotated[str, Field(pattern=r"^[a-f0-9]{64}$")]
     correlation_id: Annotated[str, Field(pattern=r"^[a-zA-Z0-9-]{1,64}$")]

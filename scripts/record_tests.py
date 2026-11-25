@@ -12,10 +12,13 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "ml_service"))
+from mulenet_core.environment import package_version
 
 
 def sources():
     paths = [p for directory in ("ml_service", "scripts") for p in (ROOT / directory).rglob("*.py") if "__pycache__" not in p.parts]
+    paths += [ROOT / name for name in ("pyproject.toml", "uv.lock", ".python-version")]
     return {str(path.relative_to(ROOT)).replace("\\", "/"): hashlib.sha256(path.read_bytes()).hexdigest() for path in sorted(paths)}
 
 
@@ -34,7 +37,7 @@ def main():
         report = {"phase": args.phase, "exit_code": result.returncode, "passed": 0, "failed": 0, "skipped": 0, "cases": []}
         report["source_sha256"] = before
         report["source_unchanged_during_run"] = before == sources()
-        report["environment"] = {"python": platform.python_version(), "packages": {name: importlib.metadata.version(name) for name in ("numpy", "scikit-learn", "xgboost", "torch", "torch-geometric", "fastapi")}}
+        report["environment"] = {"python": platform.python_version(), "packages": {name: package_version(name) for name in ("numpy", "scikit-learn", "xgboost", "torch", "torch-geometric", "fastapi")}}
         if not report["source_unchanged_during_run"]:
             report["exit_code"] = 1
         if xml.exists():

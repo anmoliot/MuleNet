@@ -1,0 +1,17 @@
+version: 2
+updates:
+  - package-ecosystem: uv
+    directory: /
+    schedule: {interval: weekly}
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule: {interval: weekly}
+  - package-ecosystem: maven
+    directory: /backend
+    schedule: {interval: weekly}
+  - package-ecosystem: docker
+    directories: [/backend, /ml_service, /frontend]
+    schedule: {interval: weekly}
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: {interval: weekly}

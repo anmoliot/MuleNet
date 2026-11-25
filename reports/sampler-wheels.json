@@ -1,0 +1,20 @@
+{
+  "official_index": "https://data.pyg.org/whl/torch-2.14.0+cpu.html",
+  "wheels": [
+    {
+      "bytes": 2092837,
+      "sha256": "1639d69e27c7ad807ec5fd09e568efc90905d97dc80b37b5be0c5cb6ee62dbb6",
+      "url": "https://data.pyg.org/whl/torch-2.14.0%2Bcpu/pyg_lib-0.9.0%2Bpt214cpu-cp310-abi3-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl"
+    },
+    {
+      "bytes": 2370064,
+      "sha256": "ee2d43117bda52bf65d6ff0695a44c10552f376ee7cac43e0157b88ed458f10f",
+      "url": "https://data.pyg.org/whl/torch-2.14.0%2Bcpu/pyg_lib-0.9.0%2Bpt214cpu-cp310-abi3-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl"
+    },
+    {
+      "bytes": 1441921,
+      "sha256": "4ff0ac2bdc5f272f0794e11a258a0104a1bcab08c4f5fc9484df51050c13dabf",
+      "url": "https://data.pyg.org/whl/torch-2.14.0%2Bcpu/pyg_lib-0.9.0%2Bpt214cpu-cp310-abi3-win_amd64.whl"
+    }
+  ]
+}

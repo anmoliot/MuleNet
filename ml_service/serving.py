@@ -30,6 +30,8 @@ def create_app(*, bundle=None, cache=None, secret=None, gnn=None):
     secret = secret or os.environ.get("MULENET_SERVICE_SECRET", "")
     require = service_authorizer(secret)
     registry_models = None
+    if bundle is None and os.environ.get("MULENET_REGISTRY_DIR") and os.environ.get("MULENET_MODEL_DIR"):
+        raise RuntimeError("Choose a registry or a fixed model directory, not both")
     if bundle is None and os.environ.get("MULENET_REGISTRY_DIR"):
         from model_registry import ModelRegistry
         registry_models = ModelRegistry(Path(os.environ["MULENET_REGISTRY_DIR"]), allow_synthetic=os.environ.get("MULENET_ALLOW_SYNTHETIC") == "true")
@@ -118,7 +120,7 @@ def create_app(*, bundle=None, cache=None, secret=None, gnn=None):
             raise HTTPException(503, "Adjacency cache unavailable") from None
         return {"snapshot_id": snapshot_id}
 
-    def score_sync(request, snapshot, candidate):
+    def score_sync(request, snapshot, candidate, tenant):
         bundle = candidate
         selected = bundle.training.get("selected_model", bundle.training["default_deep_path"])
         started = time.perf_counter()
@@ -179,7 +181,7 @@ def create_app(*, bundle=None, cache=None, secret=None, gnn=None):
                                  {"code": "FORECAST_SCOPE", "label_horizon_seconds": bundle.training.get("label_horizon_seconds", 21600)}],
                 "evidence": {"edges": evidence_edges[:200], "truncated_for_display": len(evidence_edges) > 200,
                              "total_edges": len(evidence_edges), "contribution": "observed context, not causal GNN explanation"},
-                "simulated_watchlist": watchlist.lookup("", request.account_id),
+                "simulated_watchlist": watchlist.lookup(tenant, request.account_id),
                 "durations_ms": {"feature": feature_ms, "total": (time.perf_counter() - started) * 1000},
                 "shadow_results": registry_models.shadow(features) if registry_models else []}
 
@@ -189,7 +191,7 @@ def create_app(*, bundle=None, cache=None, secret=None, gnn=None):
             with latency.labels("cache").time():
                 snapshot = await run_in_threadpool(cache.get, claims["tenant"], request.snapshot_id)
             candidate = registry_models.choose(claims["tenant"], request.account_id) if registry_models else bundle
-            result = await run_in_threadpool(score_sync, request, snapshot, candidate)
+            result = await run_in_threadpool(score_sync, request, snapshot, candidate, claims["tenant"])
             scores_count.labels(result["model"]).inc()
             return result
         except LookupError:

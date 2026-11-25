@@ -32,8 +32,8 @@ public class PlatformController {
                                @NotBlank @Size(min = 10, max = 2000) String rationale) {}
     public record CaseAction(@Min(1) int expectedVersion,
                              @NotBlank @Size(min = 10, max = 2000) String rationale,
-                             @Size(max = 128) String assignee) {}
-    public record Feedback(boolean fraudulent, @NotBlank @Size(min = 20, max = 4000) String evidence) {}
+                             @Size(max = 128) @Pattern(regexp = "[a-zA-Z0-9_-]+") String assignee) {}
+    public record Feedback(@NotNull Boolean fraudulent, @NotBlank @Size(min = 20, max = 4000) String evidence) {}
     public record Replay(@NotBlank @Size(min = 10, max = 2000) String rationale) {}
 
     @PostMapping("/transactions")
@@ -88,11 +88,14 @@ public class PlatformController {
     public Map<String, Object> action(@PathVariable String id, @PathVariable String action, @Valid @RequestBody CaseAction request, Authentication auth) {
         if (!Set.of("APPROVE", "REJECT", "RELEASE", "ASSIGN").contains(action.toUpperCase(Locale.ROOT)))
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Unknown action");
-        return platform.act(tenant(auth), actor(auth), id, request.expectedVersion(), action.toUpperCase(Locale.ROOT), request.rationale(), request.assignee());
+        return platform.act(tenant(auth), actor(auth), id, request.expectedVersion(), action.toUpperCase(Locale.ROOT), request.rationale(), privacy.token(tenant(auth), "actor", request.assignee()));
     }
     @GetMapping("/audit")
     @PreAuthorize("hasAnyRole('SUPERVISOR','ADMIN','AUDITOR')")
-    public List<Map<String, Object>> audit(Authentication auth) { return platform.auditEntries(tenant(auth)); }
+    public List<Map<String, Object>> audit(Authentication auth, @RequestParam(defaultValue = "0") long after, @RequestParam(defaultValue = "50") int limit) {
+        if (after < 0 || limit < 1 || limit > 100) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Invalid audit page bounds");
+        return platform.auditEntries(tenant(auth), after, limit);
+    }
     @GetMapping("/health")
     @PreAuthorize("hasAnyRole('ANALYST','SUPERVISOR','ADMIN','AUDITOR')")
     public Map<String, Object> health(Authentication auth) {

@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 import time
 import uuid
+import hashlib
 
 from fastapi.testclient import TestClient
 import jwt
@@ -18,6 +19,10 @@ from simulation.generator import SimulationConfig, generate
 from training.experiment import train_experiment
 
 SECRET = "test-only-" + "s" * 64
+
+
+def identifier(value):
+    return hashlib.sha256(value.encode()).hexdigest()
 
 
 class MemoryRedis:
@@ -48,8 +53,8 @@ def bundle(tmp_path_factory):
 
 
 def context():
-    events = [Transaction(transaction_id="t1", source="a", target="b", ts=100, amount=100.)]
-    accounts = [Account(account_id="a", created_at=0), Account(account_id="b", created_at=0)]
+    events = [Transaction(transaction_id=identifier("t1"), source=identifier("a"), target=identifier("b"), ts=100, amount=100.)]
+    accounts = [Account(account_id=identifier("a"), created_at=0), Account(account_id=identifier("b"), created_at=0)]
     snapshot_id = snapshot_digest(0, 200, events, accounts)
     return {"snapshot_id": snapshot_id, "complete_from": 0, "watermark": 200,
             "events": [e.model_dump() for e in events], "accounts": [a.model_dump() for a in accounts]}
@@ -58,7 +63,7 @@ def context():
 def test_internal_auth_scope_tenant_and_cache_hash(bundle):
     client = TestClient(create_app(bundle=bundle, cache=SnapshotCache(MemoryRedis()), secret=SECRET))
     snapshot = context()
-    request = {"account_id": "b", "as_of": 200, "snapshot_id": snapshot["snapshot_id"], "correlation_id": "test-id"}
+    request = {"account_id": identifier("b"), "as_of": 200, "snapshot_id": snapshot["snapshot_id"], "correlation_id": "test-id"}
     assert client.post("/v1/score", json=request).status_code == 401
     assert client.post("/v1/score", json=request, headers=token(scope="cache")).status_code == 403
     for overrides in ({"aud": "browser"}, {"iss": "other"}, {"exp": int(time.time()) - 10}, {"exp": int(time.time()) + 600}, {"sub": "analyst"}):
@@ -72,7 +77,8 @@ def test_internal_auth_scope_tenant_and_cache_hash(bundle):
     assert result["data_provenance"] == "synthetic"
     assert result["score_components"]["gnn"] is None
     assert result["reason_codes"][0]["features"]
-    assert result["evidence"]["edges"][0]["transaction_id"] == "t1"
+    assert result["evidence"]["edges"][0]["transaction_id"] == identifier("t1")
+    assert set(result["score_components"]) == {"tabular", "tabular_graph", "gnn", "anomaly_signal", "watchlist_uplift"}
     assert result["simulated_watchlist"]["simulated"]
     assert client.get("/metrics").status_code == 401
     assert client.get("/metrics", headers=token(scope="metrics")).status_code == 200
@@ -101,7 +107,7 @@ def test_gnn_failure_is_explicit_graph_fallback_not_fake_component(bundle):
         client = TestClient(create_app(bundle=bundle, cache=SnapshotCache(MemoryRedis()), secret=SECRET, gnn=FailedGnn()))
         snapshot = context()
         client.post("/v1/snapshots", json=snapshot, headers=token()).raise_for_status()
-        response = client.post("/v1/score", json={"account_id": "b", "as_of": 200, "snapshot_id": snapshot["snapshot_id"], "correlation_id": "failure-test"}, headers=token())
+        response = client.post("/v1/score", json={"account_id": identifier("b"), "as_of": 200, "snapshot_id": snapshot["snapshot_id"], "correlation_id": "failure-test"}, headers=token())
         assert response.status_code == 200, response.text
         result = response.json()
         assert result["degraded"] and result["model"] == "tabular_graph"

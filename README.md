@@ -176,7 +176,7 @@ docker compose up -d
 
 #### 3. Access the System
 - **Frontend UI**: [http://localhost:3000](http://localhost:3000)
-  - **Login**: `investigator1` / **Password**: `password`
+  - Demo authentication requires an explicit demo profile and unique per-install credentials generated in the ignored `.env` file. No shared login is shipped.
 - **Backend API**: [http://localhost:8080/api/health](http://localhost:8080/api/health)
 - **ML Engine Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
 - **Keycloak Admin**: [http://localhost:8081](http://localhost:8081)

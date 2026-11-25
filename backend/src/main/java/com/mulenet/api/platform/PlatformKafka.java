@@ -74,12 +74,15 @@ public class PlatformKafka {
         factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.RECORD);
         var handler = new DefaultErrorHandler((record, exception) -> {
             try {
+                String payload = String.valueOf(record.value());
+                String sourceKey = String.valueOf(record.key());
                 String receipt = mapper.writeValueAsString(Map.of("id", UUID.randomUUID().toString(),
                     "source_topic", record.topic(), "source_partition", record.partition(), "source_offset", record.offset(),
-                    "payload_sha256", PrivacyCodec.hash(String.valueOf(record.value())),
-                    "encrypted_payload", privacy.encrypt("dlq", String.valueOf(record.value())),
+                    "payload_sha256", PrivacyCodec.hash(payload), "key_sha256", PrivacyCodec.hash(sourceKey),
+                    "encrypted_payload", privacy.encrypt("dlq", payload.substring(0, Math.min(4096, payload.length()))),
+                    "payload_truncated", payload.length() > 4096,
                     "error", exception.getClass().getSimpleName()));
-                kafka.send("mulenet.transactions.dlq", record.partition(), String.valueOf(record.key()), receipt).get(10, TimeUnit.SECONDS);
+                kafka.send("mulenet.transactions.dlq", record.partition(), PrivacyCodec.hash(sourceKey), receipt).get(10, TimeUnit.SECONDS);
             } catch (Exception failure) { throw new IllegalStateException("DLQ publish failed; input is not acknowledged", failure); }
         }, new FixedBackOff(100, 2));
         handler.setAckAfterHandle(true);

@@ -95,3 +95,27 @@ Status: Accepted after the first real-stack test exposed empty request serializa
 Context: The old generator mishandles closed OpenAPI objects; its compile success was insufficient.
 Decision: Use official OpenAPI normalization, a compatible Spring Boot patch and serialization regression tests.
 Consequence: Strict server schemas remain intact; generated files are never manually patched.
+
+## ADR-016: Retire Competing Legacy Execution Paths
+Status: Accepted; historical migrations remain for non-destructive upgrades.
+Context: Excluding unsafe controllers and pickle training paths by profile still leaves an accidental execution surface.
+Decision: Remove retired Java/ML implementations and binary pickle bundles; quarantine legacy database tables from the runtime role.
+Consequence: Old endpoints are intentionally unsupported; audit evidence remains anchored to the baseline Git revision.
+
+## ADR-017: Separate Signing Purposes and Restrict Tenant Administration
+Status: Accepted for the local research deployment, not a production identity certificate.
+Context: A shared HMAC key enables cross-service forgery; an end-user-editable tenant claim defeats isolation.
+Decision: Independent ML, stream and ingestion keys; issuer/audience/identity validation; admin-only Keycloak tenant attributes.
+Consequence: Real OIDC signature checks and stream isolation tests are required; HTTP identity transport requires an explicit local-only override.
+
+## ADR-018: Audit Official CPU Variants Explicitly
+Status: Accepted; version advisory coverage and native binary provenance are separate checks.
+Context: PyPI advisory tooling skips CPU-local framework versions, and an older framework constrained a vulnerable build dependency.
+Decision: Use compatible official CPU/sampler wheels, pinned hashes, an upstream-release advisory mapping and independent image scans.
+Consequence: Unknown skipped packages or unfinished scanners cannot be reported as a clean security result.
+
+## ADR-019: Fail Test Receipts When Source Changes During Execution
+Status: Accepted; functional assertions alone do not identify the tested snapshot.
+Context: Long-running checks can overlap ongoing edits and otherwise produce misleading final-state acceptance claims.
+Decision: Record pre-run source hashes and reject receipts whose post-run source differs; rerun the final snapshot.
+Consequence: An intermediate BUILD SUCCESS or passing pytest output is insufficient when the receipt reports changed source.
