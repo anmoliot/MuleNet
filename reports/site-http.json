@@ -1,0 +1,53 @@
+{
+  "source": "Authenticated Vercel connector HTTP GET results, not an unauthenticated availability claim or deployed-browser certification",
+  "deployment_id": "dpl_6UuUQivsLE2zL1uHEXv2AcVodmik",
+  "checks": [
+    {
+      "path": "/evidence.json",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "csp": "default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self'; connect-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'none'; upgrade-insecure-requests",
+      "nosniff": "nosniff",
+      "provenance": "synthetic"
+    },
+    {
+      "path": "/assets/index-BfdEK_nb.js",
+      "status": 200,
+      "contentType": "application/javascript; charset=utf-8",
+      "csp": "default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self'; connect-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'none'; upgrade-insecure-requests",
+      "nosniff": "nosniff"
+    },
+    {
+      "path": "/assets/index-kxL5v7iI.css",
+      "status": 200,
+      "contentType": "text/css; charset=utf-8",
+      "csp": "default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self'; connect-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'none'; upgrade-insecure-requests",
+      "nosniff": "nosniff"
+    },
+    {
+      "path": "/evidence-graph-alpha.png",
+      "status": 200,
+      "contentType": "image/png",
+      "contentLength": "284282",
+      "csp": "default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self'; connect-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'none'; upgrade-insecure-requests",
+      "nosniff": "nosniff"
+    },
+    {
+      "path": "/api/v1/score",
+      "status": 404,
+      "contentType": "text/plain; charset=utf-8",
+      "contentLength": "84",
+      "csp": "default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self'; connect-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'none'; upgrade-insecure-requests",
+      "nosniff": "nosniff"
+    },
+    {
+      "path": "/api/demo/seed",
+      "status": 404,
+      "contentType": "text/plain; charset=utf-8",
+      "contentLength": "84",
+      "csp": "default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self'; connect-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'none'; upgrade-insecure-requests",
+      "nosniff": "nosniff"
+    }
+  ],
+  "pass": true
+}

@@ -1,8 +1,8 @@
 """Hash the exact official sampler wheels instead of trusting an un-hashed flat index."""
 
 import hashlib
-from html.parser import HTMLParser
 import json
+from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import unquote, urljoin
 from urllib.request import urlopen
@@ -35,9 +35,15 @@ def main():
                 digest.update(block)
                 length += len(block)
         results.append({"url": url, "sha256": digest.hexdigest(), "bytes": length})
-    if not results or not any("win_amd64" in r["url"] for r in results) or not any("x86_64" in r["url"] for r in results):
+    if (
+        not results
+        or not any("win_amd64" in r["url"] for r in results)
+        or not any("x86_64" in r["url"] for r in results)
+    ):
         raise RuntimeError("Required official CPU sampler wheels are unavailable")
-    (ROOT / "reports/sampler-wheels.json").write_text(json.dumps({"official_index": INDEX, "wheels": results}, sort_keys=True, indent=2) + "\n", encoding="utf-8")
+    (ROOT / "reports/sampler-wheels.json").write_text(
+        json.dumps({"official_index": INDEX, "wheels": results}, sort_keys=True, indent=2) + "\n", encoding="utf-8"
+    )
     print("PASS: exact official sampler wheel sizes and SHA-256 receipts recorded")
 
 

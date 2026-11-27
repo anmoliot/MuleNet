@@ -1,14 +1,33 @@
 from dataclasses import replace
 
 import pytest
-
 from mulenet_core.labels import future_label, materialize
 from mulenet_core.schema import Transaction
-from mulenet_core.splits import Split, assert_entity_isolation, assert_no_label_leakage, entity_partitions, entity_split, partition_events, temporal_split
+from mulenet_core.splits import (
+    Split,
+    assert_entity_isolation,
+    assert_no_label_leakage,
+    entity_partitions,
+    entity_split,
+    partition_events,
+    temporal_split,
+)
 
 
 def events():
-    return tuple(Transaction(transaction_id=f"{group}-{ts}", source=f"a{group}", target=f"b{group}", ts=ts, amount=10.0, fraud=ts % 30 == 0, ring_id=str(group)) for group in range(6) for ts in range(10, 101, 10))
+    return tuple(
+        Transaction(
+            transaction_id=f"{group}-{ts}",
+            source=f"a{group}",
+            target=f"b{group}",
+            ts=ts,
+            amount=10.0,
+            fraud=ts % 30 == 0,
+            ring_id=str(group),
+        )
+        for group in range(6)
+        for ts in range(10, 101, 10)
+    )
 
 
 def test_temporal_split_purges_overlapping_windows():

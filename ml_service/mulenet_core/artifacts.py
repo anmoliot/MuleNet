@@ -5,8 +5,9 @@ from __future__ import annotations
 import hashlib
 import json
 import subprocess
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 from .io import canonical_json
 from .schema import FeatureConfig, feature_schema_hash
@@ -20,23 +21,41 @@ def sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-def write_manifest(directory: Path, config: FeatureConfig, data_hash: str, metrics_path: Path) -> dict:
-    files = {path.name: sha256(path) for path in sorted(directory.iterdir()) if path.is_file() and path.name != "manifest.json"}
+def write_manifest(directory: Path, config: FeatureConfig, data_hash: str, metrics_path: Path) -> dict[str, Any]:
+    files = {
+        path.name: sha256(path)
+        for path in sorted(directory.iterdir())
+        if path.is_file() and path.name != "manifest.json"
+    }
     manifest = {
-        "format_version": 1, "feature_schema_hash": feature_schema_hash(config),
-        "feature_config": config.model_dump(mode="json"), "data_hash": data_hash,
-        "metrics_hash": sha256(metrics_path), "metrics_file": metrics_path.name, "files": files,
+        "format_version": 1,
+        "feature_schema_hash": feature_schema_hash(config),
+        "feature_config": config.model_dump(mode="json"),
+        "data_hash": data_hash,
+        "metrics_hash": sha256(metrics_path),
+        "metrics_file": metrics_path.name,
+        "files": files,
         "git_sha": subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip(),
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "git_dirty": bool(subprocess.check_output(["git", "status", "--porcelain"], text=True).strip()),
-        "model_version": hashlib.sha256(canonical_json({name: digest for name, digest in files.items() if Path(name).suffix in {".ubj", ".skops", ".pt", ".ts"}})).hexdigest()[:16],
+        "model_version": hashlib.sha256(
+            canonical_json(
+                {
+                    name: digest
+                    for name, digest in files.items()
+                    if Path(name).suffix in {".ubj", ".skops", ".pt", ".ts"}
+                }
+            )
+        ).hexdigest()[:16],
     }
     (directory / "manifest.json").write_bytes(canonical_json(manifest))
     return manifest
 
 
-def verify_manifest(directory: Path, config: FeatureConfig, *, allow_synthetic: bool = False) -> dict:
-    manifest = json.loads((directory / "manifest.json").read_bytes())
+def verify_manifest(directory: Path, config: FeatureConfig, *, allow_synthetic: bool = False) -> dict[str, Any]:
+    manifest: dict[str, Any] = json.loads((directory / "manifest.json").read_bytes())
+    if not isinstance(manifest, dict):
+        raise ValueError("Manifest must be a JSON object")
     if manifest.get("format_version") != 1 or manifest.get("feature_schema_hash") != feature_schema_hash(config):
         raise ValueError("Model feature-schema mismatch; explicit retraining required")
     if not manifest.get("files"):
@@ -50,7 +69,16 @@ def verify_manifest(directory: Path, config: FeatureConfig, *, allow_synthetic: 
     metrics_file = manifest.get("metrics_file")
     if metrics_file not in manifest["files"] or manifest.get("metrics_hash") != manifest["files"][metrics_file]:
         raise ValueError("Manifest metrics hash mismatch")
-    required = {"tabular.ubj", "tabular_graph.ubj", "calibration.skops", "anomaly.skops", "stack.skops", "gnn.ts", "training.json"}
+    required = {
+        "tabular.ubj",
+        "tabular_graph.ubj",
+        "calibration.skops",
+        "anomaly.skops",
+        "stack.skops",
+        "gnn.ts",
+        "training.json",
+        "drift-reference.json",
+    }
     if not required <= manifest["files"].keys():
         raise ValueError("Incomplete artifact bundle")
     training = json.loads((directory / "training.json").read_bytes())

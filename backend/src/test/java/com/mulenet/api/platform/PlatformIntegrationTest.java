@@ -32,47 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles({"platform", "demo"})
 @Testcontainers
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
-class PlatformIntegrationTest {
-    private static final Network NETWORK = Network.newNetwork();
-    private static final String SERVICE_SECRET = UUID.randomUUID().toString() + UUID.randomUUID();
-    private static final String STREAM_SECRET = UUID.randomUUID().toString() + UUID.randomUUID();
-    private static final String INGESTION_SECRET = UUID.randomUUID().toString() + UUID.randomUUID();
-    private static final String KEY = Base64.getEncoder().encodeToString(java.security.SecureRandom.getSeed(32));
-    private static final String RUNTIME_PASSWORD = UUID.randomUUID().toString();
-    private static final Map<String, String> PASSWORDS = Map.of("analyst", UUID.randomUUID().toString(), "supervisor", UUID.randomUUID().toString(), "admin", UUID.randomUUID().toString(), "auditor", UUID.randomUUID().toString());
-    private static final String INIT_SQL = "CREATE ROLE mulenet_runtime LOGIN PASSWORD '" + RUNTIME_PASSWORD + "'; GRANT USAGE ON SCHEMA public TO mulenet_runtime; ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT,INSERT,UPDATE,DELETE ON TABLES TO mulenet_runtime; ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE,SELECT ON SEQUENCES TO mulenet_runtime;";
-    @Container static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:17.7-alpine")
-        .withDatabaseName("mulenet").withUsername("migration").withPassword(UUID.randomUUID().toString())
-        .withCopyToContainer(Transferable.of(INIT_SQL), "/docker-entrypoint-initdb.d/10-runtime.sql").withNetwork(NETWORK);
-    @Container static KafkaContainer kafka = new KafkaContainer(DockerImageName.parse("apache/kafka:4.1.1")).withNetwork(NETWORK);
-    @Container static GenericContainer<?> redis = new GenericContainer<>("redis:7.4.7-alpine").withExposedPorts(6379).withNetwork(NETWORK).withNetworkAliases("redis");
-    @Container static GenericContainer<?> ml = new GenericContainer<>(System.getenv().getOrDefault("MULENET_ML_TEST_IMAGE", "mulenet/ml:local"))
-        .withNetwork(NETWORK).dependsOn(redis).withExposedPorts(8000)
-        .withFileSystemBind(Path.of("../artifacts/demo-temporal-v3").toAbsolutePath().normalize().toString(), "/models", BindMode.READ_ONLY)
-        .withEnv("MULENET_MODEL_DIR", "/models").withEnv("MULENET_ALLOW_SYNTHETIC", "true")
-        .withEnv("MULENET_SERVICE_SECRET", SERVICE_SECRET).withEnv("MULENET_REDIS_URL", "redis://redis:6379/0")
-        .waitingFor(org.testcontainers.containers.wait.strategy.Wait.forHttp("/health").forPort(8000)).withStartupTimeout(Duration.ofMinutes(2));
-
-    @DynamicPropertySource static void properties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", () -> "mulenet_runtime");
-        registry.add("spring.datasource.password", () -> RUNTIME_PASSWORD);
-        registry.add("spring.datasource.driverClassName", () -> "org.postgresql.Driver");
-        registry.add("spring.jpa.properties.hibernate.dialect", () -> "org.hibernate.dialect.PostgreSQLDialect");
-        registry.add("spring.jpa.hibernate.ddl-auto", () -> "validate");
-        registry.add("spring.flyway.enabled", () -> true);
-        registry.add("spring.flyway.user", postgres::getUsername);
-        registry.add("spring.flyway.password", postgres::getPassword);
-        registry.add("spring.kafka.bootstrap-servers", kafka::getBootstrapServers);
-        registry.add("mulenet.token-key", () -> KEY);
-        registry.add("mulenet.encryption-key", () -> KEY);
-        registry.add("mulenet.service-secret", () -> SERVICE_SECRET);
-        registry.add("mulenet.stream-secret", () -> STREAM_SECRET);
-        registry.add("mulenet.ingestion-secret", () -> INGESTION_SECRET);
-        registry.add("mulenet.ml-url", () -> "http://" + ml.getHost() + ":" + ml.getMappedPort(8000));
-        registry.add("mulenet.demo-jwt-secret", () -> KEY);
-        PASSWORDS.forEach((role, password) -> registry.add("mulenet.demo-passwords." + role, () -> password));
-    }
+class PlatformIntegrationTest extends PlatformTestStack {
 
     @Autowired MockMvc http;
     @Autowired ObjectMapper json;
@@ -87,6 +47,27 @@ class PlatformIntegrationTest {
             .content(json.writeValueAsString(Map.of("username", role, "password", PASSWORDS.get(role)))))
             .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
         return "Bearer " + json.readTree(response).path("access_token").asText();
+    }
+
+    @Test void initialPolicyVersionAndVerifiedIdentity() throws Exception {
+        http.perform(get("/api/v1/auth/session")).andExpect(status().isUnauthorized());
+        String admin = login("admin");
+        http.perform(get("/api/v1/auth/session").header("Authorization", admin))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.tenant").value("demo"))
+            .andExpect(jsonPath("$.roles[0]").value("ADMIN")).andExpect(jsonPath("$.demo_mode").value(true));
+        String policy = json.writeValueAsString(Map.of("expectedVersion", 0,
+            "config", ReviewPolicy.initial(), "rationale", "Preserve initial research policy with an audited first version"));
+        http.perform(put("/api/v1/policy").header("Authorization", login("analyst"))
+            .contentType("application/json").content(policy)).andExpect(status().isForbidden());
+        admin = "Bearer " + io.jsonwebtoken.Jwts.builder()
+            .setIssuer("mulenet-demo").setAudience("mulenet-api").setSubject("initial-policy-admin")
+            .setIssuedAt(new Date()).setExpiration(Date.from(Instant.now().plusSeconds(60)))
+            .claim("tenant", "initial-policy-test").claim("roles", List.of("ADMIN"))
+            .signWith(io.jsonwebtoken.security.Keys.hmacShaKeyFor(Base64.getDecoder().decode(KEY)), io.jsonwebtoken.SignatureAlgorithm.HS256).compact();
+        http.perform(put("/api/v1/policy").header("Authorization", admin)
+            .contentType("application/json").content(policy)).andExpect(status().isOk()).andExpect(jsonPath("$.version").value(1));
+        http.perform(put("/api/v1/policy").header("Authorization", admin)
+            .contentType("application/json").content(policy)).andExpect(status().isConflict());
     }
 
     @Test void realStackReplayIdempotencyDlqDegradationAndReview() throws Exception {
@@ -106,6 +87,22 @@ class PlatformIntegrationTest {
         assertEquals("tabular_graph", result.path("model").asText());
         assertEquals(64, result.path("feature_schema_hash").asText().length());
         assertFalse(result.toString().contains("raw-source"));
+        var metricsClient = java.net.http.HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(3)).build();
+        var metricsUri = java.net.URI.create("http://" + ml.getHost() + ":" + ml.getMappedPort(8000) + "/metrics");
+        assertEquals(401, metricsClient.send(java.net.http.HttpRequest.newBuilder(metricsUri).GET().build(), java.net.http.HttpResponse.BodyHandlers.ofString()).statusCode());
+        assertEquals(403, metricsClient.send(java.net.http.HttpRequest.newBuilder(metricsUri).header("Authorization", "Bearer " + tokens.ml("demo")).GET().build(), java.net.http.HttpResponse.BodyHandlers.ofString()).statusCode());
+        java.util.function.Function<String, String> metricsCredential = tenant -> io.jsonwebtoken.Jwts.builder()
+            .setIssuer("mulenet-backend").setAudience("mulenet-ml").setSubject("backend")
+            .setId(UUID.randomUUID().toString()).setIssuedAt(new Date()).setExpiration(Date.from(Instant.now().plusSeconds(30)))
+            .claim("tenant", tenant).claim("scope", "metrics")
+            .signWith(io.jsonwebtoken.security.Keys.hmacShaKeyFor(SERVICE_SECRET.getBytes(java.nio.charset.StandardCharsets.UTF_8)), io.jsonwebtoken.SignatureAlgorithm.HS256).compact();
+        var driftMetrics = metricsClient.send(java.net.http.HttpRequest.newBuilder(metricsUri).header("Authorization", "Bearer " + metricsCredential.apply("demo")).GET().build(), java.net.http.HttpResponse.BodyHandlers.ofString());
+        assertEquals(200, driftMetrics.statusCode());
+        assertTrue(driftMetrics.body().contains("mulenet_ml_drift_samples{"));
+        assertFalse(driftMetrics.body().contains("mulenet_ml_drift_psi{"));
+        var isolatedMetrics = metricsClient.send(java.net.http.HttpRequest.newBuilder(metricsUri).header("Authorization", "Bearer " + metricsCredential.apply("isolated-metrics")).GET().build(), java.net.http.HttpResponse.BodyHandlers.ofString());
+        assertEquals(200, isolatedMetrics.statusCode());
+        assertFalse(isolatedMetrics.body().contains("mulenet_ml_drift_samples{"));
         String scoped = json.readTree(http.perform(post("/api/v1/stream-token").header("Authorization", admin))
             .andExpect(status().isOk()).andReturn().getResponse().getContentAsString()).path("access_token").asText();
         var stream = http.perform(get("/api/v1/events").header("Authorization", "Bearer " + scoped).header("Last-Event-ID", "0"))
@@ -163,6 +160,15 @@ class PlatformIntegrationTest {
         db.update("UPDATE platform_decisions SET expires_at=? WHERE status='SOFT_HOLD'", Instant.now().getEpochSecond() - 1);
         platform.releaseExpired();
         assertTrue(platform.decisions("demo").stream().noneMatch(row -> row.get("status").equals("SOFT_HOLD")));
+        http.perform(get("/actuator/prometheus")).andExpect(status().isUnauthorized());
+        http.perform(get("/actuator/prometheus").header("Authorization", analyst)).andExpect(status().isForbidden());
+        String metrics = http.perform(get("/actuator/prometheus").header("Authorization", admin))
+            .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        assertTrue(metrics.contains("mulenet_pipeline_stage_seconds_count"));
+        assertTrue(metrics.contains("stage=\"score_http\""));
+        assertTrue(metrics.contains("stage=\"kafka_process\""));
+        assertFalse(metrics.contains("raw-source"));
+        assertFalse(metrics.contains("raw-device"));
         String previous = "GENESIS";
         for (Map<String, Object> row : platform.auditEntries("demo")) {
             assertEquals(previous, row.get("previous_hash"));

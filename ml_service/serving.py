@@ -1,27 +1,25 @@
 """Internal, strict, artifact-backed candidate service. No automatic training."""
 
-from contextlib import asynccontextmanager
-import json
 import os
-from pathlib import Path
 import time
+from contextlib import asynccontextmanager
+from pathlib import Path
 
-from fastapi import Depends, FastAPI, HTTPException, Request, Response
 import networkx as nx
-import numpy as np
-from prometheus_client import CollectorRegistry, Counter, Histogram, generate_latest
 import redis
-from starlette.concurrency import run_in_threadpool
-
 from adjacency_cache import SnapshotCache
+from fastapi import Depends, FastAPI, HTTPException, Request, Response
 from gnn_deadline import GnnDeadline
 from internal_auth import service_authorizer
+from live_drift import LiveDrift
 from mulenet_core.calibration import calibrated_probabilities
 from mulenet_core.features import extract_features
 from mulenet_core.labels import Example
 from mulenet_core.models import ModelBundle
-from mulenet_core.schema import FeatureConfig, feature_schema_hash
+from mulenet_core.schema import feature_schema_hash
+from prometheus_client import CollectorRegistry, Counter, Histogram, generate_latest
 from serving_contract import ScoreRequest, ScoreResponse, Snapshot
+from starlette.concurrency import run_in_threadpool
 from training.train_gnn import snapshot_graph
 from watchlist import SimulatedI4CProvider
 
@@ -29,12 +27,18 @@ from watchlist import SimulatedI4CProvider
 def create_app(*, bundle=None, cache=None, secret=None, gnn=None):
     secret = secret or os.environ.get("MULENET_SERVICE_SECRET", "")
     require = service_authorizer(secret)
+    score_authorization = Depends(require("score"))
+    cache_authorization = Depends(require("cache"))
     registry_models = None
     if bundle is None and os.environ.get("MULENET_REGISTRY_DIR") and os.environ.get("MULENET_MODEL_DIR"):
         raise RuntimeError("Choose a registry or a fixed model directory, not both")
     if bundle is None and os.environ.get("MULENET_REGISTRY_DIR"):
         from model_registry import ModelRegistry
-        registry_models = ModelRegistry(Path(os.environ["MULENET_REGISTRY_DIR"]), allow_synthetic=os.environ.get("MULENET_ALLOW_SYNTHETIC") == "true")
+
+        registry_models = ModelRegistry(
+            Path(os.environ["MULENET_REGISTRY_DIR"]),
+            allow_synthetic=os.environ.get("MULENET_ALLOW_SYNTHETIC") == "true",
+        )
         bundle = registry_models.active
     if bundle is None:
         directory = os.environ.get("MULENET_MODEL_DIR")
@@ -49,7 +53,7 @@ def create_app(*, bundle=None, cache=None, secret=None, gnn=None):
         url = os.environ.get("MULENET_REDIS_URL")
         if not url:
             raise RuntimeError("MULENET_REDIS_URL is required")
-        client = redis.Redis.from_url(url, socket_connect_timeout=.2, socket_timeout=.2)
+        client = redis.Redis.from_url(url, socket_connect_timeout=0.2, socket_timeout=0.2)
         client.ping()
         cache = SnapshotCache(client)
     selected = bundle.training.get("selected_model", bundle.training["default_deep_path"])
@@ -63,6 +67,7 @@ def create_app(*, bundle=None, cache=None, secret=None, gnn=None):
     degraded = Counter("mulenet_ml_degraded_total", "Explicit graph-tabular fallbacks", registry=registry)
     scores_count = Counter("mulenet_ml_scores_total", "Successful candidate decisions", ["model"], registry=registry)
     watchlist = SimulatedI4CProvider()
+    drift = LiveDrift(registry)
 
     @asynccontextmanager
     async def lifespan(app):
@@ -70,8 +75,14 @@ def create_app(*, bundle=None, cache=None, secret=None, gnn=None):
         if runner:
             runner.close()
 
-    app = FastAPI(title="MuleNet internal scoring API", version="1.0.0", lifespan=lifespan,
-                  docs_url=None, redoc_url=None, openapi_url=None)
+    app = FastAPI(
+        title="MuleNet internal scoring API",
+        version="1.0.0",
+        lifespan=lifespan,
+        docs_url=None,
+        redoc_url=None,
+        openapi_url=None,
+    )
 
     @app.middleware("http")
     async def limits(request: Request, call_next):
@@ -100,18 +111,35 @@ def create_app(*, bundle=None, cache=None, secret=None, gnn=None):
     def contract():
         return app.openapi()
 
-    @app.get("/metrics", dependencies=[Depends(require("metrics"))])
-    def metrics():
-        return Response(generate_latest(registry), media_type="text/plain; version=0.0.4")
+    metrics_authorization = Depends(require("metrics"))
+
+    @app.get(
+        "/metrics",
+        response_class=Response,
+        responses={200: {"content": {"text/plain": {"schema": {"type": "string"}}}}},
+    )
+    def metrics(claims=metrics_authorization):
+        return Response(
+            generate_latest(registry) + drift.metrics(claims["tenant"]), media_type="text/plain; version=0.0.4"
+        )
+
+    @app.get("/v1/drift", operation_id="tenantDrift")
+    def tenant_drift(claims=metrics_authorization):
+        return {"windows": drift.snapshot(claims["tenant"]), "automatic_action": False}
 
     @app.get("/ready", dependencies=[Depends(require("score"))])
     def ready():
-        return {"status": "ready", "model_version": bundle.manifest["model_version"],
-                "feature_schema_hash": feature_schema_hash(config), "model": selected,
-                "data_provenance": "synthetic", "production_approved": False}
+        return {
+            "status": "ready",
+            "model_version": bundle.manifest["model_version"],
+            "feature_schema_hash": feature_schema_hash(config),
+            "model": selected,
+            "data_provenance": "synthetic",
+            "production_approved": False,
+        }
 
     @app.post("/v1/snapshots", operation_id="cacheSnapshot")
-    def put_snapshot(snapshot: Snapshot, claims=Depends(require("cache"))):
+    def put_snapshot(snapshot: Snapshot, claims=cache_authorization):
         try:
             snapshot_id = cache.put(claims["tenant"], snapshot)
         except ValueError as exc:
@@ -150,6 +178,7 @@ def create_app(*, bundle=None, cache=None, secret=None, gnn=None):
                 graph = snapshot_graph(events, [row], config, snapshot.accounts)
                 # Bound the inference ego graph after computing features on the complete context.
                 from torch_geometric.utils import k_hop_subgraph
+
                 index = graph.account_ids.index(request.account_id)
                 nodes, edges, mapping, mask = k_hop_subgraph(index, 3, graph.edge_index, relabel_nodes=True)
                 graph.x = graph.x[nodes]
@@ -169,24 +198,65 @@ def create_app(*, bundle=None, cache=None, secret=None, gnn=None):
         evidence_graph = nx.DiGraph()
         past = [e for e in events if request.as_of - max(config.windows) < e.ts]
         evidence_graph.add_edges_from((e.source, e.target) for e in past)
-        neighbors = nx.single_source_shortest_path_length(evidence_graph.to_undirected(), request.account_id, cutoff=3) if request.account_id in evidence_graph else {request.account_id: 0}
-        evidence_edges = [{"transaction_id": e.transaction_id, "source": e.source, "target": e.target, "ts": e.ts, "amount": e.amount, "currency": e.currency} for e in past if e.source in neighbors and e.target in neighbors]
-        return {"account_id": request.account_id, "as_of": request.as_of, "correlation_id": request.correlation_id,
-                "snapshot_id": request.snapshot_id, "model_version": bundle.manifest["model_version"],
-                "feature_schema_hash": feature_schema_hash(config), "data_provenance": "synthetic",
-                "model": model, "probability": score, "validation_threshold": threshold, "alert": bool(score >= threshold),
-                "degraded": reason is not None, "degradation_reason": reason,
-                "score_components": {"tabular": tabular_score, "tabular_graph": graph_score, "gnn": gnn_score, "anomaly_signal": anomaly_signal, "watchlist_uplift": None},
-                "reason_codes": [{"code": "TABULAR_SHAP", "model": "tabular_graph", "features": top},
-                                 {"code": "FORECAST_SCOPE", "label_horizon_seconds": bundle.training.get("label_horizon_seconds", 21600)}],
-                "evidence": {"edges": evidence_edges[:200], "truncated_for_display": len(evidence_edges) > 200,
-                             "total_edges": len(evidence_edges), "contribution": "observed context, not causal GNN explanation"},
-                "simulated_watchlist": watchlist.lookup(tenant, request.account_id),
-                "durations_ms": {"feature": feature_ms, "total": (time.perf_counter() - started) * 1000},
-                "shadow_results": registry_models.shadow(features) if registry_models else []}
+        neighbors = (
+            nx.single_source_shortest_path_length(evidence_graph.to_undirected(), request.account_id, cutoff=3)
+            if request.account_id in evidence_graph
+            else {request.account_id: 0}
+        )
+        evidence_edges = [
+            {
+                "transaction_id": e.transaction_id,
+                "source": e.source,
+                "target": e.target,
+                "ts": e.ts,
+                "amount": e.amount,
+                "currency": e.currency,
+            }
+            for e in past
+            if e.source in neighbors and e.target in neighbors
+        ]
+        drift.observe(tenant, bundle, features, score, model)
+        return {
+            "account_id": request.account_id,
+            "as_of": request.as_of,
+            "correlation_id": request.correlation_id,
+            "snapshot_id": request.snapshot_id,
+            "model_version": bundle.manifest["model_version"],
+            "feature_schema_hash": feature_schema_hash(config),
+            "data_provenance": "synthetic",
+            "model": model,
+            "probability": score,
+            "validation_threshold": threshold,
+            "alert": bool(score >= threshold),
+            "degraded": reason is not None,
+            "degradation_reason": reason,
+            "score_components": {
+                "tabular": tabular_score,
+                "tabular_graph": graph_score,
+                "gnn": gnn_score,
+                "anomaly_signal": anomaly_signal,
+                "watchlist_uplift": None,
+            },
+            "reason_codes": [
+                {"code": "TABULAR_SHAP", "model": "tabular_graph", "features": top},
+                {
+                    "code": "FORECAST_SCOPE",
+                    "label_horizon_seconds": bundle.training.get("label_horizon_seconds", 21600),
+                },
+            ],
+            "evidence": {
+                "edges": evidence_edges[:200],
+                "truncated_for_display": len(evidence_edges) > 200,
+                "total_edges": len(evidence_edges),
+                "contribution": "observed context, not causal GNN explanation",
+            },
+            "simulated_watchlist": watchlist.lookup(tenant, request.account_id),
+            "durations_ms": {"feature": feature_ms, "total": (time.perf_counter() - started) * 1000},
+            "shadow_results": registry_models.shadow(features) if registry_models else [],
+        }
 
     @app.post("/v1/score", response_model=ScoreResponse, operation_id="score")
-    async def score(request: ScoreRequest, claims=Depends(require("score"))):
+    async def score(request: ScoreRequest, claims=score_authorization):
         try:
             with latency.labels("cache").time():
                 snapshot = await run_in_threadpool(cache.get, claims["tenant"], request.snapshot_id)

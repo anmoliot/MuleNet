@@ -1,0 +1,33 @@
+repos:
+  - repo: local
+    hooks:
+      - id: python-lint
+        name: Locked Python lint
+        language: system
+        entry: uv run --frozen --all-groups ruff check ml_service scripts
+        pass_filenames: false
+        types: [python]
+      - id: python-format
+        name: Locked Python formatting
+        language: system
+        entry: uv run --frozen --all-groups ruff format --check ml_service scripts
+        pass_filenames: false
+        types: [python]
+      - id: core-types
+        name: Strict feature/model core types
+        language: system
+        entry: uv run --frozen --all-groups mypy
+        pass_filenames: false
+        files: ^ml_service/mulenet_core/
+      - id: generated-readme
+        name: Measured README evidence
+        language: system
+        entry: uv run --frozen --all-groups python scripts/render_readme_metrics.py --check
+        pass_filenames: false
+        files: ^(README.md|reports/|scripts/render_readme_metrics.py)
+      - id: repository-hygiene
+        name: Retired paths and README links
+        language: system
+        entry: uv run --frozen --all-groups python scripts/check_repo_hygiene.py
+        pass_filenames: false
+        always_run: true

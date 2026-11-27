@@ -19,7 +19,7 @@ def temporal_path(events, account_id, as_of, terminal_id, end, max_hops=3):
 
 def terminal_coverage(events, rows, scores, threshold, ledger):
     detected, covered = [], set()
-    for row, score in zip(rows, scores):
+    for row, score in zip(rows, scores, strict=True):
         if score < threshold or not row.label:
             continue
         candidates = []
@@ -32,16 +32,32 @@ def terminal_coverage(events, rows, scores, threshold, ledger):
         if candidates:
             detected.append(min(candidates, key=lambda item: item["seconds_before_terminal"]))
     rng = np.random.default_rng(42)
-    result = {"n_detected_paths": len(detected), "method": "nondecreasing event-time paths <=3 hops; simulated terminal ledger; not actual cash-out/recovery"}
+    result = {
+        "n_detected_paths": len(detected),
+        "method": "nondecreasing event-time paths <=3 hops; simulated terminal ledger; not actual cash-out/recovery",
+    }
     for field in ("seconds_before_terminal", "hops_before_terminal"):
         values = np.asarray([item[field] for item in detected], dtype=float)
         if len(values):
             draws = [np.median(rng.choice(values, size=len(values), replace=True)) for _ in range(1000)]
-            result[field] = {"value": float(np.median(values)), "ci95": np.quantile(draws, [.025, .975]).tolist()}
+            result[field] = {"value": float(np.median(values)), "ci95": np.quantile(draws, [0.025, 0.975]).tolist()}
         else:
             result[field] = {"value": None, "ci95": None, "reason": "No detected path at the frozen operating point"}
-    eligible = {terminal["transaction_id"]: terminal for terminal in ledger if any(row.as_of < terminal["ts"] <= row.label_end for row in rows)}
-    values = np.asarray([item["amount"] if key in covered else 0 for key, item in sorted(eligible.items())], dtype=float)
-    result["synthetic_exposure_covered_inr"] = {"value": float(values.sum()), "ci95": np.quantile([rng.choice(values, size=len(values), replace=True).sum() for _ in range(1000)], [.025, .975]).tolist() if len(values) else None,
-                                                  "not_intercepted_or_recovered": True}
+    eligible = {
+        terminal["transaction_id"]: terminal
+        for terminal in ledger
+        if any(row.as_of < terminal["ts"] <= row.label_end for row in rows)
+    }
+    values = np.asarray(
+        [item["amount"] if key in covered else 0 for key, item in sorted(eligible.items())], dtype=float
+    )
+    result["synthetic_exposure_covered_inr"] = {
+        "value": float(values.sum()),
+        "ci95": np.quantile(
+            [rng.choice(values, size=len(values), replace=True).sum() for _ in range(1000)], [0.025, 0.975]
+        ).tolist()
+        if len(values)
+        else None,
+        "not_intercepted_or_recovered": True,
+    }
     return result

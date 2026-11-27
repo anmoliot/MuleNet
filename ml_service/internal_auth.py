@@ -2,9 +2,9 @@
 
 import time
 
+import jwt
 from fastapi import Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-import jwt
 
 bearer = HTTPBearer(auto_error=False)
 
@@ -17,9 +17,15 @@ def service_authorizer(secret):
         if not credentials:
             raise HTTPException(401, "Service authentication required")
         try:
-            claims = jwt.decode(credentials.credentials, secret, algorithms=["HS256"],
-                                audience="mulenet-ml", issuer="mulenet-backend", leeway=3,
-                                options={"require": ["exp", "iat", "iss", "aud", "sub", "tenant", "scope", "jti"]})
+            claims = jwt.decode(
+                credentials.credentials,
+                secret,
+                algorithms=["HS256"],
+                audience="mulenet-ml",
+                issuer="mulenet-backend",
+                leeway=3,
+                options={"require": ["exp", "iat", "iss", "aud", "sub", "tenant", "scope", "jti"]},
+            )
             if claims["sub"] != "backend" or not isinstance(claims["iat"], int) or not isinstance(claims["exp"], int):
                 raise ValueError("Invalid service subject or clock")
             if claims["exp"] - claims["iat"] > 60 or claims["iat"] > time.time() + 3:
@@ -37,6 +43,7 @@ def service_authorizer(secret):
             if scope not in claims["scope"].split():
                 raise HTTPException(403, "Insufficient service scope")
             return claims
+
         return authorized
 
     return require

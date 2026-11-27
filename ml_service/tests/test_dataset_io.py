@@ -1,7 +1,6 @@
 import hashlib
 
 import pytest
-
 from mulenet_core.io import load_amlworld, load_paysim, read_dataset, write_dataset
 from simulation.generator import TYPOLOGIES, SimulationConfig, generate
 
@@ -26,7 +25,10 @@ def test_generator_reproducibility_typologies_and_adversarial_knobs(tmp_path):
 
 def test_amlworld_duplicate_headers_banks_times_and_multiedges(tmp_path):
     path = tmp_path / "aml.csv"
-    path.write_text("Timestamp,From Bank,Account,To Bank,Account,Amount Paid,Payment Currency,Payment Format,Is Laundering\n2022/09/01 00:00,1,abc,2,abc,10,US Dollar,ACH,0\n2022/09/01 00:01,1,abc,2,abc,20,US Dollar,ACH,1\n", encoding="utf-8")
+    path.write_text(
+        "Timestamp,From Bank,Account,To Bank,Account,Amount Paid,Payment Currency,Payment Format,Is Laundering\n2022/09/01 00:00,1,abc,2,abc,10,US Dollar,ACH,0\n2022/09/01 00:01,1,abc,2,abc,20,US Dollar,ACH,1\n",
+        encoding="utf-8",
+    )
     data = load_amlworld(path)
     assert len(data) == 2
     assert data[0].source == "1:abc" and data[0].target == "2:abc"

@@ -1,8 +1,22 @@
 import json
+import re
+import tomllib
+from pathlib import Path
 
 import httpx
-
 from test_platform_tools import module
+
+
+def test_deployment_secret_rule_detects_literals_not_environment_references():
+    root = Path(__file__).resolve().parents[2]
+    config = tomllib.loads((root / ".gitleaks.toml").read_text(encoding="utf-8"))
+    rule = next(item for item in config["rules"] if item["id"] == "deployment-literal-secret")
+    regex = re.compile(rule["regex"])
+    fixture = "fixture-only-" + "x" * 24
+    assert regex.search(f"  - key: PROVIDER_PASSWORD\n    value: {fixture}\n")
+    assert not regex.search("  - key: PROVIDER_PASSWORD\n    value: ${PROVIDER_PASSWORD}\n")
+    assert not regex.search("  - key: PROVIDER_PASSWORD\n    value: '${PROVIDER_PASSWORD}'\n")
+    assert not regex.search(f"  - key: PUBLIC_LABEL\n    value: {fixture}\n")
 
 
 def test_deserialization_gate_resolves_aliases_and_requires_weights_only():
@@ -31,13 +45,18 @@ def test_tenant_profile_is_admin_only_and_preserves_existing_attributes():
     with httpx.Client(base_url="http://localhost:8081", transport=httpx.MockTransport(handler)) as client:
         assert setup.configure(client, "fixture-admin", "fixture-password")["tenant_edit"] == "admin_only"
     assert next(item for item in current["attributes"] if item["name"] == "username") == {"name": "username"}
-    assert next(item for item in current["attributes"] if item["name"] == "tenant")["permissions"] == {"view": ["admin"], "edit": ["admin"]}
+    assert next(item for item in current["attributes"] if item["name"] == "tenant")["permissions"] == {
+        "view": ["admin"],
+        "edit": ["admin"],
+    }
 
 
 def test_security_receipts_fail_closed_for_missing_and_vulnerable_scans(tmp_path):
     gate = module("security_gate")
     assert not gate.assess(tmp_path)["passed"]
-    (tmp_path / "trivy-ml.json").write_text(json.dumps({"Results": [{"Vulnerabilities": [{"VulnerabilityID": "fixture"}]}]}))
+    (tmp_path / "trivy-ml.json").write_text(
+        json.dumps({"Results": [{"Vulnerabilities": [{"VulnerabilityID": "fixture"}]}]})
+    )
     assert gate.assess(tmp_path)["checks"]["trivy-ml.json"] == "failed"
     (tmp_path / "trivy-ml.json").write_text("{}")
     assert gate.assess(tmp_path)["checks"]["trivy-ml.json"] == "missing_or_invalid"
@@ -46,9 +65,10 @@ def test_security_receipts_fail_closed_for_missing_and_vulnerable_scans(tmp_path
 def test_public_gpg_triage_is_limited_to_exact_image_metadata(monkeypatch):
     triage = module("triage_secrets")
     value = f"GPG_KEY={triage.PYTHON_PUBLIC_GPG_FINGERPRINT}"
-    content = json.dumps({"Metadata": {"ImageConfig": {
-        "config": {"Env": [value]}, "history": [{"created_by": f"ENV {value}"}]
-    }}}, indent=2).encode()
+    content = json.dumps(
+        {"Metadata": {"ImageConfig": {"config": {"Env": [value]}, "history": [{"created_by": f"ENV {value}"}]}}},
+        indent=2,
+    ).encode()
     monkeypatch.setattr(triage, "blob", lambda commit, path: content)
     finding = {"RuleID": "generic-api-key", "File": "reports/trivy-ml.json", "Commit": "a" * 40}
     lines = content.decode().splitlines()

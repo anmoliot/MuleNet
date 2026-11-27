@@ -4,9 +4,9 @@ import argparse
 import hashlib
 import json
 import os
-from pathlib import Path
 import re
 import threading
+from pathlib import Path
 
 from mulenet_core.calibration import calibrated_probabilities
 from mulenet_core.io import canonical_json
@@ -35,7 +35,9 @@ class ModelRegistry:
         if bundle.training["data_provenance"] == "synthetic" and not self.allow:
             raise ValueError("Registry candidates require explicit --allow-synthetic for simulation")
         if bundle.training.get("selected_model", bundle.training["default_deep_path"]) != "tabular_graph":
-            raise ValueError("This rollout registry supports the evaluated graph-tabular path only; neural rollout requires a separate deadline worker per version")
+            raise ValueError(
+                "This rollout registry supports the evaluated graph-tabular path only; neural rollout requires a separate deadline worker per version"
+            )
         return bundle
 
     def refresh(self):
@@ -80,7 +82,13 @@ class ModelRegistry:
                 return []
             candidate = self.bundles[name]
         raw = candidate.graph_tabular.predict_proba(candidate.matrix([features]))[:, 1]
-        return [{"model_version": candidate.manifest["model_version"], "probability": float(calibrated_probabilities(candidate.calibration["tabular_graph"], raw)[0]), "used_for_policy": False}]
+        return [
+            {
+                "model_version": candidate.manifest["model_version"],
+                "probability": float(calibrated_probabilities(candidate.calibration["tabular_graph"], raw)[0]),
+                "used_for_policy": False,
+            }
+        ]
 
 
 def _update(root, command, version=None, percentage=0, allow_synthetic=False):
@@ -124,6 +132,7 @@ def _update(root, command, version=None, percentage=0, allow_synthetic=False):
 
 def update(root, command, version=None, percentage=0, allow_synthetic=False):
     from filelock import FileLock
+
     with FileLock(str(Path(root) / ".registry.lock"), timeout=0):
         return _update(root, command, version, percentage, allow_synthetic)
 
@@ -136,7 +145,9 @@ def main():
     parser.add_argument("--percentage", type=int, default=0)
     parser.add_argument("--allow-synthetic", action="store_true")
     args = parser.parse_args()
-    print(json.dumps(update(args.root, args.command, args.version, args.percentage, args.allow_synthetic), sort_keys=True))
+    print(
+        json.dumps(update(args.root, args.command, args.version, args.percentage, args.allow_synthetic), sort_keys=True)
+    )
 
 
 if __name__ == "__main__":

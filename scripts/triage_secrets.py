@@ -3,9 +3,9 @@
 import argparse
 import hashlib
 import json
-from pathlib import Path
 import re
 import subprocess
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 HISTORICAL_DEFAULTS = {
@@ -76,13 +76,28 @@ def main():
             status = "historical_default_retired_rotate_existing_installations"
         else:
             status = "untriaged_blocking"
-        results.append({key: finding[key] for key in ("RuleID", "File", "StartLine", "Commit", "Fingerprint")} | {"status": status})
-    report = {"findings": results, "untriaged": sum(row["status"] == "untriaged_blocking" for row in results),
-              "public_fingerprint_source": "https://github.com/docker-library/python/blob/master/3.13/slim-trixie/Dockerfile",
-              "history_rewritten": False, "external_installation_rotation_verified": False,
-              "current_control": "Legacy signer removed; independent generated per-install signing keys required; old IDP users must be revoked by existing operators"}
+        results.append(
+            {key: finding[key] for key in ("RuleID", "File", "StartLine", "Commit", "Fingerprint")} | {"status": status}
+        )
+    report = {
+        "findings": results,
+        "untriaged": sum(row["status"] == "untriaged_blocking" for row in results),
+        "public_fingerprint_source": "https://github.com/docker-library/python/blob/master/3.13/slim-trixie/Dockerfile",
+        "history_rewritten": False,
+        "external_installation_rotation_verified": False,
+        "current_control": "Legacy signer removed; independent generated per-install signing keys required; old IDP users must be revoked by existing operators",
+    }
     args.out.write_text(json.dumps(report, sort_keys=True, indent=2) + "\n", encoding="utf-8")
-    print(json.dumps({"findings": len(results), "untriaged": report["untriaged"], "external_installation_rotation_verified": False}, sort_keys=True))
+    print(
+        json.dumps(
+            {
+                "findings": len(results),
+                "untriaged": report["untriaged"],
+                "external_installation_rotation_verified": False,
+            },
+            sort_keys=True,
+        )
+    )
     if report["untriaged"]:
         raise SystemExit("Untriaged secret findings block the security gate")
 

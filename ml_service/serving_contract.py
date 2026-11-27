@@ -1,11 +1,10 @@
 """Versioned internal API; model evidence is not a bank intervention instruction."""
 
+import re
 from typing import Annotated, Literal
 
+from mulenet_core.schema import Account, StrictModel, Transaction
 from pydantic import Field, model_validator
-import re
-
-from mulenet_core.schema import Account, Epoch, Identifier, StrictModel, Transaction
 
 ServiceEpoch = Annotated[int, Field(ge=0, json_schema_extra={"format": "int64"})]
 
@@ -29,7 +28,12 @@ class Snapshot(StrictModel):
             raise ValueError("Snapshot contains duplicate account IDs")
         if any(e.fraud is not None or e.typology or e.ring_id for e in self.events):
             raise ValueError("Training labels are forbidden in serving context")
-        identifiers = [identifier for e in self.events for identifier in (e.transaction_id, e.source, e.target, e.device_id, e.ip_address) if identifier is not None]
+        identifiers = [
+            identifier
+            for e in self.events
+            for identifier in (e.transaction_id, e.source, e.target, e.device_id, e.ip_address)
+            if identifier is not None
+        ]
         identifiers.extend(a.account_id for a in self.accounts)
         if any(not re.fullmatch(r"[a-f0-9]{64}", identifier) for identifier in identifiers):
             raise ValueError("Serving identifiers must be tokenized at the ingestion boundary")

@@ -24,6 +24,8 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - run: uv sync --frozen --all-groups
       - run: uv run --frozen --all-groups python scripts/check_unsafe_paths.py
+      - run: uv run --frozen --all-groups python scripts/check_repo_hygiene.py
+      - run: uv run --frozen --all-groups python scripts/render_readme_metrics.py --check
       - run: uv run --frozen --all-groups python scripts/audit_python.py
       - run: npm ci --ignore-scripts --no-audit --no-fund
         working-directory: frontend
@@ -32,7 +34,7 @@ jobs:
         shell: bash
         run: |
           set +e
-          docker run --rm -v "$PWD:/repo:ro" -v "$PWD/reports:/reports" zricethezav/gitleaks:v8.30.1 git /repo --log-opts=--all --redact --report-format json --report-path /reports/gitleaks-history.json
+          docker run --rm -v "$PWD:/repo:ro" -v "$PWD/reports:/reports" zricethezav/gitleaks:v8.30.1 git /repo --config /repo/.gitleaks.toml --log-opts=--all --redact --report-format json --report-path /reports/gitleaks-history.json
           result=$?
           set -e
           test "$result" -eq 0 -o "$result" -eq 1

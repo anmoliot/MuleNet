@@ -1,14 +1,15 @@
 """Single bounded GNN process; a deadline kills computation, not just its waiter."""
 
 import multiprocessing as mp
-from pathlib import Path
 import queue
 import threading
 import time
+from pathlib import Path
 
 
 def _worker(model_path, incoming, outgoing, ready):
     import torch
+
     torch.set_num_threads(1)
     model = torch.jit.load(model_path, map_location="cpu").eval()
     ready.set()
@@ -25,7 +26,7 @@ def _worker(model_path, incoming, outgoing, ready):
 
 
 class GnnDeadline:
-    def __init__(self, model_path: Path, timeout_seconds=.2, cooldown_seconds=30):
+    def __init__(self, model_path: Path, timeout_seconds=0.2, cooldown_seconds=30):
         self.context = mp.get_context("spawn")
         self.path = str(model_path)
         self.timeout = timeout_seconds
@@ -40,7 +41,9 @@ class GnnDeadline:
         self.incoming = self.context.Queue(maxsize=1)
         self.outgoing = self.context.Queue(maxsize=1)
         self.ready = self.context.Event()
-        self.process = self.context.Process(target=_worker, args=(self.path, self.incoming, self.outgoing, self.ready), daemon=True)
+        self.process = self.context.Process(
+            target=_worker, args=(self.path, self.incoming, self.outgoing, self.ready), daemon=True
+        )
         self.process.start()
 
     def predict(self, graph):
@@ -74,10 +77,10 @@ class GnnDeadline:
     def close(self):
         if self.process:
             self.process.terminate()
-            self.process.join(timeout=.2)
+            self.process.join(timeout=0.2)
             if self.process.is_alive():
                 self.process.kill()
-                self.process.join(timeout=.2)
+                self.process.join(timeout=0.2)
             self.process = None
             # A killed reader can leave the multiprocessing feeder blocked on a pipe.
             for channel in (self.incoming, self.outgoing):

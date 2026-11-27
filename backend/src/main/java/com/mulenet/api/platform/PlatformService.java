@@ -244,6 +244,7 @@ public class PlatformService {
         return db.queryForList("SELECT sequence,previous_hash,entry_hash,payload FROM platform_audit WHERE tenant=? AND sequence>? ORDER BY sequence LIMIT ?", tenant, after, limit);
     }
     public String circuitState() { return ml.circuitState(); }
+    public JsonNode drift(String tenant) { return ml.drift(tenant); }
 
     public List<Map<String, Object>> notes(String tenant, String id) {
         decision(tenant, id);

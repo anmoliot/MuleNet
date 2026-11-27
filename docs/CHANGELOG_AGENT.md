@@ -440,3 +440,394 @@ fingerprint classification checks exact parsed metadata and has a negative test.
 `scripts/triage_secrets.py` on the full-history pre-push report then returned no
 untriaged findings. Historical public defaults remain disclosed and require
 rotation in any old installation. Local raw scanner output is redacted.
+
+## Publication and Reproducibility Follow-Up: In Progress
+
+The operator requested publication before continuation. The unchanged-source
+Python suite passed, the phase checkpoint was committed and pre-push full-history
+triage passed for the scanner rules available at that time. Commands:
+
+```text
+git push --atomic -u origin phase-0-audit phase-1-data-foundation phase-2-models phase-3-evaluation phase-4-platform phase-5-security
+PASS: all named branches published; no force push or main update by the agent.
+git fetch origin
+PASS: observed the operator's squash-merged phase checkpoints on main.
+git diff --stat phase-5-security origin/main
+PASS: identical content at that checkpoint.
+git rebase --autostash --onto origin/main phase-5-security phase-6-reproducibility
+PASS: based the unpushed continuation on the operator's new main; current changes preserved.
+```
+
+The subsequent repository-listing request exposed an important gap: root
+documents/launchers still advertised retired code and unsupported results, and
+render.yaml retained a literal provider credential missed by default Gitleaks.
+It was not used to access the provider. Removed the retired deployment/launcher,
+notebook, duplicate pytest/flake8 configuration and stale root pitch/metric/model
+documents. Added current research model/runbook notes, generated README tables,
+hygiene regression tests and a specific deployment-secret scanner rule. The
+expanded scan now fails on the historical provider secret. Revocation is NOT
+verified, and neither source removal nor earlier scan success closes that risk.
+
+Other changes: explicit repository lint configuration; strict core types with
+narrow untyped-library boundaries; formatting of the active Python sources;
+fresh seeded training/evaluation golden regression; per-file branch-aware core
+coverage enforcement; initial Make targets, hooks and cross-platform CI workflow.
+The complete platform/observability/Make acceptance is still unfinished.
+
+```text
+python -m mypy
+PASS: strict checks on the entire mulenet_core package.
+python -m ruff check ml_service scripts
+python -m ruff format --check ml_service scripts
+PASS: lint and formatting checks.
+python -m pytest --cov --cov-report=json:reports/coverage-python.json --cov-report=term-missing -q
+PASS: initial measured core coverage above the requested gate; detailed evidence in JSON. Later tests add invalid transaction-input branches.
+python scripts/eval_smoke.py --allow-synthetic --update-golden
+PASS: golden JSON generated from actual fresh training and held-out evaluation, not edited metrics.
+python scripts/eval_smoke.py --allow-synthetic
+PASS: fresh retraining/evaluation matched golden within the stated numerical tolerance; no golden update on comparison.
+python scripts/render_readme_metrics.py
+python scripts/render_readme_metrics.py --check
+PASS: generated tables and source-hash receipt; check mode confirms no hand-edited values.
+python scripts/check_repo_hygiene.py
+PASS: retired paths absent, README links resolve, unsupported legacy claims absent.
+python -m pytest ml_service/tests/test_security_tools.py ml_service/tests/test_reproducibility.py -q
+PASS: focused renderer, golden-comparison, hygiene, scanner and security regression tests.
+gitleaks git . --config .gitleaks.toml --log-opts=--all --redact --report-format json --report-path reports/gitleaks-history.json
+FINDINGS: expanded full-history scan detects the provider credential; report redacted.
+python scripts/triage_secrets.py
+FAIL: provider finding remains blocking; no permissive allowlist added.
+make PYTHON=.tools/runtime/Scripts/python.exe lint-python
+PASS through WSL make: all underlying checks pass.
+uv run --frozen --all-groups pre-commit run --all-files
+PASS with access to the existing uv cache. The initial sandboxed attempt failed on cache writes and was rerun with authorization.
+```
+
+Claims removed/downgraded: enterprise-grade readiness, direct government access,
+legacy perfect topology scores, amortized batch timing described as transaction
+latency, seeded fund recovery, real-world PaySim characterization, automatic bank
+freezes and a working full-stack/UI quick start. Current README instead reports
+measured simulation results and plainly identifies unmeasured or unfinished work.
+
+### Explicit Reproduction and Java Coverage Continuation
+
+Added scripts/reproduce.py with required dataset selection, explicit simulator
+consent, deterministic input preservation, verified supplier/data hashes,
+immutable run-specific model directories and run-scoped evaluation reports.
+Added data/train/eval and Python/Java test Make targets. Full-network AMLworld
+training/evaluation remains deliberately rejected, not replaced by a small cohort.
+The runbook documents this boundary and the existing licensing workflow.
+
+Added ReviewPolicy unit oracles and pinned JaCoCo line/branch gates on that policy
+class. This narrow coverage scope is not full-backend coverage. Java acceptance
+now runs through Maven verify and records policy counters. The CI integration
+job generates and trains its own explicit simulator fixture and builds the ML
+image before running real Testcontainers acceptance; hosted execution remains
+unverified. MULENET_TEST_MODEL_DIR selects that candidate without hardcoding a
+developer's filesystem. No new public benchmark result is claimed.
+
+```text
+make PYTHON=.tools/runtime/Scripts/python.exe DATASET=sim ALLOW_SYNTHETIC=1 RUN_ID=repro-phase6 EPOCHS=2 data train eval
+PASS: actual fresh temporal/entity candidates trained and evaluated; generated evidence under reports/runs/repro-phase6, including uncertainty, typology and adversarial sections.
+python scripts/reproduce.py data --dataset amlworld --run-id primary-input-check
+PASS: both small raw benchmark files and supplier metadata match acquisition receipts; this is input verification, not model performance.
+python scripts/reproduce.py data --dataset paysim --run-id paysim-input-check
+PASS: raw benchmark and supplier metadata hashes verified.
+python scripts/reproduce.py train --dataset amlworld --run-id refusal-check
+EXPECTED FAIL: full-network training is unimplemented; no synthetic or cohort fallback and no success report.
+python scripts/reproduce.py data --dataset sim
+EXPECTED FAIL: explicit --allow-synthetic required.
+python -m pytest ml_service/tests/test_reproduction_commands.py -q
+PASS: deterministic input, non-overwrite, opt-in, unsafe-run-id, provenance-tamper and primary-evaluation refusal oracles.
+python scripts/record_tests.py --phase security-python --coverage
+PASS: unchanged-source full suite and every core-file coverage gate; generated receipt records exact outcomes and branch coverage. Framework deprecation/tracing warnings retained.
+python scripts/record_maven_tests.py --wsl
+PASS: actual stack tests, contract/security/privacy tests and new policy tests; unchanged Java sources, Maven BUILD SUCCESS and policy line/branch coverage gates satisfied.
+uv run --frozen --all-groups pre-commit run --all-files
+PASS: final reproduction-source snapshot passes hooks.
+python scripts/render_readme_metrics.py --check
+python scripts/check_repo_hygiene.py
+PASS: generated README matches evidence and retired paths remain absent.
+```
+
+The initial direct Docker rebuild failed because the local WSL CLI lacked its
+BuildKit plugin. Installed the packaged docker-buildx tool with authorization and
+retried using docker buildx build --load. The Dockerfile's pinned dependency and
+cache-mount requirements were not weakened to hide the environment failure.
+The current phase is still in progress: no observability, full-stack UI/demo,
+end-to-end benchmark or complete security/clean-checkout acceptance is claimed.
+
+Current-source fixture follow-up:
+
+```text
+MULENET_TEST_MODEL_DIR=../artifacts/repro-phase6-sim-temporal python scripts/record_maven_tests.py --wsl
+PASS: the rebuilt service code and freshly reproduced candidate pass the real stack and policy coverage checks; reports/platform-tests.json records the unchanged-source result.
+docker buildx build --load -f ml_service/Dockerfile -t mulenet/ml:local .
+PASS for the current-service rebuild. Its subsequent full vulnerability scan failed and exposed an available libzstd distribution fix in the cached OS layer.
+```
+
+The package-update layer is now invalidated through OS_PATCH_EPOCH and the new
+build installs the available vendor patch. That is not a clean-image claim:
+final scan evidence, including all remaining findings, is required. Updated
+ARCHITECTURE.md separates the current platform map from the preserved baseline
+audit and keeps unmeasured full-path latency stages explicitly empty.
+
+Final patch verification:
+
+```text
+apt-get install -y docker-buildx=0.30.1-0ubuntu1
+PASS: authorized installation of the missing local build tool.
+docker buildx build --load -f ml_service/Dockerfile -t mulenet/ml:local .
+PASS: OS_PATCH_EPOCH invalidates the stale apt layer and the available vendor libzstd patch is installed.
+docker run --rm --network none -v "$PWD/artifacts/repro-phase6-sim-temporal:/models:ro" --entrypoint /app/.venv/bin/python mulenet/ml:local -c "from pathlib import Path; import numpy as np; import torch; from mulenet_core.models import ModelBundle; b=ModelBundle(Path('/models'),allow_synthetic=True); assert np.isfinite(b.graph_tabular.predict_proba(np.zeros((1,len(b.names))))).all(); assert torch.isfinite(b.gnn(torch.zeros(1,len(b.names)),torch.empty((2,0),dtype=torch.long),torch.empty((0,3)))).all(); print('PASS: verified bundle, tabular prediction and GNN export execute in patched non-root image')"
+PASS: safe candidate loading and both inference paths execute in the patched image, without network access. TorchScript deprecation warning retained.
+docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro -v "$PWD/reports:/reports" -v mulenet_trivy_cache:/cache aquasec/trivy:0.76.2 image --cache-dir /cache --timeout 30m --quiet --scanners vuln --format json --output /reports/trivy-ml.json --exit-code 1 mulenet/ml:local
+FAIL: updated report has remaining vendor-unfixed findings; no available fixed-version findings and no libzstd advisory remain. No severity suppression used.
+python scripts/security_gate.py
+FAIL: security findings and provider revocation remain open; passing Python/Java receipts do not override those gates.
+git diff --check
+PASS: no whitespace errors; line-ending normalization warnings are not test failures.
+```
+
+This local checkpoint remains on phase-6-reproducibility without declaring the
+phase finished. The newly added hosted jobs have not been reported as executed.
+
+### Actual-Network Latency and Initial Stage Observability
+
+Extracted the existing container/property setup into PlatformTestStack so the
+correctness and real-network benchmark use the same dependency/authentication
+configuration. PlatformLatencyTest starts an actual embedded HTTP server, reads
+authenticated SSE with renewable short-lived tokens/cursor resumption, publishes
+signed Kafka input and correlates both persisted account decisions. Individual
+monotonic durations and model/schema/image identities are recorded, with no
+batch-duration division. The wrapper bootstraps request-level quantiles, rejects
+degraded/incomplete runs and removes old raw input before execution so failures
+cannot reuse earlier measurements.
+
+New/changed: scripts/bench_pipeline.py, scripts/bench_latency.py pipeline mode,
+Make bench target, actual-network CI step, regression tests, shared Java fixture
+and latency test, StageTelemetry and callers/tests. README/current architecture
+timing tables are rendered from reports. The selected graph-tabular candidate is
+measured, not the unselected GNN. A production SLO is not claimed.
+
+Stage timers cover snapshot/scoring HTTP and Kafka processing with fixed
+stage/outcome labels and generated histogram bounds. Structured logs carry scoped
+correlation without event bodies or credentials. Full OpenTelemetry, drift
+collection and deployed Prometheus/Grafana remain unfinished.
+
+```text
+mvn -B -ntp -DskipTests test-compile
+PASS: shared fixture and actual-network latency harness compile.
+python -m pytest ml_service/tests/test_pipeline_benchmark.py -q
+PASS: individual quantiles/interval determinism, invalid/degraded sample rejection, explicit opt-in and stale-result refusal.
+MULENET_TEST_MODEL_DIR=../artifacts/repro-phase6-sim-temporal python scripts/bench_pipeline.py --allow-synthetic --wsl
+PASS: actual ML HTTP and Kafka-to-real-HTTP-SSE measurements under steady/burst traffic; both committed decisions required, no degraded samples dropped. Reports contain outcomes and raw timings.
+python scripts/render_readme_metrics.py
+python scripts/render_readme_metrics.py --check
+PASS: README/current architecture tables derive from actual reports, with distinct scopes and uncertainty.
+python scripts/record_tests.py --phase security-python --coverage
+PASS: unchanged-source complete Python suite and per-core-file coverage gates, including benchmark regression oracles; deprecation warnings retained.
+uv run --frozen --all-groups pre-commit run --all-files
+PASS: lint, formatting, strict core typing, generated evidence and hygiene hooks.
+```
+
+Failures investigated: the telemetry unit test initially rejected Micrometer's
+generated le bucket label, then its alternative decimal formatting. The revised
+test allows only the explicit fixed histogram boundaries, compared numerically;
+other label keys remain forbidden. These intermediate failures are not passing
+acceptance receipts. The final full suite is rerun on the corrected snapshot.
+Test JVM startup attempted unsupported dynamic member-accessor attachment; the
+documented Mockito reflection accessor is now explicit, alongside the existing
+subclass mock maker. Java test-source receipts now include all resource files,
+not only Java/properties/SQL suffixes.
+
+The next full-suite attempt found an authenticated Prometheus route returning
+not-found: Spring Boot's test defaults had disabled its export registry. The
+shared test fixture now explicitly enables metrics observability, with tracing
+export disabled. Security policy is unchanged. The subsequent full actual-stack
+run passed, including anonymous/analyst rejection, admin scrape success, stage
+histogram exposure and absence of fixture account/device identifiers in metrics.
+The Surefire shutdown-deadline warning remains in the local log; it is not hidden
+or interpreted as a deployment lifecycle certification.
+
+```text
+MULENET_TEST_MODEL_DIR=../artifacts/repro-phase6-sim-temporal python scripts/record_maven_tests.py --wsl
+PASS: final actual-stack/security/privacy/contract/policy/telemetry assertions; Maven BUILD SUCCESS, unchanged full source/resource snapshot and policy coverage gate.
+```
+
+```text
+make PYTHON=.tools/runtime/Scripts/python.exe ALLOW_SYNTHETIC=1 JAVA_TEST_FLAGS=--wsl bench
+PASS: exact Make target rerun on the final metrics-enabled fixture and corrected source snapshot. reports/latency-pipeline.json includes current JVM/OS context, model/schema/image identities, individual samples and bootstrap intervals; reports/pipeline-bench-tests.json records the passing unchanged-source gate.
+python scripts/render_readme_metrics.py
+python scripts/render_readme_metrics.py --check
+PASS: final README and current architecture tables regenerated from the latest network report. Model-only and network experiments remain explicitly separate workloads.
+```
+
+Phase 6 remains unfinished: production collection/dashboards, full distributed
+tracing, drift exposure and complete clean-checkout/hosted acceptance are not
+declared done. Primary full-network evaluation, frontend migration and the open
+security findings also remain. These continuation changes are still local to the
+phase branch, not a new main release or a claim that hosted CI has executed.
+
+## Approved Public Website and Vercel Deployment (2026-11-27)
+
+User-approved scope: a new landing page, with an image-first brand sheet and
+opening checkpoint, then implementation and deployment. This is not completion
+of the investigator-UI migration or the remaining platform phases.
+
+Changed files: isolated `frontend/website/` entry and generated bitmap; pinned,
+self-hosted IBM Plex fonts and license notices; `vite.site.config.js`; public
+evidence, packaging and receipt scripts; browser tests and separate lint config;
+frontend package/lock files; public-site CI job; generated `reports/site-*.json`
+and contrast receipts; `docs/PUBLIC_SITE.md` and this decision/execution record.
+The legacy app entry and backend code were not modified for this addition.
+
+Copy decisions: technology marks are not customer endorsements; the quote-shaped
+section contains identified project principles, not invented customer stories;
+the comparison covers research setups, not fabricated commercial prices. The
+graph is explicitly illustrative/simulated, not a screenshot of a connected
+system. PaySim and account-simulator results remain distinct. No direct watchlist
+integration, recovery benefit or production-readiness claim is added.
+
+```text
+npm install --save-exact @fontsource/ibm-plex-sans@5.3.0 @fontsource/ibm-plex-mono@5.3.0
+npm install --save-dev --save-exact @playwright/test@1.65.1 apca-w3@0.1.9
+PASS: project-local pinned installations; npm reported no vulnerabilities at installation time.
+npm run build:site
+PASS: separate static production build; generated public evidence from repository reports; no app/backend entry included.
+node scripts/render-site-evidence.mjs --check
+PASS: public evidence is generated, not hand-edited.
+npx eslint --config eslint.site.config.js website scripts/*.mjs *.site.config.js tests/site.spec.js
+PASS: scoped public-site source, scripts and test lint.
+SITE_BROWSER_CHANNEL=msedge npm run test:site
+PASS: final generated browser receipt, no skips or unexpected failures; full-page/opening captures across configured viewports.
+node scripts/package-site.mjs
+PASS: allowlisted static files and build/source hashes recorded in reports/site-build.json; unexpected paths and symlinks fail closed.
+node scripts/record-site-checks.mjs
+PASS: browser and measured HTML-text contrast gates, source unchanged against manifest; reports/site-acceptance.json.
+```
+
+Failures investigated before the final passing run: sandbox DNS/browser-process
+restrictions required approved network/test execution; the installed Lucide
+version no longer exported its brand icon, so repository links use its generic
+code glyph; narrow metric text and two APCA caption pairings required corrections;
+the menu test needed a stable locator after its accessible label changed. A
+nontransparent image background was replaced through image generation, not hidden.
+The narrow layout now exposes the next section without clipping the main graph.
+Contrast receipts keep WCAG ratios and APCA separate; raster labels and full
+assistive-technology conformance are not certified by these checks.
+
+Vercel commands were executed through the authenticated connector:
+`list_teams`, `list_projects`, `create_project`, `create_deployment`,
+`get_deployment`, `open_deployments`, and `web_fetch_vercel_url`.
+Only the generated public static-file payload was uploaded. The provider assigned
+the new project's first deployment to its production target despite the omitted
+target; `reports/site-deployment.json` records the observed target and READY
+state, rather than calling it preview. Default deployment protection is retained;
+access may require the owner's Vercel sign-in. This is not a production deployment
+of the fraud platform. Hosted HTTP receipts verify static content and absent API
+routes; they are authenticated connector checks, not a hosted-browser or public
+unauthenticated availability certification.
+
+```text
+node scripts/record-site-deployment.mjs --id dpl_AzgfU2HQtGbGi1baYLGnU4brJk8U --url https://mulenet-public-lrhff299o-anmoliots-projects.vercel.app --state READY --target production
+PASS: observed provider metadata and exact static-file manifest recorded.
+node scripts/record-site-http.mjs <connector-result-json> <deployment-id>
+PASS: expected static resources and security headers; scoring and demo-seeding paths are not hosted.
+```
+
+The earlier unfinished phase work is preserved. No claim is made that main was
+updated, the full phase acceptance passed, or hosted GitHub Actions ran. The
+deployment receipt explicitly identifies local uncommitted source. Security
+exceptions, full-network evaluation, operational observability and investigator
+workflow integration remain open.
+
+Final public-site refinement: the expanded diagram has an independently
+scrollable, keyboard-focusable region at a readable image scale, rather than
+shrinking every account label on phones. Build, scoped lint, the complete browser
+suite, source-manifest gate and authenticated hosted HTTP checks were rerun.
+The latest deployment, file inventory and HTTP outcomes are in the generated
+site receipts; the earlier deployment above is superseded, not the current URL.
+
+```text
+.tools/runtime/Scripts/python.exe scripts/audit_frontend.py
+PASS: refreshed reports/npm-audit.json; npm returned no reported vulnerabilities for this lockfile. This does not close platform or container security findings.
+node scripts/record-site-deployment.mjs --id dpl_6UuUQivsLE2zL1uHEXv2AcVodmik --url https://mulenet-public-7wuww3iyg-anmoliots-projects.vercel.app --state READY --target production
+PASS: final provider-confirmed READY deployment, with source/file hashes and retained access protection.
+node scripts/record-site-http.mjs <final-connector-result-json> dpl_6UuUQivsLE2zL1uHEXv2AcVodmik
+PASS: final static-resource and absent-API checks, not a deployed authenticated-browser certification.
+git diff --check
+PASS: no whitespace errors; Git's existing line-ending normalization warnings remain visible.
+```
+
+## Investigator Console and Requested Push Checkpoint
+
+The user requested pushing the current code before further implementation. This
+checkpoint is not phase completion, production approval or a claim of hosted CI
+acceptance. It preserves the unfinished phase work on phase-6-reproducibility;
+main is not merged or rewritten.
+
+Replaced the legacy investigator entry/components and fabricated fallback data
+with authenticated platform decision, evidence, review, policy, audit and health
+views. Identity and roles come from the verified backend session endpoint;
+credentials stay in memory, and SSE uses scoped bearer headers rather than query
+tokens. The demo profile is visibly simulated. OIDC uses the pinned PKCE client,
+but production OIDC browser acceptance is unverified. Observed graph edges are
+explicitly not causal GNN explanations or confirmed typologies. Missing and
+degraded probabilities are unavailable, not manufactured scores.
+
+Added a tenant-filtered backend/ML drift contract, isolated initial-policy-version
+regression coverage, real-stack browser fixtures, client unit receipts and a
+non-root/read-only frontend image with explicit CSP origin validation and query
+log scrubbing. Removed unused UI dependencies. Added CI definitions for console
+checks and actual-stack browser acceptance; those hosted jobs have not run here.
+The previously deployed public Vercel site is unchanged by this checkpoint.
+
+Commands and observed outcomes before the push:
+
+```text
+.tools/runtime/Scripts/python.exe -m pytest ml_service/tests/test_serving.py -q
+PASS: 5 tests; existing export/runtime warnings retained. Tenant drift requires metrics scope.
+node node_modules/eslint/bin/eslint.js . (from frontend)
+PASS: no lint errors reported for the new console and website sources.
+.tools/runtime/Scripts/python.exe scripts/record_frontend_tests.py
+PASS: 4 actual Node unit tests; unchanged-source receipt in reports/frontend-unit-tests.json.
+.tools/runtime/Scripts/python.exe scripts/audit_frontend.py
+PASS: npm reported no vulnerabilities for this lockfile; this does not close backend/image findings.
+.tools/runtime/Scripts/python.exe scripts/record_maven_tests.py --wsl --tests PlatformBrowserTest,ReviewPolicyTest --out reports/frontend-java-tests.json
+FAIL: real browser acceptance is not green; reports/frontend-platform.json and reports/frontend-browser-tests.json preserve measured outcomes. Desktop review/release/policy and read-only auditor flows pass; mobile login fails in the latest run. Earlier runs exposed WSL loopback reachability and an ambiguous Action label; the bridge and label were corrected before this run.
+.tools/runtime/Scripts/python.exe scripts/verify_frontend_image.py --wsl
+PASS on the earlier built image: actual non-root/read-only static smoke, headers and invalid CSP-origin rejection. Subsequent graph/layout source refinements are not covered by that historical image receipt; rebuild remains required.
+.tools/runtime/Scripts/python.exe -m ruff check ml_service scripts
+PASS: all checks passed.
+.tools/runtime/Scripts/python.exe scripts/check_repo_hygiene.py
+PASS: no findings in its documented limited scope.
+git diff --check
+PASS: no whitespace errors; line-ending normalization warnings remain.
+```
+
+No new recovery, detection-effectiveness or integration claim was added. The old
+UI readiness implication is downgraded to explicit incomplete browser acceptance.
+Full-network AMLworld, production-scale evaluation, complete tracing/operational
+acceptance, licensed Spring patch access and credential revocation remain open.
+
+Final checkpoint verification:
+
+```text
+.tools/runtime/Scripts/python.exe scripts/record_tests.py --phase security-python --coverage
+PASS: 56 passed, no failed/skipped cases; 91.38% aggregate core coverage, every measured core file above the gate; unchanged source during execution. Existing runtime/export warnings are retained in the run output.
+.tools/runtime/Scripts/python.exe -m ruff format --check ml_service scripts
+PASS: 80 files already formatted.
+.tools/runtime/Scripts/python.exe -m mypy
+PASS: no issues in the strict core scope.
+.tools/runtime/Scripts/python.exe scripts/render_readme_metrics.py
+PASS: regenerated the stale derived README receipt from the existing measured reports; no metric hand edits.
+.tools/runtime/Scripts/python.exe scripts/render_readme_metrics.py --check
+PASS: README and architecture tables match report inputs.
+docker run --rm -v <workspace>:/repo:ro -v <workspace>/.tools:/reports zricethezav/gitleaks:v8.30.1 git /repo --staged --config /repo/.gitleaks.toml --redact --report-format json --report-path /reports/push-checkpoint-secrets.json
+REVIEWED: scanner exited with findings, all in generated source_sha256 maps. Compared current-source digests with LF/CRLF normalization; older ServiceTokens digest matches HEAD and older OpenAPI digests match the pre-drift contract. No credential finding was identified in this staged diff. This is not a clean full-history/security-gate claim.
+git ls-files .env artifacts .tools data/raw data/generated data/processed
+PASS: no tracked local secret, model, raw-data or runtime files.
+git ls-remote --heads origin main phase-6-reproducibility
+PASS: the phase branch is not yet present remotely; main remains the existing published security checkpoint. The requested push targets only phase-6-reproducibility, without force or a main merge.
+```

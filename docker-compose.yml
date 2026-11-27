@@ -111,7 +111,7 @@ services:
       MULENET_REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/0
       PYTHONDONTWRITEBYTECODE: '1'
     volumes:
-      - ./artifacts:/registry:ro
+      - ${MULENET_REGISTRY_ROOT:-./artifacts}:/registry:ro
     read_only: true
     tmpfs: [/tmp]
     cap_drop: [ALL]
@@ -121,7 +121,14 @@ services:
       redis: {condition: service_healthy}
   frontend:
     build: ./frontend
-    ports: ['127.0.0.1:3000:80']
+    image: mulenet/frontend:local
+    ports: ['127.0.0.1:3000:8080']
+    environment:
+      MULENET_OIDC_BROWSER_ORIGIN: ${MULENET_OIDC_BROWSER_ORIGIN:-}
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
     networks: [gateway]
     depends_on: [backend]
 networks:

@@ -1,0 +1,353 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "C:\\Users\\Anmol\\OneDrive\\Desktop\\MuleNet\\frontend\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "--config",
+      "playwright.platform.config.js"
+    ],
+    "configFile": "C:\\Users\\Anmol\\OneDrive\\Desktop\\MuleNet\\frontend\\playwright.platform.config.js",
+    "rootDir": "C:/Users/Anmol/OneDrive/Desktop/MuleNet/frontend/tests",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/Anmol/OneDrive/Desktop/MuleNet/.tools/platform-browser",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "desktop",
+        "name": "desktop",
+        "testDir": "C:/Users/Anmol/OneDrive/Desktop/MuleNet/frontend/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "platform.spec.js"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "C:/Users/Anmol/OneDrive/Desktop/MuleNet/.tools/platform-browser",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "mobile",
+        "name": "mobile",
+        "testDir": "C:/Users/Anmol/OneDrive/Desktop/MuleNet/frontend/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "platform.spec.js"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "filteredProjects": [
+      {
+        "grep": {},
+        "grepInvert": null,
+        "outputDir": "C:\\Users\\Anmol\\OneDrive\\Desktop\\MuleNet\\.tools\\platform-browser",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "name": "desktop",
+        "testDir": "C:\\Users\\Anmol\\OneDrive\\Desktop\\MuleNet\\frontend\\tests",
+        "snapshotDir": "C:\\Users\\Anmol\\OneDrive\\Desktop\\MuleNet\\frontend\\tests",
+        "testIgnore": [],
+        "testMatch": "platform.spec.js",
+        "timeout": 60000,
+        "use": {
+          "baseURL": "http://127.0.0.1:5181",
+          "browserName": "chromium",
+          "channel": "msedge",
+          "screenshot": "only-on-failure",
+          "trace": "off",
+          "reducedMotion": "reduce",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          }
+        },
+        "dependencies": [],
+        "ignoreSnapshots": false,
+        "__projectId": "desktop"
+      },
+      {
+        "grep": {},
+        "grepInvert": null,
+        "outputDir": "C:\\Users\\Anmol\\OneDrive\\Desktop\\MuleNet\\.tools\\platform-browser",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "name": "mobile",
+        "testDir": "C:\\Users\\Anmol\\OneDrive\\Desktop\\MuleNet\\frontend\\tests",
+        "snapshotDir": "C:\\Users\\Anmol\\OneDrive\\Desktop\\MuleNet\\frontend\\tests",
+        "testIgnore": [],
+        "testMatch": "platform.spec.js",
+        "timeout": 60000,
+        "use": {
+          "baseURL": "http://127.0.0.1:5181",
+          "browserName": "chromium",
+          "channel": "msedge",
+          "screenshot": "only-on-failure",
+          "trace": "off",
+          "reducedMotion": "reduce",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "isMobile": true,
+          "hasTouch": true
+        },
+        "dependencies": [],
+        "ignoreSnapshots": false,
+        "__projectId": "mobile"
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "../reports/frontend-browser-tests.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "default",
+    "updateSourceMethod": "patch",
+    "version": "1.65.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "platform.spec.js",
+      "file": "platform.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "real login, tenant queue, evidence, notes, privileged release and policy audit",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 11939,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-27T06:32:26.196Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            },
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "mobile",
+              "projectName": "mobile",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 7520,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('button', { name: 'Sign out', exact: true })\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByRole('button', { name: 'Sign out', exact: true }) with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('button', { name: 'Sign out', exact: true })\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('button', { name: 'Sign out', exact: true })\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByRole('button', { name: 'Sign out', exact: true }) with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('button', { name: 'Sign out', exact: true })\u001b[22m\n\n    at login (C:\\Users\\Anmol\\OneDrive\\Desktop\\MuleNet\\frontend\\tests\\platform.spec.js:23:5)\n    at C:\\Users\\Anmol\\OneDrive\\Desktop\\MuleNet\\frontend\\tests\\platform.spec.js:90:3",
+                    "location": {
+                      "file": "C:\\Users\\Anmol\\OneDrive\\Desktop\\MuleNet\\frontend\\tests\\platform.spec.js",
+                      "column": 5,
+                      "line": 23
+                    },
+                    "snippet": " \u001b[90m 21 |\u001b[39m   \u001b[36mawait\u001b[39m expect(\n \u001b[90m 22 |\u001b[39m     page\u001b[33m.\u001b[39mgetByRole(\u001b[32m\"button\"\u001b[39m\u001b[33m,\u001b[39m { name\u001b[33m:\u001b[39m \u001b[32m\"Sign out\"\u001b[39m\u001b[33m,\u001b[39m exact\u001b[33m:\u001b[39m \u001b[36mtrue\u001b[39m })\u001b[33m,\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 23 |\u001b[39m   )\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m     \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 24 |\u001b[39m }\n \u001b[90m 25 |\u001b[39m \u001b[36masync\u001b[39m \u001b[36mfunction\u001b[39m navigate(page\u001b[33m,\u001b[39m name) {\n \u001b[90m 26 |\u001b[39m   \u001b[36mconst\u001b[39m nav \u001b[33m=\u001b[39m page\u001b[33m.\u001b[39mgetByRole(\u001b[32m\"navigation\"\u001b[39m\u001b[33m,\u001b[39m { name\u001b[33m:\u001b[39m \u001b[32m\"Investigator navigation\"\u001b[39m })\u001b[33m;\u001b[39m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Users\\Anmol\\OneDrive\\Desktop\\MuleNet\\frontend\\tests\\platform.spec.js",
+                        "column": 5,
+                        "line": 23
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('button', { name: 'Sign out', exact: true })\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByRole('button', { name: 'Sign out', exact: true }) with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('button', { name: 'Sign out', exact: true })\u001b[22m\n\n\n  21 |   await expect(\n  22 |     page.getByRole(\"button\", { name: \"Sign out\", exact: true }),\n> 23 |   ).toBeVisible();\n     |     ^\n  24 | }\n  25 | async function navigate(page, name) {\n  26 |   const nav = page.getByRole(\"navigation\", { name: \"Investigator navigation\" });\n    at login (C:\\Users\\Anmol\\OneDrive\\Desktop\\MuleNet\\frontend\\tests\\platform.spec.js:23:5)\n    at C:\\Users\\Anmol\\OneDrive\\Desktop\\MuleNet\\frontend\\tests\\platform.spec.js:90:3"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-27T06:32:42.758Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "C:\\Users\\Anmol\\OneDrive\\Desktop\\MuleNet\\.tools\\platform-browser\\platform-real-login-tenant-61609-ed-release-and-policy-audit-mobile\\test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Users\\Anmol\\OneDrive\\Desktop\\MuleNet\\.tools\\platform-browser\\platform-real-login-tenant-61609-ed-release-and-policy-audit-mobile\\error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Users\\Anmol\\OneDrive\\Desktop\\MuleNet\\frontend\\tests\\platform.spec.js",
+                    "column": 5,
+                    "line": 23
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "1185f41e8aab7f8405be-8b5a577f6cf081fa6154",
+          "file": "platform.spec.js",
+          "line": 46,
+          "column": 1
+        },
+        {
+          "title": "auditor is read-only and refresh does not restore a browser-stored credential",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1039,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-27T06:32:39.874Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            },
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "mobile",
+              "projectName": "mobile",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 5757,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('button', { name: 'Sign out', exact: true })\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByRole('button', { name: 'Sign out', exact: true }) with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('button', { name: 'Sign out', exact: true })\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('button', { name: 'Sign out', exact: true })\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByRole('button', { name: 'Sign out', exact: true }) with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('button', { name: 'Sign out', exact: true })\u001b[22m\n\n    at login (C:\\Users\\Anmol\\OneDrive\\Desktop\\MuleNet\\frontend\\tests\\platform.spec.js:23:5)\n    at C:\\Users\\Anmol\\OneDrive\\Desktop\\MuleNet\\frontend\\tests\\platform.spec.js:149:3",
+                    "location": {
+                      "file": "C:\\Users\\Anmol\\OneDrive\\Desktop\\MuleNet\\frontend\\tests\\platform.spec.js",
+                      "column": 5,
+                      "line": 23
+                    },
+                    "snippet": " \u001b[90m 21 |\u001b[39m   \u001b[36mawait\u001b[39m expect(\n \u001b[90m 22 |\u001b[39m     page\u001b[33m.\u001b[39mgetByRole(\u001b[32m\"button\"\u001b[39m\u001b[33m,\u001b[39m { name\u001b[33m:\u001b[39m \u001b[32m\"Sign out\"\u001b[39m\u001b[33m,\u001b[39m exact\u001b[33m:\u001b[39m \u001b[36mtrue\u001b[39m })\u001b[33m,\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 23 |\u001b[39m   )\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m     \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 24 |\u001b[39m }\n \u001b[90m 25 |\u001b[39m \u001b[36masync\u001b[39m \u001b[36mfunction\u001b[39m navigate(page\u001b[33m,\u001b[39m name) {\n \u001b[90m 26 |\u001b[39m   \u001b[36mconst\u001b[39m nav \u001b[33m=\u001b[39m page\u001b[33m.\u001b[39mgetByRole(\u001b[32m\"navigation\"\u001b[39m\u001b[33m,\u001b[39m { name\u001b[33m:\u001b[39m \u001b[32m\"Investigator navigation\"\u001b[39m })\u001b[33m;\u001b[39m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Users\\Anmol\\OneDrive\\Desktop\\MuleNet\\frontend\\tests\\platform.spec.js",
+                        "column": 5,
+                        "line": 23
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('button', { name: 'Sign out', exact: true })\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByRole('button', { name: 'Sign out', exact: true }) with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('button', { name: 'Sign out', exact: true })\u001b[22m\n\n\n  21 |   await expect(\n  22 |     page.getByRole(\"button\", { name: \"Sign out\", exact: true }),\n> 23 |   ).toBeVisible();\n     |     ^\n  24 | }\n  25 | async function navigate(page, name) {\n  26 |   const nav = page.getByRole(\"navigation\", { name: \"Investigator navigation\" });\n    at login (C:\\Users\\Anmol\\OneDrive\\Desktop\\MuleNet\\frontend\\tests\\platform.spec.js:23:5)\n    at C:\\Users\\Anmol\\OneDrive\\Desktop\\MuleNet\\frontend\\tests\\platform.spec.js:149:3"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-27T06:32:51.935Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "C:\\Users\\Anmol\\OneDrive\\Desktop\\MuleNet\\.tools\\platform-browser\\platform-auditor-is-read-o-2f49e-a-browser-stored-credential-mobile\\test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Users\\Anmol\\OneDrive\\Desktop\\MuleNet\\.tools\\platform-browser\\platform-auditor-is-read-o-2f49e-a-browser-stored-credential-mobile\\error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Users\\Anmol\\OneDrive\\Desktop\\MuleNet\\frontend\\tests\\platform.spec.js",
+                    "column": 5,
+                    "line": 23
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "1185f41e8aab7f8405be-0329808c74a8e0c21abe",
+          "file": "platform.spec.js",
+          "line": 145,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-11-27T06:32:25.051Z",
+    "duration": 33478.443,
+    "expected": 2,
+    "skipped": 0,
+    "unexpected": 2,
+    "flaky": 0
+  }
+}

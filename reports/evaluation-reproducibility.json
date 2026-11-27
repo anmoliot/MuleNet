@@ -1,17 +1,18 @@
 {
   "experiments": [
     {
-      "after_sha256": "7168a7ef3f2edf42c3b86b93089054818dc8ab89aa1b08a93ff90752e0f2b223",
-      "before_sha256": "7168a7ef3f2edf42c3b86b93089054818dc8ab89aa1b08a93ff90752e0f2b223",
+      "after_sha256": "41eb4efc45de2a1c644bc552a067c547fc5218d387f454d11a865f4ef62fb649",
+      "before_sha256": "41eb4efc45de2a1c644bc552a067c547fc5218d387f454d11a865f4ef62fb649",
       "identical": true,
       "split": "temporal"
     },
     {
-      "after_sha256": "11fadc00668dc77019fb225493f248822d1b47121d5b572b2e0a3058a2147e24",
-      "before_sha256": "11fadc00668dc77019fb225493f248822d1b47121d5b572b2e0a3058a2147e24",
+      "after_sha256": "67033e48e2009b095299239bdc41f574bb6875c118931914f83b94adbcfc8ca8",
+      "before_sha256": "67033e48e2009b095299239bdc41f574bb6875c118931914f83b94adbcfc8ca8",
       "identical": true,
       "split": "entity"
     }
   ],
+  "run_id": "repro-phase6-drift",
   "scope": "Frozen weights and input, repeat numerical evaluation; not proof of cross-platform training identity"
 }

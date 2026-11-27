@@ -17,6 +17,10 @@ def distribution_shift(reference, observed, bins=10):
     expected, actual = expected / expected.sum(), actual / actual.sum()
     psi = float(np.sum((actual - expected) * np.log(actual / expected)))
     ks = ks_2samp(reference, observed)
-    return {"psi": psi, "ks": float(ks.statistic), "ks_pvalue": float(ks.pvalue),
-            "review_trigger": bool(psi >= .2 or (ks.statistic >= .1 and ks.pvalue < .01)),
-            "action": "review_data_then_shadow_retrain; never_auto_promote"}
+    return {
+        "psi": psi,
+        "ks": float(ks.statistic),
+        "ks_pvalue": float(ks.pvalue),
+        "review_trigger": bool(psi >= 0.2 or (ks.statistic >= 0.1 and ks.pvalue < 0.01)),
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+    }

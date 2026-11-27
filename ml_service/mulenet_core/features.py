@@ -7,6 +7,8 @@ import statistics
 from collections import defaultdict, deque
 from collections.abc import Iterable, Mapping
 from functools import lru_cache
+from itertools import pairwise
+from typing import cast
 
 import networkx as nx
 
@@ -15,7 +17,9 @@ from .schema import Account, FeatureConfig, Transaction, feature_names
 
 
 @lru_cache(maxsize=4)
-def _window_context(events: tuple[Transaction, ...], config: FeatureConfig):
+def _window_context(
+    events: tuple[Transaction, ...], config: FeatureConfig
+) -> tuple[nx.DiGraph[str], dict[str, int], dict[str, float]]:
     graph = amount_graph(transaction_graph(events, config))
     cycles = bounded_cycle_counts(graph, config)
     ranks = nx.pagerank(graph, alpha=0.85, weight="weight", tol=1e-12, max_iter=1000) if graph else {}
@@ -87,7 +91,7 @@ def _velocity(history: list[Transaction], count: int, as_of: int, window: int, h
 
 def _burstiness(events: list[Transaction]) -> float:
     times = [e.ts for e in events]
-    intervals = [b - a for a, b in zip(times, times[1:])]
+    intervals = [b - a for a, b in pairwise(times)]
     if len(intervals) < 2:
         return 0.0
     mean = statistics.fmean(intervals)
@@ -95,7 +99,9 @@ def _burstiness(events: list[Transaction]) -> float:
     return (deviation - mean) / (deviation + mean) if deviation + mean else 0.0
 
 
-def _sharing(events: tuple[Transaction, ...], outgoing: list[Transaction], field: str, account_id: str) -> tuple[float, float]:
+def _sharing(
+    events: tuple[Transaction, ...], outgoing: list[Transaction], field: str, account_id: str
+) -> tuple[float, float]:
     identifiers = {getattr(e, field) for e in outgoing if getattr(e, field) is not None}
     if not identifiers:
         return 0.0, 0.0
@@ -106,17 +112,29 @@ def _sharing(events: tuple[Transaction, ...], outgoing: list[Transaction], field
 def _balance_error(events: list[Transaction], account_id: str) -> tuple[float, float]:
     errors = []
     for event in events:
-        if event.source == account_id and event.sender_balance_before is not None and event.sender_balance_after is not None:
+        if (
+            event.source == account_id
+            and event.sender_balance_before is not None
+            and event.sender_balance_after is not None
+        ):
             errors.append(abs(event.sender_balance_before - event.amount - event.sender_balance_after))
-        if event.target == account_id and event.receiver_balance_before is not None and event.receiver_balance_after is not None:
+        if (
+            event.target == account_id
+            and event.receiver_balance_before is not None
+            and event.receiver_balance_after is not None
+        ):
             errors.append(abs(event.receiver_balance_before + event.amount - event.receiver_balance_after))
     return (math.log1p(statistics.median(errors)), 1.0) if errors else (0.0, 0.0)
 
 
 def extract_features(
-    events: Iterable[Transaction], account_id: str, as_of: int,
-    config: FeatureConfig = FeatureConfig(), accounts: Mapping[str, Account] | None = None,
-    *, _snapshot: FeatureSnapshot | None = None,
+    events: Iterable[Transaction],
+    account_id: str,
+    as_of: int,
+    config: FeatureConfig = FeatureConfig(),
+    accounts: Mapping[str, Account] | None = None,
+    *,
+    _snapshot: FeatureSnapshot | None = None,
 ) -> dict[str, float]:
     if isinstance(as_of, bool) or not isinstance(as_of, int) or as_of < 0:
         raise ValueError("as_of must be a nonnegative integer UTC epoch second")
@@ -132,7 +150,10 @@ def extract_features(
     if registry_account and related and registry_account.created_at > related[0].ts:
         raise ValueError("Transaction predates registered account creation")
     first_seen = registry_account.created_at if registry_account else (related[0].ts if related else as_of)
-    result = {"account_age_seconds": float(as_of - first_seen), "account_age_known": float(registry_account is not None)}
+    result = {
+        "account_age_seconds": float(as_of - first_seen),
+        "account_age_known": float(registry_account is not None),
+    }
     for window in config.windows:
         selected, graph, cycles, ranks = snapshot.windows[window]
         incoming = [e for e in related if e.ts > as_of - window and e.target == account_id]
@@ -146,25 +167,38 @@ def extract_features(
         ip_degree, ip_observed = _sharing(selected, outgoing, "ip_address", account_id)
         balance_error, balance_observed = _balance_error(activity, account_id)
         values = {
-            "in_degree": float(len(incoming)), "out_degree": float(len(outgoing)),
-            "log_recv": math.log1p(received), "log_sent": math.log1p(sent),
-            "unique_in": float(len(in_peers)), "unique_out": float(len(out_peers)),
+            "in_degree": float(len(incoming)),
+            "out_degree": float(len(outgoing)),
+            "log_recv": math.log1p(received),
+            "log_sent": math.log1p(sent),
+            "unique_in": float(len(in_peers)),
+            "unique_out": float(len(out_peers)),
             "counterparty_entropy": _entropy(incoming),
             "pass_through_ratio": min(sent, received) / max(received, 1e-12),
-            "dwell_seconds": dwell, "dwell_observed": dwell_observed,
+            "dwell_seconds": dwell,
+            "dwell_observed": dwell_observed,
             "velocity_zscore": _velocity(related, len(activity), as_of, window, config.history_seconds),
             "new_payee_ratio": sum(e.target not in known_payees for e in outgoing) / max(len(outgoing), 1),
             "burstiness": _burstiness(activity),
-            "round_amount_ratio": sum(math.isclose(e.amount % 1000, 0.0, abs_tol=1e-7) for e in outgoing) / max(len(outgoing), 1),
-            "structuring_score": sum(config.structuring_threshold * 0.95 <= e.amount < config.structuring_threshold for e in outgoing) / max(len(outgoing), 1),
-            "device_sharing_degree": device_degree, "ip_sharing_degree": ip_degree,
-            "device_observed": device_observed, "ip_observed": ip_observed,
+            "round_amount_ratio": sum(math.isclose(e.amount % 1000, 0.0, abs_tol=1e-7) for e in outgoing)
+            / max(len(outgoing), 1),
+            "structuring_score": sum(
+                config.structuring_threshold * 0.95 <= e.amount < config.structuring_threshold for e in outgoing
+            )
+            / max(len(outgoing), 1),
+            "device_sharing_degree": device_degree,
+            "ip_sharing_degree": ip_degree,
+            "device_observed": device_observed,
+            "ip_observed": ip_observed,
             "cycle_count": float(cycles.get(account_id, 0)),
-            "clustering": float(nx.clustering(graph.to_undirected(), account_id)) if account_id in graph else 0.0,
+            "clustering": float(cast(float, nx.clustering(graph.to_undirected(), account_id)))
+            if account_id in graph
+            else 0.0,
             "pagerank": float(ranks.get(account_id, 0.0)),
             "fan_in_ratio": len(in_peers) / max(len(out_peers), 1),
             "fan_out_ratio": len(out_peers) / max(len(in_peers), 1),
-            "balance_delta_error": balance_error, "balance_delta_observed": balance_observed,
+            "balance_delta_error": balance_error,
+            "balance_delta_observed": balance_observed,
         }
         for direction, incoming_flag in (("in", True), ("out", False)):
             for hop, flow in enumerate(hop_flows(graph, account_id, incoming_flag), 1):

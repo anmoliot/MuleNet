@@ -60,6 +60,10 @@ processed_paysim.csv
 /.mypy_cache/
 /artifacts/
 /.tools/
+/.coverage
+/.coverage.*
+/frontend/dist-site/
+/htmlcov/
 
 # Local Demo & Voiceover (kept locally, not committed)
 docs/demo/

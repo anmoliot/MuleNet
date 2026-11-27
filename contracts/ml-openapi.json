@@ -508,8 +508,10 @@
         "responses": {
           "200": {
             "content": {
-              "application/json": {
-                "schema": {}
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
               }
             },
             "description": "Successful Response"
@@ -563,6 +565,27 @@
           }
         ],
         "summary": "Ready"
+      }
+    },
+    "/v1/drift": {
+      "get": {
+        "operationId": "tenantDrift",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Tenant Drift"
       }
     },
     "/v1/score": {

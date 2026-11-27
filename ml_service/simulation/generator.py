@@ -5,15 +5,24 @@ from __future__ import annotations
 import argparse
 import random
 from collections import defaultdict
+from itertools import pairwise
 from pathlib import Path
-
-from pydantic import Field, model_validator
 
 from mulenet_core.graph import canonical_events
 from mulenet_core.io import write_dataset
 from mulenet_core.schema import Account, Dataset, StrictModel, Transaction
+from pydantic import Field, model_validator
 
-TYPOLOGIES = ("fan_in", "fan_out", "scatter_gather", "cycle", "layering", "pass_through", "dormant_activation", "structuring")
+TYPOLOGIES = (
+    "fan_in",
+    "fan_out",
+    "scatter_gather",
+    "cycle",
+    "layering",
+    "pass_through",
+    "dormant_activation",
+    "structuring",
+)
 
 
 class SimulationConfig(StrictModel):
@@ -55,20 +64,38 @@ def generate(config: SimulationConfig = SimulationConfig(), cashout_ledger: list
                 used_ids.add(identifier)
                 return identifier
 
-    def emit(source: str, target: str, amount: float, ts: int, typology: str, fraud: bool, ring_id: str | None = None) -> None:
+    def emit(
+        source: str, target: str, amount: float, ts: int, typology: str, fraud: bool, ring_id: str | None = None
+    ) -> None:
         value = round(max(0.01, amount * rng.uniform(1 - config.amount_noise, 1 + config.amount_noise)), 2)
         if typology == "structuring" and 47500 <= amount < 50000:
             value = min(49999.99, max(47500.0, value))
         transaction = Transaction(
-            transaction_id=f"t{len(transactions):09d}", source=source, target=target,
-            ts=ts, amount=value, kind="TRANSFER", fraud=fraud, typology=typology,
+            transaction_id=f"t{len(transactions):09d}",
+            source=source,
+            target=target,
+            ts=ts,
+            amount=value,
+            kind="TRANSFER",
+            fraud=fraud,
+            typology=typology,
             ring_id=ring_id,
             device_id=f"d{rng.randrange(8):02d}" if rng.random() < 0.7 else None,
             ip_address=f"192.0.2.{rng.randrange(1, 30)}" if rng.random() < 0.7 else None,
         )
         transactions.append(transaction)
         if cashout_ledger is not None and target == collector and fraud:
-            cashout_ledger.append({"transaction_id": transaction.transaction_id, "source": source, "target": target, "ts": ts, "amount": value, "currency": "INR", "simulation_definition": "terminal collector credit, not verified bank cash-out"})
+            cashout_ledger.append(
+                {
+                    "transaction_id": transaction.transaction_id,
+                    "source": source,
+                    "target": target,
+                    "ts": ts,
+                    "amount": value,
+                    "currency": "INR",
+                    "simulation_definition": "terminal collector credit, not verified bank cash-out",
+                }
+            )
         tags[source].add(typology)
         tags[target].add(typology)
 
@@ -83,10 +110,17 @@ def generate(config: SimulationConfig = SimulationConfig(), cashout_ledger: list
             emit(node, nodes[(index + 1) % len(nodes)], 4000, config.base_time + index * 60, "legit_cycle", False)
         for day in range(config.days):
             base = config.base_time + day * 86400 + 3600
-            for index in range(config.noise_events_per_day):
+            for _ in range(config.noise_events_per_day):
                 sender, receiver = rng.sample(nodes[:-1], 2)
                 ts = base + rng.randrange(60000)
-                emit(sender, receiver, rng.lognormvariate(9, 1), ts, "merchant" if receiver == merchant else "ordinary", False)
+                emit(
+                    sender,
+                    receiver,
+                    rng.lognormvariate(9, 1),
+                    ts,
+                    "merchant" if receiver == merchant else "ordinary",
+                    False,
+                )
             if day % 7 == 0:
                 emit(salary, hub, 50000, base + 100, "salary", False)
                 emit(hub, rent, 18000, base + 400, "rent", False)
@@ -121,21 +155,27 @@ def generate(config: SimulationConfig = SimulationConfig(), cashout_ledger: list
                     emit(node, destination, amount * 0.3, start + (i + 4) * delay, typology, fraudulent, ring)
             elif typology == "cycle":
                 cycle = [origin, hub, relays[0], origin]
-                for i, (source, target) in enumerate(zip(cycle, cycle[1:])):
-                    emit(source, target, amount * 0.98 ** i, start + i * delay, typology, fraudulent, ring)
+                for i, (source, target) in enumerate(pairwise(cycle)):
+                    emit(source, target, amount * 0.98**i, start + i * delay, typology, fraudulent, ring)
             else:
                 depth = config.layering_depth if typology == "layering" else 1
                 chain = [origin] + relays[:depth] + [destination]
                 if typology == "dormant_activation":
                     # Relay is quiet in the preceding several days, not a class-coded feature.
                     chain = [origin, nodes[-1], destination]
-                for i, (source, target) in enumerate(zip(chain, chain[1:])):
-                    emit(source, target, amount * 0.96 ** i, start + i * delay, typology, fraudulent, ring)
+                for i, (source, target) in enumerate(pairwise(chain)):
+                    emit(source, target, amount * 0.96**i, start + i * delay, typology, fraudulent, ring)
                 if config.merchant_hop:
-                    emit(merchant, collector, amount * 0.85, start + (len(chain) + 1) * delay, typology, fraudulent, ring)
-    return Dataset(source="mulenet-simulator-v1", seed=config.seed,
-                   transactions=canonical_events(transactions), accounts=tuple(sorted(accounts, key=lambda a: a.account_id)),
-                   account_typologies={key: tuple(sorted(value)) for key, value in sorted(tags.items())})
+                    emit(
+                        merchant, collector, amount * 0.85, start + (len(chain) + 1) * delay, typology, fraudulent, ring
+                    )
+    return Dataset(
+        source="mulenet-simulator-v1",
+        seed=config.seed,
+        transactions=canonical_events(transactions),
+        accounts=tuple(sorted(accounts, key=lambda a: a.account_id)),
+        account_typologies={key: tuple(sorted(value)) for key, value in sorted(tags.items())},
+    )
 
 
 def main() -> None:
@@ -154,13 +194,32 @@ def main() -> None:
     args = parser.parse_args()
     if not args.allow_synthetic:
         parser.error("Synthetic generation requires explicit --allow-synthetic")
-    config = SimulationConfig(seed=args.seed, delay_seconds=args.delay_seconds, split_count=args.split_count, merchant_hop=args.merchant_hop, components=args.components, accounts_per_component=args.accounts_per_component, days=args.days, noise_events_per_day=args.noise_events_per_day)
+    config = SimulationConfig(
+        seed=args.seed,
+        delay_seconds=args.delay_seconds,
+        split_count=args.split_count,
+        merchant_hop=args.merchant_hop,
+        components=args.components,
+        accounts_per_component=args.accounts_per_component,
+        days=args.days,
+        noise_events_per_day=args.noise_events_per_day,
+    )
     ledger = []
     digest = write_dataset(generate(config, ledger), args.out)
     if args.cashout_ledger:
         from mulenet_core.io import canonical_json
+
         args.cashout_ledger.parent.mkdir(parents=True, exist_ok=True)
-        args.cashout_ledger.write_bytes(canonical_json({"data_hash": digest, "data_provenance": "synthetic", "config": config.model_dump(mode="json"), "events": ledger}))
+        args.cashout_ledger.write_bytes(
+            canonical_json(
+                {
+                    "data_hash": digest,
+                    "data_provenance": "synthetic",
+                    "config": config.model_dump(mode="json"),
+                    "events": ledger,
+                }
+            )
+        )
     print(digest)
 
 

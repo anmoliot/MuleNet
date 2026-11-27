@@ -1,0 +1,160 @@
+name: Verification
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  investigator-console:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22.20.0'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm --prefix frontend ci --no-audit --no-fund
+      - run: npm --prefix frontend run lint
+      - run: npm --prefix frontend run build
+      - run: python3 scripts/record_frontend_tests.py
+      - run: docker build -t mulenet/frontend:local frontend
+      - run: python3 scripts/verify_frontend_image.py
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: investigator-console
+          path: |
+            reports/frontend-unit-tests.json
+            reports/frontend-image.json
+          if-no-files-found: error
+  public-site:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22.20.0'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - run: node scripts/render-site-evidence.mjs --check
+      - run: npx eslint --config eslint.site.config.js website scripts/*.mjs *.site.config.js tests/site.spec.js
+      - run: npm run build:site
+      - run: npx playwright install --with-deps chromium
+      - name: Browser acceptance
+        shell: bash
+        run: |
+          node node_modules/vite/bin/vite.js preview --config vite.site.config.js --host 127.0.0.1 --port 5174 --strictPort > ../.tools-site-preview.log 2>&1 &
+          server=$!
+          trap 'kill "$server"' EXIT
+          for attempt in {1..30}; do curl --fail --silent http://127.0.0.1:5174/ > /dev/null && break; sleep 1; done
+          npm run test:site
+      - run: node scripts/package-site.mjs
+      - run: node scripts/record-site-checks.mjs
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: public-site-evidence
+          path: |
+            reports/site-*.json
+            reports/site-contrast/
+            .tools/site-browser/
+          include-hidden-files: true
+          if-no-files-found: error
+  java-integration:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    env:
+      MULENET_TEST_MODEL_DIR: ../artifacts/ci-sim-temporal
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@94527f2e458b27549849d47d273a16bec83a01e9
+        with:
+          version: '0.13.9'
+      - run: uv sync --frozen --all-groups
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22.20.0'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm --prefix frontend ci --no-audit --no-fund
+      - run: cd frontend && npx playwright install --with-deps chromium
+      - name: Generate and train the explicit integration fixture
+        run: make DATASET=sim ALLOW_SYNTHETIC=1 RUN_ID=ci EPOCHS=2 data train
+      - run: docker build -f ml_service/Dockerfile -t mulenet/ml:local .
+      - name: Real stack and policy coverage
+        shell: bash
+        run: |
+          export JAVA_HOME="$JAVA_HOME_17_X64"
+          export PATH="$JAVA_HOME/bin:$PATH"
+          uv run --frozen --all-groups python scripts/record_maven_tests.py --out .tools/ci/platform-tests.json
+      - name: Actual-stack investigator browser acceptance
+        shell: bash
+        run: |
+          export JAVA_HOME="$JAVA_HOME_17_X64"
+          export PATH="$JAVA_HOME/bin:$PATH"
+          uv run --frozen --all-groups python scripts/record_maven_tests.py --tests PlatformBrowserTest,ReviewPolicyTest --out reports/frontend-java-tests.json
+      - name: Actual-network latency benchmark
+        shell: bash
+        run: |
+          export JAVA_HOME="$JAVA_HOME_17_X64"
+          export PATH="$JAVA_HOME/bin:$PATH"
+          uv run --frozen --all-groups python scripts/bench_pipeline.py --allow-synthetic --out .tools/ci/latency-pipeline.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: java-integration
+          path: |
+            .tools/ci/*.json
+            .tools/platform-test.log
+            reports/pipeline-bench-tests.json
+            reports/frontend-platform.json
+            reports/frontend-browser-tests.json
+            reports/frontend-java-tests.json
+            .tools/platform-browser/
+            .tools/platform-browser.log
+            backend/target/site/jacoco/
+          include-hidden-files: true
+          if-no-files-found: error
+  python:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-2025]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@94527f2e458b27549849d47d273a16bec83a01e9
+        with:
+          version: '0.13.9'
+      - run: uv sync --frozen --all-groups
+      - run: uv run --frozen --all-groups ruff check ml_service scripts
+      - run: uv run --frozen --all-groups ruff format --check ml_service scripts
+      - run: uv run --frozen --all-groups mypy
+      - run: uv run --frozen --all-groups python scripts/check_repo_hygiene.py
+      - run: uv run --frozen --all-groups python scripts/render_readme_metrics.py --check
+      - run: uv run --frozen --all-groups python scripts/record_tests.py --phase python --coverage --out .tools/ci/python-tests.json
+      - run: uv run --frozen --all-groups python scripts/eval_smoke.py --allow-synthetic --out .tools/ci/eval-smoke.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: python-${{ matrix.os }}
+          path: .tools/ci/*.json
+          include-hidden-files: true
+          if-no-files-found: error

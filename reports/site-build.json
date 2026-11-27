@@ -1,0 +1,128 @@
+{
+  "scope": "Public static landing page only. No backend, application entry, model, dataset, environment file or credentials.",
+  "source_sha256": {
+    "frontend/website/main.jsx": "af10be0ae1b508defbeae201f6484840367554789937b9980146234ff9233f2f",
+    "frontend/website/site.css": "1a2f540c6edea4a6c49440958a14d40d63856b25abd1640485fa826be99088f9",
+    "frontend/website/index.html": "b3ac3786eaeeaddd0c663f8df2fbfc4f2a2b497dea4211af15dc3dcf050fe9d2",
+    "frontend/vite.site.config.js": "d52d0c16d4f316bd9677827473d26ff2d599011e14ba8abd8245523f4dc4f4f1",
+    "frontend/package.json": "0d1b774f67fac1cb8819766139f85f359d0bb2448afbdd7872fc6c1c811b0e52",
+    "frontend/package-lock.json": "c0a43e9379aae8a3cbda91894a6c29ea6d5236ef7f4af9c310a92b7c3890c331",
+    "frontend/scripts/render-site-evidence.mjs": "f1561799c46bd95c7fe053b9d8e6638e774acc40d5eac36a9431d2d23ba21c27"
+  },
+  "files": [
+    {
+      "file": "assets/ibm-plex-mono-latin-400-normal-CvHOgSBP.woff",
+      "size": 13144,
+      "sha": "ad63126dcf5c721ec5044ad0a5f9d672c8406053",
+      "sha256": "328d50b6ece9ca25c46eea3e885ba497f6237f2fb84ef7b92f88e14a1a25e381"
+    },
+    {
+      "file": "assets/ibm-plex-mono-latin-400-normal-DMJ8VG8y.woff2",
+      "size": 14708,
+      "sha": "bb87500e3204a3a7c65d6633c79c5c840c3be8d3",
+      "sha256": "08949f728dc52d528e69b1667d15c89a5686a4ee9a296ff90983985f99c380f7"
+    },
+    {
+      "file": "assets/ibm-plex-mono-latin-500-normal-CB9ihrfo.woff",
+      "size": 13156,
+      "sha": "4bcc22a799e8e103b8e81161dc53f340aa4839e7",
+      "sha256": "09f018c58556e5801ecc49d5b5275dcff4c73311c2af6b88e31c51d76d076a9d"
+    },
+    {
+      "file": "assets/ibm-plex-mono-latin-500-normal-DSY6xOcd.woff2",
+      "size": 14888,
+      "sha": "d32f0e0701ac62043840131a800ce717a86e4ee2",
+      "sha256": "01d285447409c8a588692162439a038b8cbd7871309ee20267b0d2d91c6e8e22"
+    },
+    {
+      "file": "assets/ibm-plex-sans-latin-400-normal-CDDApCn2.woff2",
+      "size": 22588,
+      "sha": "248289744b813a6a7249cc41d568fac40b81ce7f",
+      "sha256": "3b646991d30055a93a4ecc499713d4347953a74a947ecab435ab72070cbdab0e"
+    },
+    {
+      "file": "assets/ibm-plex-sans-latin-400-normal-CYLoc0-x.woff",
+      "size": 22104,
+      "sha": "ecac6770ec17eb49a7ffb777da9baed9546b7177",
+      "sha256": "828907bfd14855c880789878bd2b38ffd284a6c27c8b80f6069900f70dae3901"
+    },
+    {
+      "file": "assets/ibm-plex-sans-latin-500-normal-6ng42L7E.woff2",
+      "size": 24184,
+      "sha": "4d42c785b645312766d05fffcee5787bed880a5f",
+      "sha256": "0717336fb31fcdcde4b8deb3675bb4a0f7f6d484864afcd6751ac29975962203"
+    },
+    {
+      "file": "assets/ibm-plex-sans-latin-500-normal-BgVn5rGT.woff",
+      "size": 23916,
+      "sha": "ea648afc3dc138a5673364c48e9a66cdba5bddb3",
+      "sha256": "8d2c7b2eca91869d447851a9c8bd07edf629b26025eacb882291e03b384b4e35"
+    },
+    {
+      "file": "assets/ibm-plex-sans-latin-600-normal-Cu4Hd6ag.woff",
+      "size": 23876,
+      "sha": "df4cbd1b4246ea8a7cc62d61232da8fa0eb42084",
+      "sha256": "7861a349af1e925a80d56547c2c9e0b1e9f6a9002a9a6867351da2f05122ad21"
+    },
+    {
+      "file": "assets/ibm-plex-sans-latin-600-normal-CuJfVYMP.woff2",
+      "size": 24252,
+      "sha": "90d9c22697da8cb2722b091ed254ed617a0ed74a",
+      "sha256": "8960851d691c054ed38e259bdcf1a6190d157b4203ed5bb32c632a863fb8ec2f"
+    },
+    {
+      "file": "assets/index-BfdEK_nb.js",
+      "size": 253269,
+      "sha": "d8f3b37b3e13aa264230f3a1b582e47eace52e81",
+      "sha256": "54a3faec027eb5964c5f0dcbb66baeea3d9c14bf586f09e6a2b44462477b7d7a"
+    },
+    {
+      "file": "assets/index-kxL5v7iI.css",
+      "size": 27343,
+      "sha": "60b9e88ced83ed1ae54c5e98f9ad6d76b964fcb3",
+      "sha256": "749fab2f352dd49744f1df2d9a2032554d80158c829cc5c193f0c3ae13e3e941"
+    },
+    {
+      "file": "evidence-graph-alpha.png",
+      "size": 284282,
+      "sha": "79f648f6f60bfb869512e42783953c57908b3eda",
+      "sha256": "a48ae9bc123adaac56c9ec7459b7272ed945398b776d7ab0a07813e563d6cb3b"
+    },
+    {
+      "file": "evidence.json",
+      "size": 3016,
+      "sha": "3a3247dce6b1bc57e6d7bbff0faf012b18c4b590",
+      "sha256": "34e1cfbd49f2b8dfbddc04d5aa8cfecb43bec88b6a1c874daffdaf8851633e7b"
+    },
+    {
+      "file": "favicon.svg",
+      "size": 298,
+      "sha": "5db61f72355f61a7888c0831cd1b21d9ef5de662",
+      "sha256": "772aadd958460f97204305115ff49a0b1d7fec7096a1c101b1c6545ac98ed2cc"
+    },
+    {
+      "file": "IBM-Plex-LICENSE.txt",
+      "size": 4429,
+      "sha": "68c8eb0451fb922f9b069fb23021ae0ffc57b797",
+      "sha256": "d0283623ef57e722fd0eb688a8041589670c608ab780cd3612d06ba6f153d3fd"
+    },
+    {
+      "file": "IBM-Plex-Mono-LICENSE.txt",
+      "size": 5299,
+      "sha": "40b80a196930166aca1e4500fd99117caf0fcc3f",
+      "sha256": "23b0a9d0c6d3f140a0b77e483c5cfa6bba574325ef5cb189ed9f2fec4884533f"
+    },
+    {
+      "file": "index.html",
+      "size": 731,
+      "sha": "9e35799398d06bad72ee046bc85449f1484ce7c9",
+      "sha256": "312eecf7479a987d603e84ba26237ba233b99d0c1e99681e7497929eec37c9fd"
+    },
+    {
+      "file": "vercel.json",
+      "size": 866,
+      "sha": "a97683e5c8d2b6496420f29977e74bfde70638f4",
+      "sha256": "d9548bbf7f34c837d8ed93924069614b736337e69b2478eea599676412609a8f"
+    }
+  ]
+}

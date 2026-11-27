@@ -41,6 +41,22 @@ coverage must remain explicit rather than disappearing from a count.
 
 ## Open Boundaries
 
+### Historical Provider Credential: Revocation Required
+
+Root cleanup found a literal Neo4j provider password in the retired Render
+deployment definition. The file is removed; the value is not reproduced here and
+was not used to access the provider. The default secret scanner missed this
+deployment-list shape. An explicit Gitleaks rule now detects it in the full
+history and has positive/negative tests. Redacted scan and triage reports retain
+the finding as blocking, not waived or silently allowlisted.
+
+Treat it as compromised. The provider account owner must revoke it, inspect
+provider access logs and rotate any reused secret. No provider access or
+revocation evidence is available to the agent. Historical default-key triage is
+not evidence that this provider credential was revoked. Source deletion does not
+remove public history. Coordinated history cleanup needs separate authorization
+after revocation.
+
 ### Spring Boot 3 Patch Access: Pending Operator Credentials
 
 The current public Spring Framework/Security patch line still triggers advisories.
@@ -63,6 +79,12 @@ still lists distribution advisories with no vendor fix. These are not accepted
 as a clean scan and are not excluded by severity or an ignore file. Exact package,
 version, advisory, vendor status and image identity remain in
 [the raw image report](../reports/trivy-ml.json). The aggregate gate stays failed.
+
+Each OS patch refresh must invalidate the package-install cache using the
+Dockerfile's OS_PATCH_EPOCH build argument, followed by an actual image scan.
+The continuation scan detected a newly fixable libzstd advisory hidden by a
+cached package-update layer. That layer is refreshed explicitly; neither a
+successful cached build nor an older image report is proof of current patches.
 
 The remaining high-severity families include privileged mount/cgroup operations,
 ACL traversal, terminal parsing, SQLite extensions, OpenSSL QUIC, systemd-homed,

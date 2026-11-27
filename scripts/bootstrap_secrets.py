@@ -3,9 +3,9 @@
 import argparse
 import base64
 import os
-from pathlib import Path
 import secrets
 import uuid
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -13,7 +13,11 @@ ROOT = Path(__file__).resolve().parents[1]
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--demo", action="store_true", help="Explicitly enable local simulated demonstration profiles")
-    parser.add_argument("--upgrade-purpose-keys", action="store_true", help="Append missing purpose-separated keys to a file created by this tool")
+    parser.add_argument(
+        "--upgrade-purpose-keys",
+        action="store_true",
+        help="Append missing purpose-separated keys to a file created by this tool",
+    )
     parser.add_argument("--out", type=Path, default=ROOT / ".env")
     args = parser.parse_args()
     if args.upgrade_purpose_keys:
@@ -26,7 +30,11 @@ def main():
             original = args.out.read_text(encoding="utf-8")
             if not original.startswith("# Generated locally;"):
                 raise SystemExit("Only tool-generated installation files can be upgraded automatically")
-            missing = [key for key in ("MULENET_STREAM_SECRET", "MULENET_INGESTION_SECRET") if not any(line.startswith(key + "=") for line in original.splitlines())]
+            missing = [
+                key
+                for key in ("MULENET_STREAM_SECRET", "MULENET_INGESTION_SECRET")
+                if not any(line.startswith(key + "=") for line in original.splitlines())
+            ]
             if not missing:
                 print("No missing purpose-separated keys; installation unchanged")
                 return
@@ -38,18 +46,41 @@ def main():
             lock.unlink()
         print("Added missing purpose-separated keys; existing installation values are preserved")
         return
-    values = {name: secrets.token_urlsafe(48) for name in (
-        "POSTGRES_PASSWORD", "MULENET_DB_PASSWORD", "REDIS_PASSWORD", "MULENET_SERVICE_SECRET", "MULENET_STREAM_SECRET", "MULENET_INGESTION_SECRET",
-        "MULENET_DEMO_ANALYST_PASSWORD", "MULENET_DEMO_SUPERVISOR_PASSWORD", "MULENET_DEMO_ADMIN_PASSWORD",
-        "MULENET_DEMO_AUDITOR_PASSWORD", "KEYCLOAK_ADMIN_PASSWORD")}
-    values.update({name: base64.b64encode(secrets.token_bytes(32)).decode() for name in (
-        "MULENET_TOKEN_KEY", "MULENET_ENCRYPTION_KEY", "MULENET_DEMO_JWT_SECRET")})
-    values.update({"POSTGRES_DB": "mulenet", "POSTGRES_USER": "mulenet_migrator", "KEYCLOAK_ADMIN": "installation-admin",
-                   "KAFKA_CLUSTER_ID": base64.urlsafe_b64encode(uuid.uuid4().bytes).decode().rstrip("="),
-                   "SPRING_PROFILES_ACTIVE": "platform,demo" if args.demo else "platform",
-                   "MULENET_ALLOW_SYNTHETIC": "true" if args.demo else "false",
-                   "MULENET_ACTIVE_MODEL": "demo-temporal-v3" if args.demo else "REQUIRED_APPROVED_MODEL",
-                   "MULENET_OIDC_ISSUER": "", "MULENET_CORS_ORIGINS": "http://localhost:3000,http://localhost:5173"})
+    values = {
+        name: secrets.token_urlsafe(48)
+        for name in (
+            "POSTGRES_PASSWORD",
+            "MULENET_DB_PASSWORD",
+            "REDIS_PASSWORD",
+            "MULENET_SERVICE_SECRET",
+            "MULENET_STREAM_SECRET",
+            "MULENET_INGESTION_SECRET",
+            "MULENET_DEMO_ANALYST_PASSWORD",
+            "MULENET_DEMO_SUPERVISOR_PASSWORD",
+            "MULENET_DEMO_ADMIN_PASSWORD",
+            "MULENET_DEMO_AUDITOR_PASSWORD",
+            "KEYCLOAK_ADMIN_PASSWORD",
+        )
+    }
+    values.update(
+        {
+            name: base64.b64encode(secrets.token_bytes(32)).decode()
+            for name in ("MULENET_TOKEN_KEY", "MULENET_ENCRYPTION_KEY", "MULENET_DEMO_JWT_SECRET")
+        }
+    )
+    values.update(
+        {
+            "POSTGRES_DB": "mulenet",
+            "POSTGRES_USER": "mulenet_migrator",
+            "KEYCLOAK_ADMIN": "installation-admin",
+            "KAFKA_CLUSTER_ID": base64.urlsafe_b64encode(uuid.uuid4().bytes).decode().rstrip("="),
+            "SPRING_PROFILES_ACTIVE": "platform,demo" if args.demo else "platform",
+            "MULENET_ALLOW_SYNTHETIC": "true" if args.demo else "false",
+            "MULENET_ACTIVE_MODEL": "demo-temporal-v3" if args.demo else "REQUIRED_APPROVED_MODEL",
+            "MULENET_OIDC_ISSUER": "",
+            "MULENET_CORS_ORIGINS": "http://localhost:3000,http://localhost:5173",
+        }
+    )
     try:
         fd = os.open(args.out, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
     except FileExistsError:

@@ -41,6 +41,12 @@ public class ServiceTokens {
             .setId(eventId).setIssuedAt(Date.from(now)).setExpiration(Date.from(now.plusSeconds(86400)))
             .claim("tenant", tenant).claim("body", body).signWith(ingestionKey, io.jsonwebtoken.SignatureAlgorithm.HS256).compact();
     }
+    public String metrics(String tenant) {
+        Instant now = Instant.now();
+        return Jwts.builder().setIssuer("mulenet-backend").setAudience("mulenet-ml").setSubject("backend")
+            .setId(UUID.randomUUID().toString()).setIssuedAt(Date.from(now)).setExpiration(Date.from(now.plusSeconds(30)))
+            .claim("tenant", tenant).claim("scope", "metrics").signWith(key, io.jsonwebtoken.SignatureAlgorithm.HS256).compact();
+    }
     public Claims verifyIngestion(String token) {
         var parsed = Jwts.parserBuilder().setSigningKey(ingestionKey).requireIssuer("mulenet-backend")
             .requireAudience("mulenet-ingestion").requireSubject("ingestion").build().parseClaimsJws(token);

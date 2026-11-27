@@ -1,0 +1,37 @@
+{
+  "cases": [
+    {
+      "name": "errors never invent records; only 401 clears an authenticated session",
+      "passed": true
+    },
+    {
+      "name": "decision parsing preserves unavailable scores and rejects unsupported evidence",
+      "passed": true
+    },
+    {
+      "name": "SSE uses a separately scoped header and parses chunked events without URL tokens",
+      "passed": true
+    },
+    {
+      "name": "active console sources do not persist access tokens, contact ML directly or use mock fallbacks",
+      "passed": true
+    }
+  ],
+  "command": [
+    "C:\\Program Files\\nodejs\\node.EXE",
+    "--test",
+    "--test-reporter=junit",
+    "tests/platform-client.test.mjs"
+  ],
+  "exit_code": 0,
+  "pass": true,
+  "source_sha256": {
+    "frontend\\src\\platform\\Console.jsx": "c18ef7e260bb659654481e43fa96946cc888f364ea518014f48b4b855bd9147f",
+    "frontend\\src\\platform\\EvidenceGraph.jsx": "c6e586cc899e0ca0b55bbf5ff33168603fc6ddbbeb1d068c5181f003da1b0a00",
+    "frontend\\src\\platform\\auth.mjs": "5385d129642fc75729e33e790a21c1a7a336aa46e4743b658333e008d363c94c",
+    "frontend\\src\\platform\\client.mjs": "d8ab3b9c808c63c50efcb8373c45d2616005b6b3e732ad34e05b02658c6ca00f",
+    "frontend\\src\\platform\\console.css": "4711244cf0684ac72b4d5a201ae4ba9485c8f98fa53ccaadd68080a2c91197e3",
+    "frontend\\tests\\platform-client.test.mjs": "c41b86a9366a1cd51c7be6d044b960a2ee10300899876d8abe5e837a0239df9a"
+  },
+  "source_unchanged": true
+}

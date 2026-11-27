@@ -1,0 +1,106 @@
+{
+  "data_provenance": "synthetic",
+  "source_sha256": {
+    "reports/metrics-paysim-temporal.json": "a3bbaedc1717330f9ef312cfdee2463b05db9a7cc97c21e7183884de47dda065",
+    "reports/metrics-sim-temporal.json": "7168a7ef3f2edf42c3b86b93089054818dc8ab89aa1b08a93ff90752e0f2b223",
+    "reports/metrics-sim-entity.json": "11fadc00668dc77019fb225493f248822d1b47121d5b572b2e0a3058a2147e24"
+  },
+  "paysim": {
+    "dataset": "PaySim",
+    "split": "temporal",
+    "model": "XGBoost, pre-transfer inputs",
+    "task": "contemporaneous transaction classification, NOT future account/ring detection",
+    "test_rows": 130116,
+    "threshold": 0.5,
+    "pr_auc": {
+      "ci95": [
+        0.8837176925620351,
+        0.9061010563706773
+      ],
+      "value": 0.8952151454841413
+    },
+    "recall": {
+      "ci95": [
+        0.7229417067307692,
+        0.765625
+      ],
+      "value": 0.7445913461538461
+    },
+    "fpr": {
+      "ci95": [
+        0.000879706038053125,
+        0.0012378164606234236
+      ],
+      "value": 0.0010509762401519633
+    },
+    "limitations": [
+      "Public simulated transactions, not real fraud outcomes",
+      "Temporal split alone cannot validate topology",
+      "Post-transfer diagnostic deliberately measures outcome-dependent features",
+      "Row bootstrap ignores temporal/account dependence",
+      "Cost parameters are assumptions, not INR losses observed in this unspecified-currency dataset"
+    ]
+  },
+  "simulator": [
+    {
+      "dataset": "Local account simulator",
+      "split": "temporal",
+      "model": "XGBoost + graph features",
+      "pr_auc": {
+        "ci95": [
+          0.076291897827092,
+          0.3194174757281554
+        ],
+        "value": 0.13604341203351106
+      },
+      "recall": {
+        "ci95": [
+          0,
+          0
+        ],
+        "value": 0
+      },
+      "fpr": {
+        "ci95": [
+          0,
+          0
+        ],
+        "value": 0
+      }
+    },
+    {
+      "dataset": "Local account simulator",
+      "split": "entity-disjoint",
+      "model": "XGBoost + graph features",
+      "pr_auc": {
+        "ci95": [
+          0.06435732165721067,
+          0.19147205358775074
+        ],
+        "value": 0.09238064791133845
+      },
+      "recall": {
+        "ci95": [
+          0,
+          0
+        ],
+        "value": 0
+      },
+      "fpr": {
+        "ci95": [
+          0,
+          0
+        ],
+        "value": 0
+      }
+    }
+  ],
+  "notes": [
+    "Simulated transaction classification is not validation of future account or ring detection.",
+    "Thresholds were selected on validation data, not the test set.",
+    "Intervals are row-bootstrap 95% confidence intervals; account and temporal dependence are not modeled.",
+    "The local account simulator recorded no test recall at its selected strict operating point.",
+    "The GNN did not earn the selected default path. Full-network AMLworld performance remains unmeasured.",
+    "No real financial recovery, customer deployment or direct I4C/NCRP access is claimed."
+  ]
+}

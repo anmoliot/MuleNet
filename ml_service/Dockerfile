@@ -2,6 +2,8 @@ FROM python:3.13.18-slim@sha256:7249d5587b78209a006dc4a3b5340678f84ea729239193aa
 
 WORKDIR /app
 
+# Bump on a reviewed OS patch refresh so cached package indexes are not reused.
+ARG OS_PATCH_EPOCH=2026-11-25
 RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
     libgomp1 \
     && rm -rf /var/lib/apt/lists/*

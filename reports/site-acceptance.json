@@ -1,0 +1,76 @@
+{
+  "scope": "Public static landing page, not fraud-platform acceptance",
+  "browser": {
+    "startTime": "2026-11-27T05:17:12.564Z",
+    "duration": 33699.648,
+    "expected": 20,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "contrast": {
+    "desktop": {
+      "measured_pairings": 628,
+      "failed_pairings": 0,
+      "states": [
+        "initial",
+        "primary-hover",
+        "setup-dialog",
+        "graph-review-dialog",
+        "simulator-and-expanded-faq"
+      ],
+      "scope": "Computed HTML text pairings on flat backgrounds in initial, hover, dialog, selected-evidence and expanded-FAQ states. Raster diagram labels are visually inspected, not contrast-certified. This is not a full accessibility certification."
+    },
+    "mobile": {
+      "measured_pairings": 533,
+      "failed_pairings": 0,
+      "states": [
+        "initial",
+        "primary-hover",
+        "setup-dialog",
+        "graph-review-dialog",
+        "simulator-and-expanded-faq"
+      ],
+      "scope": "Computed HTML text pairings on flat backgrounds in initial, hover, dialog, selected-evidence and expanded-FAQ states. Raster diagram labels are visually inspected, not contrast-certified. This is not a full accessibility certification."
+    },
+    "narrow": {
+      "measured_pairings": 533,
+      "failed_pairings": 0,
+      "states": [
+        "initial",
+        "primary-hover",
+        "setup-dialog",
+        "graph-review-dialog",
+        "simulator-and-expanded-faq"
+      ],
+      "scope": "Computed HTML text pairings on flat backgrounds in initial, hover, dialog, selected-evidence and expanded-FAQ states. Raster diagram labels are visually inspected, not contrast-certified. This is not a full accessibility certification."
+    },
+    "tablet": {
+      "measured_pairings": 613,
+      "failed_pairings": 0,
+      "states": [
+        "initial",
+        "primary-hover",
+        "setup-dialog",
+        "graph-review-dialog",
+        "simulator-and-expanded-faq"
+      ],
+      "scope": "Computed HTML text pairings on flat backgrounds in initial, hover, dialog, selected-evidence and expanded-FAQ states. Raster diagram labels are visually inspected, not contrast-certified. This is not a full accessibility certification."
+    },
+    "wide": {
+      "measured_pairings": 628,
+      "failed_pairings": 0,
+      "states": [
+        "initial",
+        "primary-hover",
+        "setup-dialog",
+        "graph-review-dialog",
+        "simulator-and-expanded-faq"
+      ],
+      "scope": "Computed HTML text pairings on flat backgrounds in initial, hover, dialog, selected-evidence and expanded-FAQ states. Raster diagram labels are visually inspected, not contrast-certified. This is not a full accessibility certification."
+    }
+  },
+  "source_unchanged_since_build_manifest": true,
+  "public_files": 19,
+  "pass": true
+}

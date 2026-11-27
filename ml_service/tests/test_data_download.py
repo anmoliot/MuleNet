@@ -1,6 +1,6 @@
+import io
 import json
 import subprocess
-import io
 
 import pytest
 
@@ -33,7 +33,9 @@ def test_download_receipt_hashes_output_and_propagates_failures(monkeypatch, tmp
         calls.append(args)
         output = download_data.Path(args[args.index("-p") + 1])
         if "metadata" in args:
-            (output / "dataset-metadata.json").write_text('{"licenses":[{"name":"CDLA-Sharing-1.0"}]}', encoding="utf-8")
+            (output / "dataset-metadata.json").write_text(
+                '{"licenses":[{"name":"CDLA-Sharing-1.0"}]}', encoding="utf-8"
+            )
         else:
             (output / "HI-Small_Trans.csv").write_text("fixture-not-benchmark-data\n", encoding="utf-8")
 
@@ -61,13 +63,17 @@ def test_public_download_checks_supplier_license_and_pins_version(monkeypatch, t
     def public_response(url, **kwargs):
         requested.append(url)
         if "/view/" in url:
-            return io.BytesIO(json.dumps({"isPrivate": False, "licenseName": "CC BY-SA 4.0", "currentVersionNumber": 2}).encode())
+            return io.BytesIO(
+                json.dumps({"isPrivate": False, "licenseName": "CC BY-SA 4.0", "currentVersionNumber": 2}).encode()
+            )
         return io.BytesIO(b"step,type,amount\n1,TRANSFER,10\n")
 
     monkeypatch.setattr(download_data.urllib.request, "urlopen", public_response)
     receipt = download_data.download_public("paysim", "default", "CC-BY-SA-4.0")
     assert receipt["supplier_version"] == 2
     assert "datasetVersionNumber=2" in requested[-1]
-    assert receipt["sha256"] == download_data.file_hash(tmp_path / "data/raw/paysim/PS_20174392719_1491204439457_log.csv")
+    assert receipt["sha256"] == download_data.file_hash(
+        tmp_path / "data/raw/paysim/PS_20174392719_1491204439457_log.csv"
+    )
     with pytest.raises(ValueError, match="license"):
         download_data.download_public("paysim", "default", "CDLA-Sharing-1.0")

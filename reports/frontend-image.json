@@ -1,0 +1,18 @@
+{
+  "capabilities_dropped": "ALL",
+  "headers_verified": true,
+  "image_id": "sha256:5823bfb10a69f34e99283cca1bc36049904b20e7b897f95812082473d0737b46",
+  "invalid_csp_origin_rejected": true,
+  "network": "none",
+  "pass": true,
+  "query_logging_scrubbed": true,
+  "read_only": true,
+  "runtime_user": "101:101",
+  "scope": "Actual static container smoke; does not certify OIDC login, live API proxy or vulnerability freedom",
+  "source_sha256": {
+    "frontend\\Dockerfile": "396ac674dd1f73d27e540f491bf71ea768abeba686ef744fd7217aa6c1c62792",
+    "frontend\\nginx-main.conf": "d74416630f871d9edfd9b4b4259be6d900d55b38f380c41ecc620e947a29d84a",
+    "frontend\\nginx.conf": "f6dc411b728323a65be776ebc5cb69a8a1555dbc88f9d893c6aed144ed7230a5",
+    "frontend\\start-nginx.sh": "916b98381516a9e88314a1ee4cf1f5e19a155d19a70c08fc41d41631257f9a72"
+  }
+}

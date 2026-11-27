@@ -17,7 +17,10 @@ import org.springframework.web.server.ResponseStatusException;
 public class PlatformController {
     private final PlatformService platform;
     private final PrivacyCodec privacy;
-    public PlatformController(PlatformService platform, PrivacyCodec privacy) { this.platform = platform; this.privacy = privacy; }
+    private final org.springframework.core.env.Environment environment;
+    public PlatformController(PlatformService platform, PrivacyCodec privacy, org.springframework.core.env.Environment environment) {
+        this.platform = platform; this.privacy = privacy; this.environment = environment;
+    }
 
     static String tenant(Authentication authentication) {
         if (!(authentication instanceof JwtAuthenticationToken jwt)) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "OIDC bearer required");
@@ -28,13 +31,22 @@ public class PlatformController {
     private String actor(Authentication auth) { return privacy.token(tenant(auth), "actor", auth.getName()); }
 
     public record Ingest(@NotEmpty @Size(max = 100) List<@Valid Payment> transactions) {}
-    public record PolicyChange(@Min(1) int expectedVersion, @NotNull @Valid ReviewPolicy config,
+    public record PolicyChange(@Min(0) int expectedVersion, @NotNull @Valid ReviewPolicy config,
                                @NotBlank @Size(min = 10, max = 2000) String rationale) {}
     public record CaseAction(@Min(1) int expectedVersion,
                              @NotBlank @Size(min = 10, max = 2000) String rationale,
                              @Size(max = 128) @Pattern(regexp = "[a-zA-Z0-9_-]+") String assignee) {}
     public record Feedback(@NotNull Boolean fraudulent, @NotBlank @Size(min = 20, max = 4000) String evidence) {}
     public record Replay(@NotBlank @Size(min = 10, max = 2000) String rationale) {}
+
+    @GetMapping("/auth/session")
+    @PreAuthorize("hasAnyRole('ANALYST','SUPERVISOR','ADMIN','AUDITOR')")
+    public Map<String, Object> session(Authentication auth) {
+        var jwt = ((JwtAuthenticationToken) auth).getToken();
+        return Map.of("subject", auth.getName(), "tenant", tenant(auth),
+            "roles", auth.getAuthorities().stream().map(a -> a.getAuthority().replace("ROLE_", "")).toList(),
+            "expires_at", jwt.getExpiresAt().getEpochSecond(), "demo_mode", environment.matchesProfiles("demo"));
+    }
 
     @PostMapping("/transactions")
     @ResponseStatus(HttpStatus.ACCEPTED)
@@ -100,6 +112,13 @@ public class PlatformController {
     @PreAuthorize("hasAnyRole('ANALYST','SUPERVISOR','ADMIN','AUDITOR')")
     public Map<String, Object> health(Authentication auth) {
         return Map.of("ml_circuit", platform.circuitState(), "tenant", tenant(auth), "production_approved", false);
+    }
+    @GetMapping("/drift")
+    @PreAuthorize("hasAnyRole('ANALYST','SUPERVISOR','ADMIN','AUDITOR')")
+    public com.fasterxml.jackson.databind.JsonNode drift(Authentication auth) {
+        String currentTenant = tenant(auth);
+        try { return platform.drift(currentTenant); }
+        catch (RuntimeException unavailable) { throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Tenant drift unavailable"); }
     }
     @GetMapping("/decisions/{id}/str-draft")
     @PreAuthorize("hasAnyRole('SUPERVISOR','ADMIN','AUDITOR')")

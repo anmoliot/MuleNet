@@ -9,5 +9,7 @@ def package_version(name: str) -> str:
     distributions = metadata.packages_distributions().get("xgboost", [])
     accepted = [name for name in distributions if name.lower().replace("_", "-") in {"xgboost", "xgboost-cpu"}]
     if len(accepted) != 1:
-        raise RuntimeError("Install exactly one official XGBoost distribution; no alternate-model fallback is supported")
+        raise RuntimeError(
+            "Install exactly one official XGBoost distribution; no alternate-model fallback is supported"
+        )
     return metadata.version(accepted[0])

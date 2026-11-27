@@ -4,23 +4,31 @@ from __future__ import annotations
 
 import numpy as np
 import xgboost as xgb
+from mulenet_core.calibration import calibrated_probabilities
 from sklearn.ensemble import IsolationForest
 from sklearn.isotonic import IsotonicRegression
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import StratifiedKFold, cross_val_predict
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
-from mulenet_core.calibration import calibrated_probabilities
 
 
 def train_xgb(x_train, y_train, x_val, y_val, seed=42):
     if len(np.unique(y_train)) != 2 or len(np.unique(y_val)) != 2:
         raise ValueError("Training and validation each require both classes")
-    model = xgb.XGBClassifier(n_estimators=200, max_depth=3, learning_rate=0.05,
-                              subsample=1, colsample_bytree=1, tree_method="hist",
-                              n_jobs=1, random_state=seed, eval_metric="aucpr",
-                              early_stopping_rounds=12,
-                              scale_pos_weight=float((y_train == 0).sum() / (y_train == 1).sum()))
+    model = xgb.XGBClassifier(
+        n_estimators=200,
+        max_depth=3,
+        learning_rate=0.05,
+        subsample=1,
+        colsample_bytree=1,
+        tree_method="hist",
+        n_jobs=1,
+        random_state=seed,
+        eval_metric="aucpr",
+        early_stopping_rounds=12,
+        scale_pos_weight=float((y_train == 0).sum() / (y_train == 1).sum()),
+    )
     model.fit(x_train, y_train, eval_set=[(x_val, y_val)], verbose=False)
     return model
 

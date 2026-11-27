@@ -16,14 +16,21 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 DATASETS = {
-    "amlworld": ("ealtman2019/ibm-transactions-for-anti-money-laundering-aml", {"HI-Small": "HI-Small_Trans.csv", "LI-Small": "LI-Small_Trans.csv"}),
+    "amlworld": (
+        "ealtman2019/ibm-transactions-for-anti-money-laundering-aml",
+        {"HI-Small": "HI-Small_Trans.csv", "LI-Small": "LI-Small_Trans.csv"},
+    ),
     "paysim": ("ealaxi/paysim1", {"default": "PS_20174392719_1491204439457_log.csv"}),
 }
 
 
 def has_credentials() -> bool:
     config_dir = Path(os.environ.get("KAGGLE_CONFIG_DIR", str(Path.home() / ".kaggle")))
-    return bool(os.environ.get("KAGGLE_API_TOKEN") or (os.environ.get("KAGGLE_USERNAME") and os.environ.get("KAGGLE_KEY")) or (config_dir / "kaggle.json").is_file())
+    return bool(
+        os.environ.get("KAGGLE_API_TOKEN")
+        or (os.environ.get("KAGGLE_USERNAME") and os.environ.get("KAGGLE_KEY"))
+        or (config_dir / "kaggle.json").is_file()
+    )
 
 
 def file_hash(path: Path) -> str:
@@ -43,7 +50,9 @@ def download(dataset: str, variant: str, license_id: str) -> dict[str, str]:
     if dataset == "amlworld" and license_id != "CDLA-Sharing-1.0":
         raise ValueError("IBM distinguishes data license CDLA-Sharing-1.0 from its code license")
     if not has_credentials():
-        raise RuntimeError("Kaggle credentials absent. Authenticate locally or supply authorized CSV paths; never paste credentials into chat.")
+        raise RuntimeError(
+            "Kaggle credentials absent. Authenticate locally or supply authorized CSV paths; never paste credentials into chat."
+        )
     executable = shutil.which("kaggle")
     if executable is None:
         raise RuntimeError("Kaggle CLI missing; install the official kaggle package. No synthetic fallback.")
@@ -63,15 +72,34 @@ def download(dataset: str, variant: str, license_id: str) -> dict[str, str]:
         supplier = json.loads(metadata.read_text(encoding="utf-8"))
         if not supplier.get("licenses"):
             raise RuntimeError("Supplier metadata lacks license terms; review licensing before proceeding")
-        normalized = lambda value: "".join(character for character in value.casefold() if character.isalnum())
-        supplier_licenses = {normalized(item["name"]) for item in supplier["licenses"] if isinstance(item, dict) and isinstance(item.get("name"), str)}
+
+        def normalized(value):
+            return "".join(character for character in value.casefold() if character.isalnum())
+
+        supplier_licenses = {
+            normalized(item["name"])
+            for item in supplier["licenses"]
+            if isinstance(item, dict) and isinstance(item.get("name"), str)
+        }
         if normalized(license_id) not in supplier_licenses:
             raise RuntimeError("Acknowledged license differs from supplier metadata; resolve licensing explicitly")
-        subprocess.run([executable, "datasets", "download", "-d", slug, "-f", filename, "-p", str(staging), "--unzip"], check=True, timeout=3600)
+        subprocess.run(
+            [executable, "datasets", "download", "-d", slug, "-f", filename, "-p", str(staging), "--unzip"],
+            check=True,
+            timeout=3600,
+        )
         incoming = staging / filename
         if not incoming.is_file() or incoming.stat().st_size == 0:
             raise RuntimeError("Requested CSV missing or empty after download")
-        receipt = {"dataset": dataset, "variant": variant, "source": slug, "data_provenance": "synthetic", "sha256": file_hash(incoming), "supplier_metadata_sha256": file_hash(metadata), "operator_acknowledged_license": license_id}
+        receipt = {
+            "dataset": dataset,
+            "variant": variant,
+            "source": slug,
+            "data_provenance": "synthetic",
+            "sha256": file_hash(incoming),
+            "supplier_metadata_sha256": file_hash(metadata),
+            "operator_acknowledged_license": license_id,
+        }
         # Retain the actual metadata locally; the receipt identifies it by hash.
         metadata.replace(destination / f"{variant}-supplier-metadata.json")
         incoming.replace(target)
@@ -85,7 +113,10 @@ def download_public(dataset: str, variant: str, license_id: str) -> dict:
     slug, files = DATASETS[dataset]
     if variant not in files:
         raise ValueError("Unsupported dataset variant")
-    aliases = {"CC-BY-SA-4.0": "CC BY-SA 4.0", "CDLA-Sharing-1.0": "Community Data License Agreement - Sharing - Version 1.0"}
+    aliases = {
+        "CC-BY-SA-4.0": "CC BY-SA 4.0",
+        "CDLA-Sharing-1.0": "Community Data License Agreement - Sharing - Version 1.0",
+    }
     if license_id not in aliases:
         raise ValueError("Explicit supported supplier-license acknowledgment required")
     with urllib.request.urlopen(f"https://www.kaggle.com/api/v1/datasets/view/{slug}", timeout=60) as response:
@@ -128,9 +159,17 @@ def download_public(dataset: str, variant: str, license_id: str) -> dict:
                 raise ValueError("Provider response is not a CSV")
         metadata_bytes = (json.dumps(metadata, sort_keys=True) + "\n").encode()
         (directory / f"{variant}-supplier-metadata.json").write_bytes(metadata_bytes)
-        receipt = {"dataset": dataset, "variant": variant, "source": slug, "supplier_version": version,
-                   "data_provenance": "synthetic", "license": license_id, "sha256": file_hash(incoming),
-                   "supplier_metadata_sha256": hashlib.sha256(metadata_bytes).hexdigest(), "bytes": incoming.stat().st_size}
+        receipt = {
+            "dataset": dataset,
+            "variant": variant,
+            "source": slug,
+            "supplier_version": version,
+            "data_provenance": "synthetic",
+            "license": license_id,
+            "sha256": file_hash(incoming),
+            "supplier_metadata_sha256": hashlib.sha256(metadata_bytes).hexdigest(),
+            "bytes": incoming.stat().st_size,
+        }
         incoming.replace(target)
     report = ROOT / "reports" / f"data-{dataset}-{variant}.json"
     report.parent.mkdir(exist_ok=True)
@@ -143,7 +182,9 @@ def main() -> None:
     parser.add_argument("--dataset", choices=DATASETS, required=True)
     parser.add_argument("--variant", required=True)
     parser.add_argument("--license-acknowledged", required=True, metavar="LICENSE_ID")
-    parser.add_argument("--public", action="store_true", help="Use the supplier's public versioned endpoint without credentials")
+    parser.add_argument(
+        "--public", action="store_true", help="Use the supplier's public versioned endpoint without credentials"
+    )
     args = parser.parse_args()
     try:
         method = download_public if args.public else download

@@ -1,0 +1,8 @@
+[extend]
+useDefault = true
+
+[[rules]]
+id = "deployment-literal-secret"
+description = "Provider secret embedded in a deployment environment list"
+regex = '''(?im)^\s*-\s*key:\s*[A-Z0-9_]*(?:PASSWORD|SECRET|TOKEN|API_KEY)\s*\r?\n\s*value:\s*['"]?([A-Za-z0-9_~!@#%^&*+=/?.,:-]{16,})'''
+secretGroup = 1

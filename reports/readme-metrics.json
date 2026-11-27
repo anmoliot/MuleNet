@@ -1,0 +1,738 @@
+{
+  "data_provenance": "synthetic",
+  "latency": {
+    "burst": {
+      "completed_per_second": 1122.759113120471,
+      "concurrency": 8,
+      "elapsed_seconds": 0.17813260000548325,
+      "p50_ms": 6.02065,
+      "p95_ms": 10.132259999999993,
+      "p99_ms": 17.351504999999992,
+      "requests": 200
+    },
+    "data_provenance": "synthetic",
+    "end_to_end": {
+      "reason": "Requires Kafka-to-SSE correlation harness; model/HTTP timings are not end-to-end latency",
+      "status": "not_measured"
+    },
+    "identity": {
+      "excludes": [
+        "feature extraction",
+        "Redis",
+        "HTTP",
+        "Kafka",
+        "policy",
+        "SSE"
+      ],
+      "model": "tabular_graph",
+      "model_version": "dbfc0bf88743bb80"
+    },
+    "mode": "model",
+    "steady": {
+      "completed_per_second": 1048.237257945847,
+      "concurrency": 1,
+      "elapsed_seconds": 0.19079650001367554,
+      "p50_ms": 0.85985,
+      "p95_ms": 1.2082249999999997,
+      "p99_ms": 1.3810519999999997,
+      "requests": 200
+    }
+  },
+  "pipeline": {
+    "data_provenance": "synthetic",
+    "environment": {
+      "java": "17.0.21.1+2-1-26.04.1-Ubuntu",
+      "os": "Linux",
+      "os_version": "6.18.33.2-microsoft-standard-WSL2",
+      "processors": 16
+    },
+    "feature_schema_hash": "bea413d3e310fef42d833cd4e43ee335a5aae972ad36d8508d046f9e2a282414",
+    "gnn_path": "not measured: not the selected candidate path",
+    "http": {
+      "burst": {
+        "bootstrap": {
+          "limitation": "Requests share a host, account and service state; intervals do not model deployment or temporal dependence",
+          "method": "IID request bootstrap",
+          "resamples": 1000,
+          "seed": 42
+        },
+        "completed_per_second": 35.351537052555095,
+        "concurrency": 8,
+        "degraded_decisions": 0,
+        "durations_ms": [
+          168.26535,
+          269.014366,
+          272.678906,
+          179.845756,
+          265.991624,
+          275.176441,
+          213.262092,
+          238.562598,
+          230.799036,
+          298.032017,
+          227.910476,
+          221.752821,
+          228.80492,
+          227.291519,
+          232.020792,
+          218.757108,
+          325.415286,
+          280.415753,
+          141.414069,
+          249.964537,
+          178.424073,
+          229.770206,
+          231.7457,
+          219.675694,
+          174.844721,
+          146.334487,
+          196.967676,
+          246.487862,
+          246.884854,
+          260.582092,
+          131.27089,
+          275.501075,
+          232.816252,
+          190.343491,
+          294.138318,
+          218.935667,
+          153.59207,
+          227.419318,
+          212.408033,
+          198.250682,
+          190.331956,
+          187.716057,
+          155.768553,
+          175.989317,
+          206.192516,
+          189.951395,
+          185.003093,
+          193.292891,
+          186.916033,
+          186.852215,
+          190.34251,
+          203.496082,
+          124.982527,
+          179.463343,
+          207.816859,
+          177.35658,
+          173.115875,
+          174.650985,
+          282.687374,
+          234.564225,
+          250.792929,
+          208.630778,
+          207.797061,
+          203.493738,
+          202.711318,
+          183.318208,
+          202.248594,
+          91.270248,
+          213.885365,
+          166.759258,
+          155.770657,
+          216.32006,
+          215.471245,
+          208.211305,
+          171.997115,
+          272.247125,
+          257.884225,
+          247.402714,
+          200.871738,
+          214.28993,
+          89.304289,
+          209.239867,
+          177.464781,
+          182.853391,
+          421.19698,
+          418.74041,
+          358.757949,
+          411.727605,
+          411.334441,
+          402.556571,
+          406.568434,
+          384.494671,
+          161.276343,
+          140.229678,
+          178.867465,
+          212.888184,
+          211.766472,
+          217.618658,
+          167.034793,
+          182.077652
+        ],
+        "elapsed_seconds": 2.828731318,
+        "quantiles": {
+          "p50_ms": {
+            "ci95": [
+              200.871738,
+              218.2891611375
+            ],
+            "value": 210.5031695
+          },
+          "p95_ms": {
+            "ci95": [
+              283.25992119999995,
+              412.07824524999995
+            ],
+            "value": 402.75716415
+          },
+          "p99_ms": {
+            "ci95": [
+              384.8616940900002,
+              421.19698
+            ],
+            "value": 418.76497570000004
+          }
+        },
+        "requests": 100,
+        "warmup_requests": 5
+      },
+      "steady": {
+        "bootstrap": {
+          "limitation": "Requests share a host, account and service state; intervals do not model deployment or temporal dependence",
+          "method": "IID request bootstrap",
+          "resamples": 1000,
+          "seed": 42
+        },
+        "completed_per_second": 32.31241059273122,
+        "concurrency": 1,
+        "degraded_decisions": 0,
+        "durations_ms": [
+          32.551051,
+          31.36642,
+          32.1272,
+          32.772374,
+          34.899757,
+          31.354617,
+          33.754306,
+          30.080218,
+          28.681759,
+          33.963057,
+          29.773136,
+          28.910984,
+          30.513157,
+          29.832777,
+          31.264841,
+          31.76347,
+          31.801742,
+          32.010242,
+          30.049251,
+          31.460127,
+          31.701262,
+          27.177641,
+          29.816987,
+          31.73578,
+          35.303934,
+          31.507794,
+          36.390082,
+          31.726682,
+          29.400681,
+          26.30398,
+          30.599418,
+          27.594016,
+          31.62671,
+          30.455634,
+          29.249168,
+          31.652604,
+          32.718243,
+          28.397368,
+          29.915631,
+          27.719667,
+          26.222674,
+          28.691016,
+          29.777959,
+          30.16415,
+          31.730579,
+          30.768775,
+          28.006287,
+          31.743514,
+          27.607733,
+          28.605676,
+          27.850306,
+          29.225875,
+          28.2647,
+          26.278282,
+          29.392856,
+          31.269679,
+          30.958118,
+          31.879818,
+          28.312579,
+          27.843809,
+          27.918518,
+          28.888124,
+          38.970836,
+          27.27463,
+          27.004819,
+          27.932868,
+          26.160292,
+          28.580865,
+          28.917895,
+          31.974174,
+          29.68175,
+          29.86376,
+          30.336627,
+          28.208576,
+          27.018544,
+          33.900218,
+          33.741814,
+          31.325365,
+          38.616622,
+          38.68228,
+          31.021221,
+          30.326618,
+          29.744366,
+          30.908721,
+          31.570781,
+          39.040224,
+          35.690771,
+          32.150323,
+          36.225079,
+          33.935164,
+          28.023339,
+          29.723783,
+          30.324755,
+          32.173216,
+          35.541583,
+          31.605095,
+          34.264323,
+          30.76812,
+          30.480115,
+          30.6013
+        ],
+        "elapsed_seconds": 3.094786126,
+        "quantiles": {
+          "p50_ms": {
+            "ci95": [
+              29.9477782125,
+              31.3182323875
+            ],
+            "value": 30.5562875
+          },
+          "p95_ms": {
+            "ci95": [
+              34.041686238749996,
+              38.6967078
+            ],
+            "value": 36.23332915
+          },
+          "p99_ms": {
+            "ci95": [
+              36.22672903,
+              39.040224
+            ],
+            "value": 38.97152988
+          }
+        },
+        "requests": 100,
+        "warmup_requests": 5
+      }
+    },
+    "http_boundary": "Client call including JWT mint, HTTP, cache, features, model and response parsing; snapshot preparation excluded",
+    "kafka_boundary": "Immediately before producer.send to real HTTP SSE receipt of both committed account decisions; producer ack, Kafka, feature fetch, scoring, policy, persistence and SSE included; ingestion REST/outbox and network outside host excluded",
+    "kafka_to_sse": {
+      "burst": {
+        "bootstrap": {
+          "limitation": "Requests share a host, account and service state; intervals do not model deployment or temporal dependence",
+          "method": "IID request bootstrap",
+          "resamples": 1000,
+          "seed": 42
+        },
+        "completed_per_second": 6.7648427760694965,
+        "concurrency": 8,
+        "decisions_per_transaction": 2,
+        "degraded_decisions": 0,
+        "durations_ms": [
+          1264.10355,
+          1008.584793,
+          1264.357714,
+          499.420007,
+          499.605363,
+          753.544751,
+          1008.270816,
+          1517.005862,
+          1267.363494,
+          1267.649067,
+          1014.768446,
+          1016.262625,
+          1016.358685,
+          1015.2131,
+          1015.182739,
+          1269.711166,
+          1270.711489,
+          1271.127711,
+          1525.185454,
+          1267.844126,
+          1520.723831,
+          1270.453513,
+          1524.049099,
+          1004.545353,
+          1011.771352,
+          1012.144859,
+          1013.756131,
+          1013.717138,
+          762.479724,
+          1015.79945,
+          1012.950177,
+          1266.506174,
+          1012.673894,
+          1266.081291,
+          1264.116018,
+          1009.924724,
+          1264.857983,
+          1264.229485,
+          1266.754167,
+          1013.122043,
+          1266.424432,
+          1014.265716,
+          1013.584266,
+          1014.860657,
+          1015.164585,
+          1269.831877,
+          1014.120331,
+          1267.200881,
+          1269.644773,
+          1014.902815,
+          1268.504865,
+          1268.374881,
+          1269.198287,
+          1015.991889,
+          1270.76583,
+          1018.857977,
+          1018.672111,
+          1015.802423,
+          1016.852314,
+          1015.822092,
+          1016.513453,
+          1015.333721,
+          1014.076424,
+          1275.921608,
+          1019.885462,
+          1275.162732,
+          1275.225369,
+          1276.360098,
+          1275.306767,
+          1274.709037,
+          1271.916704,
+          1271.369912,
+          1265.2289,
+          1014.716283,
+          1267.828112,
+          1014.505063,
+          1269.267463,
+          1014.497594,
+          1005.884641,
+          1006.191585,
+          1014.424739,
+          1269.664018,
+          1269.95371,
+          1016.722223,
+          1270.054588,
+          1268.907622,
+          1271.369311,
+          1271.836371,
+          1271.647048,
+          1017.453076,
+          1266.68077,
+          1271.432449,
+          1014.767843,
+          1268.361347,
+          1273.486489,
+          1018.549278,
+          1018.216066,
+          1270.899967,
+          1016.026789,
+          1016.581951
+        ],
+        "elapsed_seconds": 14.782309554,
+        "quantiles": {
+          "p50_ms": {
+            "ci95": [
+              1016.4360690000001,
+              1266.7174685
+            ],
+            "value": 1141.994506
+          },
+          "p95_ms": {
+            "ci95": [
+              1273.5476164,
+              1520.8900944
+            ],
+            "value": 1275.9435325000002
+          },
+          "p99_ms": {
+            "ci95": [
+              1278.3324505400014,
+              1525.185454
+            ],
+            "value": 1524.06046255
+          }
+        },
+        "requests": 100,
+        "warmup_requests": 5
+      },
+      "steady": {
+        "bootstrap": {
+          "limitation": "Requests share a host, account and service state; intervals do not model deployment or temporal dependence",
+          "method": "IID request bootstrap",
+          "resamples": 1000,
+          "seed": 42
+        },
+        "completed_per_second": 1.9705425231401423,
+        "concurrency": 1,
+        "decisions_per_transaction": 2,
+        "degraded_decisions": 0,
+        "durations_ms": [
+          500.554431,
+          500.673749,
+          501.601297,
+          500.243681,
+          500.934759,
+          499.390292,
+          500.287412,
+          500.574788,
+          500.687023,
+          499.940541,
+          500.221995,
+          499.570729,
+          501.617119,
+          500.754538,
+          498.711031,
+          499.947962,
+          501.318617,
+          500.05618,
+          499.610814,
+          499.259243,
+          500.037885,
+          500.44128,
+          498.263914,
+          499.563587,
+          499.48502,
+          498.953387,
+          500.051641,
+          499.734912,
+          500.162187,
+          498.633673,
+          500.206152,
+          501.157109,
+          501.994478,
+          498.234044,
+          752.908756,
+          500.365819,
+          248.47816,
+          750.280691,
+          499.862801,
+          500.52402,
+          499.017559,
+          499.589811,
+          499.157018,
+          499.883144,
+          500.309559,
+          498.433408,
+          500.097414,
+          499.700843,
+          500.68973,
+          498.881415,
+          506.458368,
+          497.085647,
+          487.655796,
+          499.737548,
+          499.149064,
+          499.249842,
+          500.56961,
+          498.181352,
+          502.486058,
+          501.276716,
+          502.459107,
+          495.691118,
+          498.373717,
+          502.028608,
+          498.632435,
+          497.5353,
+          495.194717,
+          500.314985,
+          500.342402,
+          502.560222,
+          503.853575,
+          505.433825,
+          499.518982,
+          497.155328,
+          499.675741,
+          498.880016,
+          500.274654,
+          499.966788,
+          500.155535,
+          499.973797,
+          500.447698,
+          498.30391,
+          500.937781,
+          497.32335,
+          500.868462,
+          497.590323,
+          503.48173,
+          500.303547,
+          500.469525,
+          500.040063,
+          497.554311,
+          498.800486,
+          501.416234,
+          499.88233,
+          513.880529,
+          499.323597,
+          499.814992,
+          499.415841,
+          499.76432,
+          499.107408
+        ],
+        "elapsed_seconds": 50.747445856,
+        "quantiles": {
+          "p50_ms": {
+            "ci95": [
+              499.734912,
+              500.2142715375
+            ],
+            "value": 499.9702925
+          },
+          "p95_ms": {
+            "ci95": [
+              502.05013295000003,
+              525.7005370999993
+            ],
+            "value": 503.93258749999995
+          },
+          "p99_ms": {
+            "ci95": [
+              503.95384454000003,
+              752.908756
+            ],
+            "value": 750.30697165
+          }
+        },
+        "requests": 100,
+        "warmup_requests": 5
+      }
+    },
+    "latency_clock": "Client process monotonic clock, individual requests; no batch-duration division",
+    "limitations": [
+      "Closed-loop fixed concurrency; worker queue wait is outside request timing; no open-loop capacity claim",
+      "Synthetic hot-account workload; a single-node local stack, not production capacity",
+      "Warmups omitted from quantiles; initial service startup excluded",
+      "Kafka starts before producer send, not after broker acknowledgment",
+      "SSE includes network serialization and receipt of both account decisions",
+      "Failed/degraded runs fail the benchmark rather than being dropped from percentiles"
+    ],
+    "ml_image_id": "sha256:9e3065801b1da7da1abd11d5a72e0171ebd78ac9d75d95ac01367f3a74643384",
+    "model": "tabular_graph",
+    "model_version": "ef1a63163a91d92e",
+    "production_approved": false,
+    "raw_sha256": "99e350d5e7225b91055b85ebaced3bb9f9313c612297d2ec6d3f5bbf43eb0a38",
+    "scope": "Local single-broker hot-account workload; not a production SLO or GNN-path measurement",
+    "status": "measured",
+    "test_receipt_sha256": "a2a845c82516e5da0611d79417b4b922cdfedb6fcf45df236496919070f50cfa"
+  },
+  "rows": [
+    {
+      "dataset": "Local simulator",
+      "fpr": {
+        "ci95": [
+          0.0,
+          0.02121862262512599
+        ],
+        "interval_method": "exact binomial",
+        "value": 0.0
+      },
+      "model": "tabular_graph",
+      "operating_point": "VAL only; maximize recall at empirical FPR <= 0.001",
+      "pr_auc": {
+        "ci95": [
+          0.076291897827092,
+          0.3194174757281554
+        ],
+        "interval_method": "bootstrap",
+        "value": 0.13604341203351106
+      },
+      "recall": {
+        "ci95": [
+          0.0,
+          0.36941664755281917
+        ],
+        "interval_method": "exact binomial",
+        "value": 0.0
+      },
+      "split": "temporal",
+      "test_rows": 180,
+      "threshold": 0.25000000000000006
+    },
+    {
+      "dataset": "Local simulator",
+      "fpr": {
+        "ci95": [
+          0.0,
+          0.011569397511906214
+        ],
+        "interval_method": "exact binomial",
+        "value": 0.0
+      },
+      "model": "tabular_graph",
+      "operating_point": "VAL only; maximize recall at empirical FPR <= 0.001",
+      "pr_auc": {
+        "ci95": [
+          0.06435732165721067,
+          0.19147205358775074
+        ],
+        "interval_method": "bootstrap",
+        "value": 0.09238064791133845
+      },
+      "recall": {
+        "ci95": [
+          0.0,
+          0.14818512891522437
+        ],
+        "interval_method": "exact binomial",
+        "value": 0.0
+      },
+      "split": "entity",
+      "test_rows": 340,
+      "threshold": 0.28571429848670965
+    },
+    {
+      "dataset": "PaySim (pre-transfer)",
+      "fpr": {
+        "ci95": [
+          0.000879706038053125,
+          0.0012378164606234236
+        ],
+        "interval_method": "bootstrap",
+        "value": 0.0010509762401519633
+      },
+      "model": "XGBoost",
+      "operating_point": "VAL only; empirical FPR bound in training protocol",
+      "pr_auc": {
+        "ci95": [
+          0.8837176925620351,
+          0.9061010563706773
+        ],
+        "interval_method": "bootstrap",
+        "value": 0.8952151454841413
+      },
+      "recall": {
+        "ci95": [
+          0.7229417067307692,
+          0.765625
+        ],
+        "interval_method": "bootstrap",
+        "value": 0.7445913461538461
+      },
+      "split": "temporal",
+      "test_rows": 130116,
+      "threshold": 0.5
+    }
+  ],
+  "source_canonical_json_sha256": {
+    "latency-pipeline.json": "bbdec4123e63827e3ecf283be07c89c1c154801bb8a8e29a739147f796dce971",
+    "latency.json": "7c4f8e3e2e28ff686f175bd5b13e31aa4ed5d44ceb3f4284aab6e9cefb975aa9",
+    "metrics-paysim-temporal.json": "25174a1f65620d66e2c99177a48bcb439d8f3a87ead9ebfaf47ccd4307b255fc",
+    "metrics-sim-entity.json": "36e6ecc93ef077f0752ae8742b1efad5c34b2eefeafae52790347518e6fd54ab",
+    "metrics-sim-temporal.json": "bdc18d47b48ada95ae4c1708bfd5261e2071f9e1a875d6364ebbf924b1c69bf3"
+  }
+}

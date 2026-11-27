@@ -1,0 +1,1422 @@
+{
+  "artifact_and_existing_registry_files_unchanged": true,
+  "baseline": {
+    "action": "review_data_then_shadow_retrain; never_auto_promote",
+    "model": "tabular_graph",
+    "model_version": "ef1a63163a91d92e",
+    "ready": true,
+    "reference_sha256": "7a2808d73e314682b4006f79f961f00783776f1b4c429996ee983edbcbd3dae3",
+    "review_required": false,
+    "samples": 600,
+    "statistics": {
+      "account_age_known": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "account_age_seconds": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "balance_delta_error_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "balance_delta_error_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "balance_delta_error_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "balance_delta_observed_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "balance_delta_observed_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "balance_delta_observed_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "burstiness_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "burstiness_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "burstiness_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "clustering_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "clustering_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "clustering_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "counterparty_entropy_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "counterparty_entropy_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "counterparty_entropy_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "cycle_count_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "cycle_count_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "cycle_count_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "device_observed_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "device_observed_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "device_observed_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "device_sharing_degree_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "device_sharing_degree_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "device_sharing_degree_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "dwell_observed_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "dwell_observed_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "dwell_observed_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "dwell_seconds_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "dwell_seconds_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "dwell_seconds_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "fan_in_ratio_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "fan_in_ratio_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "fan_in_ratio_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "fan_out_ratio_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "fan_out_ratio_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "fan_out_ratio_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "in_degree_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "in_degree_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "in_degree_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "in_flow_hop1_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "in_flow_hop1_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "in_flow_hop1_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "in_flow_hop2_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "in_flow_hop2_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "in_flow_hop2_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "in_flow_hop3_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "in_flow_hop3_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "in_flow_hop3_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "ip_observed_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "ip_observed_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "ip_observed_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "ip_sharing_degree_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "ip_sharing_degree_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "ip_sharing_degree_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "log_recv_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "log_recv_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "log_recv_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "log_sent_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "log_sent_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "log_sent_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "new_payee_ratio_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "new_payee_ratio_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "new_payee_ratio_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "out_degree_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "out_degree_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "out_degree_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "out_flow_hop1_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "out_flow_hop1_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "out_flow_hop1_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "out_flow_hop2_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "out_flow_hop2_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "out_flow_hop2_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "out_flow_hop3_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "out_flow_hop3_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "out_flow_hop3_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "pagerank_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "pagerank_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "pagerank_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "pass_through_ratio_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "pass_through_ratio_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "pass_through_ratio_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "round_amount_ratio_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "round_amount_ratio_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "round_amount_ratio_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "score": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "structuring_score_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "structuring_score_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "structuring_score_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "unique_in_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "unique_in_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "unique_in_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "unique_out_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "unique_out_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "unique_out_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "velocity_zscore_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "velocity_zscore_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "velocity_zscore_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      }
+    }
+  },
+  "data_provenance": "synthetic",
+  "limitations": [
+    "Offline behavioral probe, not a calibrated false-drift-alarm rate",
+    "PSI and KS are descriptive monitoring signals; no customer action or automated promotion"
+  ],
+  "model_version": "ef1a63163a91d92e",
+  "passed": true,
+  "probe": "Constructed train-reference replay and feature shift, NOT live fraud effectiveness",
+  "reference_sha256": "7a2808d73e314682b4006f79f961f00783776f1b4c429996ee983edbcbd3dae3",
+  "shifted": {
+    "action": "review_data_then_shadow_retrain; never_auto_promote",
+    "model": "tabular_graph",
+    "model_version": "ef1a63163a91d92e",
+    "ready": true,
+    "reference_sha256": "7a2808d73e314682b4006f79f961f00783776f1b4c429996ee983edbcbd3dae3",
+    "review_required": true,
+    "samples": 600,
+    "statistics": {
+      "account_age_known": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "account_age_seconds": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "balance_delta_error_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "balance_delta_error_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "balance_delta_error_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "balance_delta_observed_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "balance_delta_observed_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "balance_delta_observed_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "burstiness_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "burstiness_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "burstiness_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "clustering_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "clustering_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "clustering_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "counterparty_entropy_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "counterparty_entropy_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "counterparty_entropy_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "cycle_count_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "cycle_count_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "cycle_count_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "device_observed_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "device_observed_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "device_observed_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "device_sharing_degree_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "device_sharing_degree_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "device_sharing_degree_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "dwell_observed_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "dwell_observed_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "dwell_observed_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "dwell_seconds_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "dwell_seconds_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "dwell_seconds_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "fan_in_ratio_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "fan_in_ratio_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "fan_in_ratio_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "fan_out_ratio_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "fan_out_ratio_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "fan_out_ratio_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "in_degree_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "in_degree_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "in_degree_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "in_flow_hop1_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "in_flow_hop1_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "in_flow_hop1_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "in_flow_hop2_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "in_flow_hop2_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "in_flow_hop2_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "in_flow_hop3_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "in_flow_hop3_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "in_flow_hop3_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "ip_observed_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "ip_observed_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "ip_observed_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "ip_sharing_degree_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "ip_sharing_degree_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "ip_sharing_degree_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "log_recv_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "log_recv_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "log_recv_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "log_sent_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "log_sent_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "log_sent_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 1.0,
+        "ks_pvalue": 0.0,
+        "psi": 12.065303269100397,
+        "review_trigger": true
+      },
+      "new_payee_ratio_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "new_payee_ratio_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "new_payee_ratio_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "out_degree_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "out_degree_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "out_degree_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "out_flow_hop1_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "out_flow_hop1_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "out_flow_hop1_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "out_flow_hop2_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "out_flow_hop2_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "out_flow_hop2_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "out_flow_hop3_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "out_flow_hop3_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "out_flow_hop3_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "pagerank_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "pagerank_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "pagerank_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "pass_through_ratio_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "pass_through_ratio_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "pass_through_ratio_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "round_amount_ratio_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "round_amount_ratio_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "round_amount_ratio_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "score": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "structuring_score_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "structuring_score_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "structuring_score_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "unique_in_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "unique_in_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "unique_in_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "unique_out_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "unique_out_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "unique_out_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "velocity_zscore_3600s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "velocity_zscore_604800s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      },
+      "velocity_zscore_86400s": {
+        "action": "review_data_then_shadow_retrain; never_auto_promote",
+        "ks": 0.0,
+        "ks_pvalue": 1.0,
+        "psi": 0.0,
+        "review_trigger": false
+      }
+    }
+  },
+  "source_split": "TRAIN",
+  "tenant_isolation_verified": true
+}

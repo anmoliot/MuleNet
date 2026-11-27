@@ -42,32 +42,42 @@ def temporal_split(rows: Iterable[Example], train_end: int, val_end: int) -> Spl
 
 
 def entity_partitions(events: Iterable[Transaction], seed: int = 42) -> dict[str, str]:
-    graph = nx.Graph()
+    graph: nx.Graph[str] = nx.Graph()
     ring_members: dict[str, str] = {}
     for event in canonical_events(events):
         graph.add_edge(event.source, event.target)
         if event.ring_id:
             prior = ring_members.setdefault(event.ring_id, event.source)
             graph.add_edge(prior, event.source)
-    components = sorted((tuple(sorted(c)) for c in nx.connected_components(graph)))
+    components = sorted(tuple(sorted(c)) for c in nx.connected_components(graph))
     if len(components) < 3:
         raise ValueError("Need independent components/rings for entity-disjoint train, validation, test")
     random.Random(seed).shuffle(components)
     train_end = max(1, min(len(components) - 2, int(len(components) * 0.6)))
     val_end = max(train_end + 1, min(len(components) - 1, int(len(components) * 0.8)))
-    return {node: ("train" if i < train_end else "val" if i < val_end else "test") for i, comp in enumerate(components) for node in comp}
+    return {
+        node: ("train" if i < train_end else "val" if i < val_end else "test")
+        for i, comp in enumerate(components)
+        for node in comp
+    }
 
 
-def partition_events(events: Iterable[Transaction], assignments: dict[str, str], partition: str) -> tuple[Transaction, ...]:
+def partition_events(
+    events: Iterable[Transaction], assignments: dict[str, str], partition: str
+) -> tuple[Transaction, ...]:
     if partition not in {"train", "val", "test"}:
         raise ValueError("Unknown partition")
     return tuple(e for e in canonical_events(events) if assignments[e.source] == assignments[e.target] == partition)
 
 
 def entity_split(
-    events: Iterable[Transaction], points: Iterable[tuple[str, int]], horizon: int,
-    complete_through: int, config: FeatureConfig = FeatureConfig(),
-    accounts: Iterable[Account] = (), seed: int = 42,
+    events: Iterable[Transaction],
+    points: Iterable[tuple[str, int]],
+    horizon: int,
+    complete_through: int,
+    config: FeatureConfig = FeatureConfig(),
+    accounts: Iterable[Account] = (),
+    seed: int = 42,
 ) -> Split:
     ordered = canonical_events(events)
     assignments = entity_partitions(ordered, seed)
@@ -79,7 +89,9 @@ def entity_split(
         selected = partition_events(ordered, assignments, name)
         selected_points = [(account, ts) for account, ts in point_list if assignments[account] == name]
         selected_accounts = [account for account in registry if assignments.get(account.account_id) == name]
-        groups.append(tuple(materialize(selected, selected_points, horizon, complete_through, config, selected_accounts)))
+        groups.append(
+            tuple(materialize(selected, selected_points, horizon, complete_through, config, selected_accounts))
+        )
     if not all(groups):
         raise ValueError("Entity split needs nonempty training, validation and test examples")
     result = Split(groups[0], groups[1], groups[2])
@@ -93,7 +105,10 @@ def assert_entity_isolation(split: Split) -> None:
     if groups[0] & groups[1] or groups[0] & groups[2] or groups[1] & groups[2]:
         raise ValueError("Account appears in multiple entity partitions")
     # Entity-disjoint features must also be materialized from isolated edges.
-    dependencies = [{e for row in rows for e in row.feature_event_ids + row.label_event_ids} for rows in (split.train, split.val, split.test)]
+    dependencies = [
+        {e for row in rows for e in row.feature_event_ids + row.label_event_ids}
+        for rows in (split.train, split.val, split.test)
+    ]
     if dependencies[0] & dependencies[1] or dependencies[0] & dependencies[2] or dependencies[1] & dependencies[2]:
         raise ValueError("Edge appears in multiple entity partitions")
 

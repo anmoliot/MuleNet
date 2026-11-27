@@ -3,13 +3,14 @@
 import argparse
 import hashlib
 import json
-import os
 from pathlib import Path
 
 
 def verify(entries, expected_head=None, *, allow_unanchored=False):
     if not expected_head and not allow_unanchored:
-        raise ValueError("An independently witnessed --expected-head is required (or explicit --allow-unanchored for diagnostics)")
+        raise ValueError(
+            "An independently witnessed --expected-head is required (or explicit --allow-unanchored for diagnostics)"
+        )
     previous = "GENESIS"
     for sequence, entry in enumerate(entries, 1):
         if entry["sequence"] != sequence or entry["previous_hash"] != previous:
@@ -20,8 +21,12 @@ def verify(entries, expected_head=None, *, allow_unanchored=False):
         previous = actual
     if expected_head and expected_head != previous:
         raise ValueError("Audit head differs from external witness (including truncation)")
-    return {"verified_entries": len(entries), "head": previous, "anchored": bool(expected_head),
-            "scope": "Hash-chain integrity; not proof that the operator's original action was legitimate"}
+    return {
+        "verified_entries": len(entries),
+        "head": previous,
+        "anchored": bool(expected_head),
+        "scope": "Hash-chain integrity; not proof that the operator's original action was legitimate",
+    }
 
 
 def main():

@@ -40,19 +40,32 @@ def profile(path: Path, paysim: bool):
             maximum = ts if maximum is None or ts > maximum else maximum
             currencies[currency] += 1
             kinds[kind] += 1
-    return {"file": path.name, "sha256": file_hash(path), "data_provenance": "synthetic",
-            "transactions": rows, "flagged_transactions": flagged, "unique_originators": len(senders),
-            "unique_destinations": len(receivers), "accounts": len(senders | receivers),
-            "originator_unique_per_transaction": len(senders) / rows, "minimum_time": minimum, "maximum_time": maximum,
-            "currencies": dict(sorted(currencies.items())), "kinds": dict(sorted(kinds.items()))}
+    return {
+        "file": path.name,
+        "sha256": file_hash(path),
+        "data_provenance": "synthetic",
+        "transactions": rows,
+        "flagged_transactions": flagged,
+        "unique_originators": len(senders),
+        "unique_destinations": len(receivers),
+        "accounts": len(senders | receivers),
+        "originator_unique_per_transaction": len(senders) / rows,
+        "minimum_time": minimum,
+        "maximum_time": maximum,
+        "currencies": dict(sorted(currencies.items())),
+        "kinds": dict(sorted(kinds.items())),
+    }
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--dataset", choices=["paysim", "HI-Small", "LI-Small", "all"], default="all")
     args = parser.parse_args()
-    paths = {"paysim": ROOT / "data/raw/paysim/PS_20174392719_1491204439457_log.csv",
-             "HI-Small": ROOT / "data/raw/amlworld/HI-Small_Trans.csv", "LI-Small": ROOT / "data/raw/amlworld/LI-Small_Trans.csv"}
+    paths = {
+        "paysim": ROOT / "data/raw/paysim/PS_20174392719_1491204439457_log.csv",
+        "HI-Small": ROOT / "data/raw/amlworld/HI-Small_Trans.csv",
+        "LI-Small": ROOT / "data/raw/amlworld/LI-Small_Trans.csv",
+    }
     for name, path in paths.items():
         if args.dataset in {name, "all"}:
             result = profile(path, name == "paysim")

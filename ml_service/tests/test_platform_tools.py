@@ -1,9 +1,9 @@
 import hashlib
 import importlib.util
 import json
-from pathlib import Path
 import subprocess
 import sys
+from pathlib import Path
 
 import pytest
 
@@ -21,18 +21,30 @@ def test_bootstrap_is_unique_exclusive_and_never_prints_passwords(tmp_path):
     paths = [tmp_path / "first.env", tmp_path / "second.env"]
     results = []
     for path in paths:
-        completed = subprocess.run([sys.executable, str(ROOT / "scripts/bootstrap_secrets.py"), "--demo", "--out", str(path)], capture_output=True, text=True)
+        completed = subprocess.run(
+            [sys.executable, str(ROOT / "scripts/bootstrap_secrets.py"), "--demo", "--out", str(path)],
+            capture_output=True,
+            text=True,
+        )
         assert completed.returncode == 0
         values = dict(line.split("=", 1) for line in path.read_text().splitlines() if line and not line.startswith("#"))
         assert values["MULENET_ALLOW_SYNTHETIC"] == "true"
         assert values["SPRING_PROFILES_ACTIVE"] == "platform,demo"
-        secrets = [value for key, value in values.items() if "PASSWORD" in key or "SECRET" in key or "KEY" in key and key != "KEYCLOAK_ADMIN"]
+        secrets = [
+            value
+            for key, value in values.items()
+            if "PASSWORD" in key or "SECRET" in key or "KEY" in key and key != "KEYCLOAK_ADMIN"
+        ]
         assert len(set(secrets)) == len(secrets)
         assert all(value not in completed.stdout for value in secrets)
         results.append(values)
     assert results[0]["MULENET_SERVICE_SECRET"] != results[1]["MULENET_SERVICE_SECRET"]
     before = paths[0].read_bytes()
-    completed = subprocess.run([sys.executable, str(ROOT / "scripts/bootstrap_secrets.py"), "--out", str(paths[0])], capture_output=True, text=True)
+    completed = subprocess.run(
+        [sys.executable, str(ROOT / "scripts/bootstrap_secrets.py"), "--out", str(paths[0])],
+        capture_output=True,
+        text=True,
+    )
     assert completed.returncode != 0 and paths[0].read_bytes() == before
 
 
@@ -55,7 +67,9 @@ def test_audit_detects_tamper_reordering_and_truncation(tmp_path, monkeypatch):
         audit.verify([dict(entries[0], payload="changed")], allow_unanchored=True)
     input_path, output = tmp_path / "audit.json", tmp_path / "verified.json"
     input_path.write_text(json.dumps(entries), encoding="utf-8")
-    monkeypatch.setattr(sys, "argv", ["verify_audit", "--file", str(input_path), "--expected-head", previous, "--out", str(output)])
+    monkeypatch.setattr(
+        sys, "argv", ["verify_audit", "--file", str(input_path), "--expected-head", previous, "--out", str(output)]
+    )
     audit.main()
     assert json.loads(output.read_text())["verified_entries"] == len(entries)
 

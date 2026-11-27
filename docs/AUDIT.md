@@ -4,11 +4,28 @@ Baseline: `85b10e6e5df87f6ce7f44bb2ea6e12e66d65cf8a` (origin/main).
 The configured workspace was absent; a clean copy was cloned from the named
 remote. Earlier local uncommitted files were not recovered. Scope: source,
 configuration, migrations, tests, notebook source, tracked metrics/model metadata.
-All findings are OPEN unless identified as a corrected suspicion. Static inspection
+Findings in the baseline table were OPEN unless identified as a corrected suspicion.
+Later remediation is tracked below and in DOD_CHECKLIST.md. Static inspection
 is not a passing runtime test. Historical numbers quoted here are disputed source
 claims/configuration, not newly measured performance.
 
 ## Findings
+
+Root-cleanup follow-up: a provider credential was missed by the original audit
+and default Gitleaks rules. This is a real coverage gap, not a clean-history claim.
+The retired `render.yaml:34` at baseline history commit
+`cc68c1159c1e37a6d579634d8a76dba6cfad98b8` contains `- key: NEO4J_PASSWORD`,
+followed by a literal value. The value is intentionally not quoted. The expanded
+redacted history scan now detects it. Source removal is complete; provider
+revocation and historical exposure response remain OPEN. See
+[security exceptions](SECURITY_EXCEPTIONS.md).
+
+The operator also identified the stale root-file inventory. `pytest.ini:1`
+contains `[pytest]`, taking precedence over the newer pyproject configuration;
+`MuleNet_Kaggle_Trainer.ipynb:121` calls the retired
+`ml_service/training/retrain_models.py`. These competing execution paths,
+unsupported pitch/metric documents and the outdated deployment definition are
+removed. `scripts/check_repo_hygiene.py` checks for their reintroduction.
 
 P0: immediate exposure/unsafe operation. P1: substantial correctness/security risk.
 P2: reproducibility/operability gap. Evidence is an exact source substring at the

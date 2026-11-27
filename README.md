@@ -1,234 +1,154 @@
-# MuleNet: Real-Time AI & Graph-Native Money Mule Detection
+# MuleNet
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
-[![Affiliation](https://img.shields.io/badge/Team-NoString-blueviolet.svg)](#-license--affiliation)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688.svg?logo=fastapi)](https://fastapi.tiangolo.com)
-[![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.1+-6DB33F.svg?logo=springboot)](https://spring.io/projects/spring-boot)
-[![React](https://img.shields.io/badge/React-19.0+-61DAFB.svg?logo=react)](https://react.dev)
-[![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED.svg?logo=docker)](https://www.docker.com)
+MuleNet is a research platform for evaluating graph-based money-mule detection
+and investigator review workflows. It combines Spring Boot, FastAPI, React,
+Kafka, Postgres, Redis and optional Keycloak OIDC. Current evidence comes from
+simulated datasets, not bank deployments. The project is under active hardening
+and is **not approved for production decisions**.
 
-> **MuleNet** is an enterprise-grade, graph-native real-time fraud decisioning platform engineered to detect and dismantle organized money mule networks (smurfing, multi-hop layering, pass-through mules, and coordinated syndicates) in milliseconds before illicit cash-outs occur.
+## Current Status
 
----
+Shared as-of features, future-only labels, real message-passing models, verified
+model bundles and an authenticated, audited backend are implemented and tested.
+The replacement investigator console uses the authenticated platform API, with
+no substitute decision data. Its browser acceptance is not yet green: the latest
+run passes desktop workflows but fails mobile login. Full-network AMLworld
+evaluation, full deployment-scale load testing and clean-checkout acceptance remain
+unfinished. Local measured boundaries are detailed below. The
+[completion checklist](docs/DOD_CHECKLIST.md) is authoritative.
 
-## 📸 Platform Interface Preview
+Security acceptance is **failed**, not waived: licensed Spring patches and
+unfixed distribution advisories remain open. A credential found in a retired
+deployment file must also be revoked at its provider. See
+[security exceptions](docs/SECURITY_EXCEPTIONS.md).
 
-### 1. Unified Intelligence Dashboard
-Real-time operational command center providing live risk posture, alert severity distribution, active layering investigations, and immediate freeze telemetry.
+The ML service exposes authenticated, tenant-isolated drift signals tied to a
+verified training reference. Insufficient windows are explicitly not ready;
+drift requests review, never an automatic hold or model promotion. Older bundles
+without that reference require the [documented upgrade](docs/RUNBOOK.md).
 
-![Intelligence Dashboard](docs/screenshots/dashboard.png)
-
----
-
-### 2. Mule Flow Explorer & Telemetry Bar
-Interactive canvas visualizing transaction paths with glowing money badges in Indian Rupees (`₹`), compact Lakh notation (`1.18 L`), hop velocity metrics, and dispersal threshold filtering (`> ₹50k`).
-
-![Mule Flow Explorer](docs/screenshots/graph_explorer.png)
-
----
-
-### 3. Account Cash Flow Dynamics & Direct Hop Ledger
-Deep-dive account dossier displaying inflow vs. outflow cards, pass-through laundering velocity gauge (`% funds drained immediately`), and individual transaction ledgers.
-
-![Cash Flow Dynamics Dossier](docs/screenshots/node_dossier.png)
-
----
-
-### 4. Real-Time Ingestion Stream Monitor
-High-throughput transaction event monitor powered by Server-Sent Events (SSE) with millisecond-latency AI scoring, dynamic policy evaluation, and manual override controls.
-
-![Real-Time Stream Monitor](docs/screenshots/stream_monitor.png)
-
----
-
-### 5. External Threat Watchlist (I4C / NCRP)
-Direct integration with the Indian Cybercrime Coordination Centre (I4C), NCRP suspect registries, and blacklisted device fingerprints for real-time risk score uplift.
-
-![Watchlist Registry](docs/screenshots/watchlist.png)
-
----
-
-## 🏗️ Architecture Overview
-
-MuleNet combines a distributed, event-driven streaming pipeline with a dual-path Machine Learning inference engine:
+## Architecture
 
 ```mermaid
-graph TD
-    %% Entities
-    Sim["Transaction Ingestion Stream / Simulator"]
-    Kafka["Kafka Broker (upi.transactions)"]
-    Backend["Spring Boot Backend Engine"]
-    ML["FastAPI ML Inference Engine"]
-    Frontend["React Cyber-Fintech UI"]
-    
-    %% Databases & Security
-    DB_PG[("PostgreSQL - Audits/Cases")]
-    DB_REDIS[("Redis - Feature Cache & Celery")]
-    Keycloak["Keycloak OIDC SSO"]
-
-    %% Flow
-    Sim -->|"Ingests UPI & IMPS Transactions"| Kafka
-    Kafka -->|"Consumes stream"| Backend
-    Backend -->|"Dispatches Subgraph Inference"| ML
-    ML -->|"Fast-Path XGBoost & Graph Neural Network"| ML
-    ML -->|"Risk Scores, Topology & Velocity"| Backend
-    Backend -->|"Autonomous Policy Engine (FREEZE / HOLD)"| DB_PG
-    Backend <-->|"JWT / Role Validation"| Keycloak
-    Frontend <-->|"Real-Time SSE Feed & REST APIs"| Backend
+flowchart LR
+  UI["React investigator console: browser acceptance incomplete"] --> API["Spring Boot: OIDC and tenant authorization"]
+  API --> K["Kafka: account-keyed ingestion"]
+  K --> Ledger["Postgres: deduplication and event ledger"]
+  Ledger --> ML["FastAPI: signed internal requests"]
+  ML --> Cache["Redis: complete bounded snapshots"]
+  ML --> Models["Verified XGBoost and GATv2 candidates"]
+  Models --> Policy["Versioned review policy"]
+  Policy --> Outbox["Postgres: decisions, audit chain and outbox"]
+  Outbox --> SSE["Authenticated tenant-scoped SSE"]
+  SSE --> UI
 ```
 
-### 🧠 Dual-Path AI Engine
-1. **XGBoost Fast-Path (< 3 ms)**: Evaluates tabular transaction behavior, velocity surges, out-degree fan-out, and entropy.
-2. **Graph Neural Network (GNN) Deep-Path (< 180 ms)**: Analyzes subgraph structural topology, cyclic routing, and multi-hop layering paths ($k \ge 3$).
-3. **Unsupervised Anomaly Path**: Isolation Forest baseline detecting statistical drift in transaction volumes and account tenure.
-4. **Autonomous Policy Engine**: Enforces automated actions (`FREEZE_IMMEDIATE`, `SOFT_HOLD`, `STEP_UP_MONITOR`) based on composite risk scores, I4C/NCRP intelligence uplift, and threshold configs.
+SOFT_HOLD is a time-limited internal review state, not a bank-account freeze.
+See [platform contracts](docs/PLATFORM_CONTRACT.md) and the
+[baseline architecture audit](docs/ARCHITECTURE.md).
 
----
+## Development
 
-## ⚙️ Tech Stack
+Use the Python version in `.python-version` and dependencies in `uv.lock`.
+Install uv, Node/npm, Java/Maven and Docker first. Do not deploy placeholder
+secrets or expose the ML service.
 
-| Domain | Technologies |
+```sh
+uv sync --frozen --all-groups
+uv run --frozen --all-groups python scripts/bootstrap_secrets.py
+uv run --frozen --all-groups python scripts/record_tests.py --phase local
+uv run --frozen --all-groups python scripts/eval_smoke.py --allow-synthetic
+```
+
+The smoke check trains fresh seeded models and compares generated results against
+reviewed golden evidence. It is a regression check, not a banking-effectiveness
+claim. Read [data licensing](data/README.md), [security setup](docs/SECURITY_SETUP.md)
+and [the runbook](docs/RUNBOOK.md) before starting services. A verified one-command
+full-stack demo is still pending UI and deployment checks.
+
+## Evaluation
+
+Tables are generated by `scripts/render_readme_metrics.py`; do not edit values.
+Thresholds are selected on validation only. Report files retain the full protocol.
+
+<!-- METRICS:START -->
+All datasets below are simulated. Values include 95% confidence intervals.
+
+| Dataset | Split | Model | Test rows | VAL threshold | PR-AUC | Recall | FPR |
+|---|---|---|---:|---:|---|---|---|
+| Local simulator | temporal | tabular_graph | 180 | 0.2500 | 0.1360 [0.0763, 0.3194] | 0.0000 [0.0000, 0.3694] exact | 0.0000 [0.0000, 0.0212] exact |
+| Local simulator | entity | tabular_graph | 340 | 0.2857 | 0.0924 [0.0644, 0.1915] | 0.0000 [0.0000, 0.1482] exact | 0.0000 [0.0000, 0.0116] exact |
+| PaySim (pre-transfer) | temporal | XGBoost | 130116 | 0.5000 | 0.8952 [0.8837, 0.9061] | 0.7446 [0.7229, 0.7656] | 0.0011 [0.0009, 0.0012] |
+
+Simulator operating point: VAL only; maximize recall at empirical FPR <= 0.001.
+The displayed threshold is rounded; serving uses the full-precision artifact value.
+<!-- METRICS:END -->
+
+PaySim is simulated transaction classification, not topology validation. Its
+post-transfer diagnostic is not deployable pre-transfer evidence. The account
+simulator forecasts a different outcome and cannot be directly ranked against
+PaySim. Full-network AMLworld performance is unmeasured; bounded diagnostic
+cohorts are not statistically estimable.
+
+Intervals use a row bootstrap, ignoring account/ring dependence; additional
+exact binomial bounds expose degenerate operating-point uncertainty. The GNN
+did not earn the default path on the recorded validation runs. XGBoost with
+graph features remains selected. No real financial benefit has been measured.
+
+## Latency
+
+<!-- LATENCY:START -->
+Model-only, single-request wall-clock timings in milliseconds.
+
+| Load | Requests | Concurrency | p50 | p95 | p99 |
+|---|---:|---:|---:|---:|---:|
+| steady | 200 | 1 | 0.8599 | 1.2082 | 1.3811 |
+| burst | 200 | 8 | 6.0206 | 10.1323 | 17.3515 |
+
+Actual-network local stack; individual request timings with 95% bootstrap intervals (ms).
+
+| Boundary | Load | Requests | Concurrency | p50 | p95 | p99 |
+|---|---|---:|---:|---|---|---|
+| ML HTTP | steady | 100 | 1 | 30.5563 [29.9478, 31.3182] | 36.2333 [34.0417, 38.6967] | 38.9715 [36.2267, 39.0402] |
+| ML HTTP | burst | 100 | 8 | 210.5032 [200.8717, 218.2892] | 402.7572 [283.2599, 412.0782] | 418.7650 [384.8617, 421.1970] |
+| Kafka producer-to-SSE | steady | 100 | 1 | 499.9703 [499.7349, 500.2143] | 503.9326 [502.0501, 525.7005] | 750.3070 [503.9538, 752.9088] |
+| Kafka producer-to-SSE | burst | 100 | 8 | 1141.9945 [1016.4361, 1266.7175] | 1275.9435 [1273.5476, 1520.8901] | 1524.0605 [1278.3325, 1525.1855] |
+
+Synthetic hot-account traffic on one local stack, not a production SLO. The neural path was not selected or measured.
+Kafka timing starts before producer send and ends after receipt of both committed decisions over HTTP SSE; ingestion REST/outbox is excluded.
+See [raw network benchmark](reports/latency-pipeline.json) for identities, sample timings, precise boundaries and limitations.
+<!-- LATENCY:END -->
+
+Model-only timings exclude feature extraction, Redis, HTTP, Kafka, policy and
+SSE. Any separately reported network benchmark has its own explicit boundaries.
+Neither experiment establishes deployment-scale latency or throughput guarantees.
+The model-only and network experiments use different bundles and payloads;
+their JSON reports record the identities. Do not compare them as the same workload.
+
+## Simulated Versus Implemented
+
+| Surface | Status |
 |---|---|
-| **Backend Service** | Java 17, Spring Boot 3, Spring Security, Spring Kafka, Spring Data JPA, Hibernate |
-| **Machine Learning** | Python 3.10+, FastAPI, PyTorch, PyTorch Geometric, XGBoost, Scikit-Learn, Celery |
-| **Frontend UI** | React 19, Vite, ReactFlow, Lucide Icons, Material-UI, Recharts, Vanilla CSS Design System |
-| **Event Streaming** | Confluent Kafka, Zookeeper |
-| **Data & Cache** | PostgreSQL 15 (Relational Ledger), Redis 7 (Cache / Broker) |
-| **Identity / Auth** | Keycloak 22 (OIDC / OAuth2 SSO) |
-| **Containers** | Docker, Docker Compose |
+| PaySim, AMLworld and local typology generator | Simulated data |
+| I4C/NCRP watchlist | Simulated I4C/NCRP-style adapter; no government access |
+| Bank freeze or victim recovery | Not implemented or measured |
+| Models | Actual XGBoost, Isolation Forest and PyG message passing |
+| Kafka, persistence, cache and authenticated scoring | Actual local integration tests |
+| STR export | Draft/template evidence JSON, not a regulatory filing |
+| Artifacts | Hash/schema checked; publisher attestation absent |
+| Frontend | Legacy view awaiting API and workflow migration |
 
----
+## Documentation
 
-## 💻 How to Run on Local Server
+- [Evidence audit](docs/AUDIT.md), [decisions](docs/DECISIONS.md), [execution log](docs/CHANGELOG_AGENT.md)
+- [Model card](docs/MODEL_CARD.md), [feature contract](docs/FEATURE_CONTRACT.md), [runbook](docs/RUNBOOK.md)
+- [Threat model](docs/THREAT_MODEL.md), [privacy](docs/PRIVACY.md), [security exceptions](docs/SECURITY_EXCEPTIONS.md)
 
-You can run MuleNet locally either **as standalone native services** (fastest for development) or **via Docker Compose** (full stack containerization).
+Roadmap: primary topology evaluation, full-path load measurements, observability
+and hosted CI, investigator UI migration, independently reviewed deployment
+security. Historical pitch documents and unsafe launchers have been retired.
 
-### Option A: Running Standalone on Local Server (Without Docker)
+## License
 
-#### Prerequisites
-- **Python 3.10+**
-- **Java 17+ (JDK)** & Maven
-- **Node.js 18+** & npm
-- *(Optional)* PostgreSQL running locally on port `5432`
-
-#### 1. Start the Machine Learning Service (FastAPI)
-Open a terminal:
-```bash
-cd ml_service
-
-# Install Python requirements
-pip install -r requirements.txt
-
-# Launch FastAPI on port 8000
-python -m uvicorn main:app --host 127.0.0.1 --port 8000 --reload
-```
-*ML service will be live at: [http://127.0.0.1:8000](http://127.0.0.1:8000) (Swagger docs at `/docs`)*
-
-#### 2. Start the Backend Service (Spring Boot)
-Open a second terminal:
-```bash
-cd backend
-
-# Run with Maven wrapper
-./mvnw spring-boot:run
-```
-*(On Windows cmd/powershell, run `mvnw.cmd spring-boot:run`)*  
-*Backend will be live at: [http://localhost:8080](http://localhost:8080)*
-
-#### 3. Start the Frontend Dashboard (React + Vite)
-Open a third terminal:
-```bash
-cd frontend
-
-# Install UI dependencies
-npm install
-
-# Launch Vite development server
-npm run dev
-```
-*Frontend will be live at: **[http://localhost:5173](http://localhost:5173)** (or `http://127.0.0.1:5173`)*
-
-#### 4. Instant Demo Seeding
-To populate realistic multi-hop fraud cases and watchlists instantly:
-- In the browser, open **Graph Explorer** and click **"Generate demo case"**, or
-- Run via terminal:
-```bash
-curl -X POST http://localhost:8080/api/demo/seed
-```
-
----
-
-### Option B: Running with Docker Compose (All Services)
-
-#### Prerequisites
-- [Docker Desktop](https://www.docker.com/) installed and running (allocate at least 8 GB RAM).
-
-#### 1. Configure Environment
-```bash
-cp .env.example .env
-```
-
-#### 2. Start All Services
-```bash
-docker compose up -d
-```
-*Or on Windows, simply double-click **`run_all.bat`**.*
-
-#### 3. Access the System
-- **Frontend UI**: [http://localhost:3000](http://localhost:3000)
-  - Demo authentication requires an explicit demo profile and unique per-install credentials generated in the ignored `.env` file. No shared login is shipped.
-- **Backend API**: [http://localhost:8080/api/health](http://localhost:8080/api/health)
-- **ML Engine Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
-- **Keycloak Admin**: [http://localhost:8081](http://localhost:8081)
-
-To stop the containers:
-```bash
-docker compose down
-```
-
----
-
-## 📊 Evaluation & Benchmarks
-
-MuleNet models were evaluated on real PaySim financial transaction data and structured synthetic laundering graphs:
-
-| Benchmark Metric | Model / Evaluator | Result |
-|---|---|---|
-| **ROC-AUC (FastPath XGBoost)** | PaySim Held-Out Split | **0.7567** |
-| **PR-AUC (FastPath XGBoost)** | PaySim Held-Out Split | **0.0407** *(against 0.41% base rate)* |
-| **Synthetic Topology ROC-AUC** | GNN + Centrality Features | **1.0000** |
-| **Synthetic Topology PR-AUC** | GNN + Centrality Features | **1.0000** |
-| **Scoring Latency / Transaction** | FastPath Pipeline | **0.0021 ms** |
-| **Precision / Recall at Threshold** | Optimal F1 Operating Point | Precision: **0.9934** / Recall: **1.0000** |
-
-### 💰 Economic Impact & Recovery
-- **False-Positive Mitigation**: Automated hard freezes (`FREEZE_IMMEDIATE`) are strictly reserved for verified scores $\ge 70.0$. Borderline transactions route to `SOFT_HOLD` (preserving inbound liquidity while blocking outbound dissipation), saving institutions estimated thousands in operational overhead.
-- **Demonstration Batch Recovery**: Across 3 multi-hop fraud networks totaling **₹6,43,000** in complaints, MuleNet auto-intercepted **₹3,20,000** before cash-out (**49.8% direct fund recovery rate**).
-
----
-
-## 🧪 Testing
-
-```bash
-# Backend unit & integration tests
-cd backend && ./mvnw clean test
-
-# E2E Kafka streaming test
-python scripts/kafka_e2e_test.py
-
-# OAuth2 / Keycloak verification test
-python scripts/oauth2_e2e_test.py
-
-# ML training & validation suite
-python ml_service/training/train_and_test.py
-```
-
----
-
-## 📄 License & Affiliation
-
-MuleNet is released under the **MIT License**.
-
-**Affiliated to the NoString team.**
-
-See the [LICENSE](./LICENSE) file for complete terms and copyright details.
+Project code is [MIT licensed](LICENSE), with NoString affiliation. Benchmarks
+have separate supplier terms; raw datasets are not committed here.

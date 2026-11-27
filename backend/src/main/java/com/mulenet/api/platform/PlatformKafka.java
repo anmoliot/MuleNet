@@ -92,8 +92,8 @@ public class PlatformKafka {
 
     @Bean
     public Worker platformWorker(PlatformService platform, ServiceTokens tokens, ObjectMapper mapper,
-                                  JdbcTemplate db, @Qualifier("platformKafka") KafkaTemplate<String, String> kafka) {
-        return new Worker(platform, tokens, mapper, db, kafka);
+                                  JdbcTemplate db, @Qualifier("platformKafka") KafkaTemplate<String, String> kafka, StageTelemetry telemetry) {
+        return new Worker(platform, tokens, mapper, db, kafka, telemetry);
     }
 
     public static class Worker {
@@ -102,18 +102,33 @@ public class PlatformKafka {
         private final ObjectMapper mapper;
         private final JdbcTemplate db;
         private final KafkaTemplate<String, String> kafka;
-        public Worker(PlatformService platform, ServiceTokens tokens, ObjectMapper mapper, JdbcTemplate db, KafkaTemplate<String, String> kafka) {
-            this.platform = platform; this.tokens = tokens; this.mapper = mapper; this.db = db; this.kafka = kafka;
+        private final StageTelemetry telemetry;
+        public Worker(PlatformService platform, ServiceTokens tokens, ObjectMapper mapper, JdbcTemplate db, KafkaTemplate<String, String> kafka, StageTelemetry telemetry) {
+            this.platform = platform; this.tokens = tokens; this.mapper = mapper; this.db = db; this.kafka = kafka; this.telemetry = telemetry;
         }
         @KafkaListener(topics = "mulenet.transactions", containerFactory = "platformListener", autoStartup = "${mulenet.kafka.enabled:true}")
         public void consume(ConsumerRecord<String, String> record) throws Exception {
+            long started = System.nanoTime();
+            boolean success = false;
+            String previousCorrelation = org.slf4j.MDC.get("correlation_id");
+            try {
             Claims claims = tokens.verifyIngestion(record.value());
             String tenant = claims.get("tenant", String.class);
             if (tenant == null || !tenant.matches("[a-zA-Z0-9_-]{1,64}")) throw new IllegalArgumentException("Invalid ingestion tenant");
             var event = mapper.readTree(claims.get("body", String.class));
             if (!String.valueOf(record.key()).equals(tenant + ":" + event.path("source").asText()))
                 throw new IllegalArgumentException("Partition key must be tenant and source account ID");
-            platform.process(tenant, event, UUID.nameUUIDFromBytes(claims.getId().getBytes(java.nio.charset.StandardCharsets.UTF_8)).toString());
+            String correlation = UUID.nameUUIDFromBytes(claims.getId().getBytes(java.nio.charset.StandardCharsets.UTF_8)).toString();
+            org.slf4j.MDC.put("correlation_id", correlation);
+            platform.process(tenant, event, correlation);
+            success = true;
+            } finally {
+                try { telemetry.record(StageTelemetry.Stage.KAFKA_PROCESS, started, success); }
+                finally {
+                    if (previousCorrelation == null) org.slf4j.MDC.remove("correlation_id");
+                    else org.slf4j.MDC.put("correlation_id", previousCorrelation);
+                }
+            }
         }
 
         @Scheduled(fixedDelayString = "${mulenet.outbox.delay-ms:100}")

@@ -31,12 +31,14 @@ public class CandidateClient {
     private final RestTemplate transport;
     private final CircuitBreaker circuit;
     private final Retry retry;
+    private final StageTelemetry telemetry;
 
     public CandidateClient(ServiceTokens tokens, ObjectMapper mapper,
-                           @Value("${mulenet.ml-url}") String baseUrl) {
+                           @Value("${mulenet.ml-url}") String baseUrl, StageTelemetry telemetry) {
         this.tokens = tokens;
         this.mapper = mapper;
         this.baseUrl = baseUrl;
+        this.telemetry = telemetry;
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
         factory.setConnectTimeout(300);
         factory.setReadTimeout(1500);
@@ -58,7 +60,8 @@ public class CandidateClient {
             headers.setContentType(MediaType.APPLICATION_JSON);
             Map<String, Object> snapshot = Map.of("complete_from", completeFrom, "watermark", asOf,
                 "events", events, "accounts", List.of());
-            JsonNode receipt = transport.postForObject(baseUrl + "/v1/snapshots", new HttpEntity<>(snapshot, headers), JsonNode.class);
+            JsonNode receipt = telemetry.timed(StageTelemetry.Stage.SNAPSHOT_HTTP,
+                () -> transport.postForObject(baseUrl + "/v1/snapshots", new HttpEntity<>(snapshot, headers), JsonNode.class));
             if (receipt == null || !receipt.path("snapshot_id").asText().matches("[a-f0-9]{64}"))
                 throw new IllegalStateException("Invalid ML snapshot receipt");
             ApiClient apiClient = new ApiClient(transport);
@@ -66,7 +69,8 @@ public class CandidateClient {
             apiClient.setBearerToken(credential);
             ScoreRequest request = new ScoreRequest().accountId(accountId).asOf(asOf)
                 .snapshotId(receipt.path("snapshot_id").asText()).correlationId(correlationId);
-            JsonNode result = mapper.valueToTree(new DefaultApi(apiClient).score(request));
+            JsonNode result = telemetry.timed(StageTelemetry.Stage.SCORE_HTTP,
+                () -> mapper.valueToTree(new DefaultApi(apiClient).score(request)));
             if (!result.path("probability").isNumber() || !Double.isFinite(result.path("probability").asDouble()) ||
                 result.path("probability").asDouble() < 0 || result.path("probability").asDouble() > 1 ||
                 !accountId.equals(result.path("account_id").asText()) || result.path("as_of").asLong() != asOf ||
@@ -77,4 +81,13 @@ public class CandidateClient {
     }
 
     public String circuitState() { return circuit.getState().name(); }
+
+    public JsonNode drift(String tenant) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(tokens.metrics(tenant));
+        JsonNode result = transport.exchange(baseUrl + "/v1/drift", HttpMethod.GET, new HttpEntity<>(headers), JsonNode.class).getBody();
+        if (result == null || !result.path("windows").isArray() || !result.path("automatic_action").isBoolean() || result.path("automatic_action").asBoolean())
+            throw new IllegalStateException("Invalid tenant drift contract");
+        return result;
+    }
 }

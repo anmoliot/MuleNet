@@ -1,5 +1,5 @@
 {
-  "files_checked": 66,
+  "files_checked": 78,
   "findings": [],
   "scope": "Python source deserialization call gate; not a complete static security analyzer"
 }

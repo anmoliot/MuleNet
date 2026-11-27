@@ -14,7 +14,7 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = ["pytest==9.0.3", "pytest-cov==7.1.0", "ruff==0.17.6", "mypy==2.4.1", "types-networkx==3.6.1.20261122", "pip-audit==2.10.1"]
+dev = ["pytest==9.0.3", "pytest-cov==7.1.0", "ruff==0.17.6", "mypy==2.4.1", "types-networkx==3.6.1.20261122", "pip-audit==2.10.1", "pre-commit==4.5.1"]
 evaluation = ["matplotlib==3.10.9", "shap==0.54.1"]
 training = ["pyg-lib==0.9.0+pt214cpu"]
 deployment = ["python-dotenv==1.2.4"]
@@ -42,3 +42,25 @@ testpaths = ["ml_service/tests"]
 [tool.ruff]
 target-version = "py313"
 line-length = 120
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I", "UP", "B"]
+
+[tool.ruff.lint.flake8-bugbear]
+# Frozen Pydantic configurations and FastAPI dependency declarations are immutable.
+extend-immutable-calls = ["mulenet_core.schema.FeatureConfig", "schema.FeatureConfig", "simulation.generator.SimulationConfig", "generator.SimulationConfig", "fastapi.Depends", "internal_auth.require", "ml_service.internal_auth.require"]
+
+[tool.ruff.lint.per-file-ignores]
+"scripts/*.py" = ["E402"]
+
+[tool.mypy]
+strict = true
+files = ["ml_service/mulenet_core"]
+
+[tool.coverage.run]
+branch = true
+source = ["ml_service/mulenet_core"]
+
+[tool.coverage.report]
+fail_under = 80
+show_missing = true

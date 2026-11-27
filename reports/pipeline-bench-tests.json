@@ -1,0 +1,112 @@
+{
+  "cases": [
+    {
+      "class": "com.mulenet.api.platform.PlatformLatencyTest",
+      "name": "measureRealHttpAndKafkaToSseUnderSteadyAndBurstLoad",
+      "status": "passed"
+    },
+    {
+      "class": "com.mulenet.api.platform.ReviewPolicyTest",
+      "name": "initialPolicyUsesValidationUnlessCostRequiresMoreCaution",
+      "status": "passed"
+    },
+    {
+      "class": "com.mulenet.api.platform.ReviewPolicyTest",
+      "name": "explicitReviewedThresholdReplacesValidationButNotCostFloor",
+      "status": "passed"
+    }
+  ],
+  "command": [
+    "wsl",
+    "--user",
+    "root",
+    "--cd",
+    "/mnt/c/Users/Anmol/OneDrive/Desktop/MuleNet/backend",
+    "--exec",
+    "env",
+    "JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64",
+    "mvn",
+    "-B",
+    "-ntp",
+    "-Dtest=PlatformLatencyTest,ReviewPolicyTest",
+    "clean",
+    "verify"
+  ],
+  "exit_code": 0,
+  "failed": 0,
+  "passed": 3,
+  "policy_coverage": {
+    "BRANCH": {
+      "covered": 2,
+      "missed": 0
+    },
+    "CLASS": {
+      "covered": 1,
+      "missed": 0
+    },
+    "COMPLEXITY": {
+      "covered": 4,
+      "missed": 0
+    },
+    "INSTRUCTION": {
+      "covered": 43,
+      "missed": 0
+    },
+    "LINE": {
+      "covered": 4,
+      "missed": 0
+    },
+    "METHOD": {
+      "covered": 3,
+      "missed": 0
+    }
+  },
+  "skipped": 0,
+  "source_sha256": {
+    "backend/pom.xml": "b1b31e63eb7c1bccd30d415ee16e344800e179895855443c553dd97e002e8425",
+    "backend/src/main/java/com/mulenet/api/ApiApplication.java": "7745ab39447ee4c404573a039d800988ee02989e212f9edda87c635f7f95a154",
+    "backend/src/main/java/com/mulenet/api/exception/GlobalExceptionHandler.java": "8cbcb0b9e4250940798c434c1ffca35e2081659eed3c0bc80965a227c9c96a13",
+    "backend/src/main/java/com/mulenet/api/platform/AuthenticationConfiguration.java": "8358e9880ae54ae8df7cdcb402419709726a091875edd31f439fa4ec57fde819",
+    "backend/src/main/java/com/mulenet/api/platform/CandidateClient.java": "0f69ca5d07549d49ca5ffdcb45d663d3183a1b5f80cfa3a69fc95d3f8109171f",
+    "backend/src/main/java/com/mulenet/api/platform/ConfigurationGuard.java": "1cb4896aec24007d2e1fc2a80de0b9048d74b96aa5bfb5ed84098a997d0be7df",
+    "backend/src/main/java/com/mulenet/api/platform/DecisionStream.java": "b82e294a8f3a3274089a5c4806015406f382fcc7df61b64a3df1921b34e53452",
+    "backend/src/main/java/com/mulenet/api/platform/DemoAuthentication.java": "7c6cb78bee6295c158f4f9612e3c43208f63f9c9ce0d76a5d1ad577275fceb8a",
+    "backend/src/main/java/com/mulenet/api/platform/DemoSeed.java": "4c30733f53089e239d358353af4e2f607b73da5c4003718a71a2172b6916e208",
+    "backend/src/main/java/com/mulenet/api/platform/IngestionRateGuard.java": "5875768626ee120374f2586043d9fb0362cb4fc599af8e5992927c1e47b92b85",
+    "backend/src/main/java/com/mulenet/api/platform/MigrationExit.java": "49adc801b99e63ec8a4f4622b6310b94a0e03efa5b2e9dd93e99f1d6773bd419",
+    "backend/src/main/java/com/mulenet/api/platform/Payment.java": "b117cc2cf3acf22e64eae1c07a5079d3ffd7a6ceb5e28d4986442fc9b274c3b0",
+    "backend/src/main/java/com/mulenet/api/platform/PlatformController.java": "92b31c758eb34850123eab45c5c8aef766561c71369d8aae07130d81b5d5b60c",
+    "backend/src/main/java/com/mulenet/api/platform/PlatformKafka.java": "78dd6059ebc1a0ba8b6321f27e37cf09adf588294dcd0adea6c3294425a7ecb6",
+    "backend/src/main/java/com/mulenet/api/platform/PlatformSecurity.java": "85679e2a0522bca872e41636b3557200b7142019c7285bc16538b50e90588315",
+    "backend/src/main/java/com/mulenet/api/platform/PlatformService.java": "fa4104e66a25ac08c33d2bec0d885b44adc35e23f8b1e2199cc98f85f82b88d0",
+    "backend/src/main/java/com/mulenet/api/platform/PrivacyCodec.java": "ffe618e262c592dbcdeaa53fb83475645a42714878e435378a57f506183fc7c5",
+    "backend/src/main/java/com/mulenet/api/platform/RequestGuards.java": "aae0f257eccb2fd9f8130652053c2be480d4afdee14a9c991474a086d12f6e13",
+    "backend/src/main/java/com/mulenet/api/platform/ReviewPolicy.java": "1117c9fe41c3e5ede26741e60c19405e933dfee6c92d226b4b912169321a2b78",
+    "backend/src/main/java/com/mulenet/api/platform/ServiceTokens.java": "fc537d607266336eb84ff7f2bf8db2968468324d6a3a1dac09bcf55e6baa599b",
+    "backend/src/main/java/com/mulenet/api/platform/StageTelemetry.java": "f7e57992cb05717f40e3bcd40d5dfb3b28bd8ac5878039af05a6d77a687dc163",
+    "backend/src/main/java/com/mulenet/api/platform/StrictJson.java": "3b01223d5e0d341ba89fef813bbc270cfef4d3cb98e2b3cf0ee4e680ff5df2ad",
+    "backend/src/main/resources/application-demo.properties": "9937ea2abb264fc048ea2814db70121c800624e0c85f83447983d500d157f14a",
+    "backend/src/main/resources/application-migrate.properties": "e12abf1f48133a06b8bfacd570e73a9cba6d0202080339c5a9bc3d6dc7e88392",
+    "backend/src/main/resources/application-platform.properties": "132d37d220d0d6c4eaf9aff751a373e76d100d32032e0cbfcecd13677ea6177e",
+    "backend/src/main/resources/application.properties": "5a4d6db62c8ed89f297002e506bcfea2a9b6a2ee78b9f46c1db790cd19a3f726",
+    "backend/src/main/resources/db/migration/V1__Initial_Schema.sql": "74fb6f3c67d949292beb94f2bfba2da6142b2c5afc92ed86219ae55c2542a05e",
+    "backend/src/main/resources/db/migration/V2__Add_Case_Comments_And_User_Management.sql": "20a0600e921de24de80267731572546570a5908a73fa374ce1a6a38ea02090eb",
+    "backend/src/main/resources/db/migration/V3__Add_Complaints_Actions_And_Case_Fields.sql": "eb35005f1039a00ecdc92d070fa9b4d709375d5c577c0a27bd7ad9ebd91188c0",
+    "backend/src/main/resources/db/migration/V4__versioned_platform.sql": "a023a557e23095acd2c88ad7dc16ced3f642a0e1e01fa99ee39cf67bb68b1076",
+    "backend/src/main/resources/db/migration/V5__restrict_legacy_storage.sql": "3849943d310f5318d52e544d49977baa8eea3ea1728e8060a86d9d41dc3703f8",
+    "backend/src/test/java/com/mulenet/api/platform/ClientContractTest.java": "ffd947b33ff3258bacf4f53c280f3795e178bb89a3fab392816b5bbdb4d7d18e",
+    "backend/src/test/java/com/mulenet/api/platform/PlatformIntegrationTest.java": "4371cce18a2775d19623686351a877e5e65d625d07859f5e989c68dee56bc20a",
+    "backend/src/test/java/com/mulenet/api/platform/PlatformLatencyTest.java": "e2f6339117b4940d8e7cf43eeb9a167ed0ea03677174d0283ee6c1b7146a4fd8",
+    "backend/src/test/java/com/mulenet/api/platform/PlatformTestStack.java": "12fd55f5a3abe5bb0136efff95bca6ae54afa4c2355cfcd9a8c6a29c455a0f0a",
+    "backend/src/test/java/com/mulenet/api/platform/PrivacyCodecTest.java": "d42bbe8b671c71cd6cdf866a6d7fdd5a896d8d882831bb9d507d29c18b80a83b",
+    "backend/src/test/java/com/mulenet/api/platform/ReviewPolicyTest.java": "fc19d1cb765671563b5024ea324ad0a593d67dcd809cb9bdabed0c3185fc19b5",
+    "backend/src/test/java/com/mulenet/api/platform/SecurityBoundaryTest.java": "1d89fdc78d5b1ccd53405bca319ac272ddbccb274e9f9b6037fbe73f0ba9815e",
+    "backend/src/test/java/com/mulenet/api/platform/StageTelemetryTest.java": "198028a0778d707356ebd2009527a8cacd6aa2c2eb1eb079a85606384f18a1b8",
+    "backend/src/test/resources/application.properties": "6579618d955674fd3e5ec3a962c259094149511fbdb8e5bcf5f65fa108f9f558",
+    "backend/src/test/resources/mockito-extensions/org.mockito.plugins.MemberAccessor": "f03c834f2bf5d58702453b8e2441aed4d1dd30afa523d28ad978f79aab56e0c7",
+    "backend/src/test/resources/mockito-extensions/org.mockito.plugins.MockMaker": "8eca853a5a457f17e0479b71dfbe95f2a13aff9eeff250261ecdc8ca9b847a6a",
+    "contracts/ml-openapi.json": "1a960d60d7d947a111476c7b91561f2ae5a04394820f53f3af5a5a1eee4ba8c9"
+  },
+  "source_unchanged_during_run": true,
+  "test_phase_executed": true
+}

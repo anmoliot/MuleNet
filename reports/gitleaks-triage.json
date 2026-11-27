@@ -3,6 +3,70 @@
   "external_installation_rotation_verified": false,
   "findings": [
     {
+      "Commit": "efe9509e907b38676025259245d36d63fbcb4536",
+      "File": "reports/platform-tests.json",
+      "Fingerprint": "efe9509e907b38676025259245d36d63fbcb4536:reports/platform-tests.json:generic-api-key:66",
+      "RuleID": "generic-api-key",
+      "StartLine": 66,
+      "status": "verified_source_checksum_false_positive"
+    },
+    {
+      "Commit": "efe9509e907b38676025259245d36d63fbcb4536",
+      "File": "reports/platform-tests.json",
+      "Fingerprint": "efe9509e907b38676025259245d36d63fbcb4536:reports/platform-tests.json:generic-api-key:84",
+      "RuleID": "generic-api-key",
+      "StartLine": 84,
+      "status": "verified_source_checksum_false_positive"
+    },
+    {
+      "Commit": "efe9509e907b38676025259245d36d63fbcb4536",
+      "File": "reports/platform-tests.json",
+      "Fingerprint": "efe9509e907b38676025259245d36d63fbcb4536:reports/platform-tests.json:generic-api-key:100",
+      "RuleID": "generic-api-key",
+      "StartLine": 100,
+      "status": "verified_source_checksum_false_positive"
+    },
+    {
+      "Commit": "efe9509e907b38676025259245d36d63fbcb4536",
+      "File": "reports/security-python-tests.json",
+      "Fingerprint": "efe9509e907b38676025259245d36d63fbcb4536:reports/security-python-tests.json:generic-api-key:190",
+      "RuleID": "generic-api-key",
+      "StartLine": 190,
+      "status": "verified_source_checksum_false_positive"
+    },
+    {
+      "Commit": "efe9509e907b38676025259245d36d63fbcb4536",
+      "File": "reports/security-python-tests.json",
+      "Fingerprint": "efe9509e907b38676025259245d36d63fbcb4536:reports/security-python-tests.json:generic-api-key:230",
+      "RuleID": "generic-api-key",
+      "StartLine": 230,
+      "status": "verified_source_checksum_false_positive"
+    },
+    {
+      "Commit": "efe9509e907b38676025259245d36d63fbcb4536",
+      "File": "reports/security-python-tests.json",
+      "Fingerprint": "efe9509e907b38676025259245d36d63fbcb4536:reports/security-python-tests.json:generic-api-key:233",
+      "RuleID": "generic-api-key",
+      "StartLine": 233,
+      "status": "verified_source_checksum_false_positive"
+    },
+    {
+      "Commit": "efe9509e907b38676025259245d36d63fbcb4536",
+      "File": "reports/security-python-tests.json",
+      "Fingerprint": "efe9509e907b38676025259245d36d63fbcb4536:reports/security-python-tests.json:generic-api-key:235",
+      "RuleID": "generic-api-key",
+      "StartLine": 235,
+      "status": "verified_source_checksum_false_positive"
+    },
+    {
+      "Commit": "efe9509e907b38676025259245d36d63fbcb4536",
+      "File": "reports/security-python-tests.json",
+      "Fingerprint": "efe9509e907b38676025259245d36d63fbcb4536:reports/security-python-tests.json:generic-api-key:241",
+      "RuleID": "generic-api-key",
+      "StartLine": 241,
+      "status": "verified_source_checksum_false_positive"
+    },
+    {
       "Commit": "93c4fab467c79151190e4dc37690460152a65f1b",
       "File": "reports/feedback-tests.json",
       "Fingerprint": "93c4fab467c79151190e4dc37690460152a65f1b:reports/feedback-tests.json:generic-api-key:45",
@@ -68,38 +132,6 @@
     },
     {
       "Commit": "93c4fab467c79151190e4dc37690460152a65f1b",
-      "File": "reports/serving-tests.json",
-      "Fingerprint": "93c4fab467c79151190e4dc37690460152a65f1b:reports/serving-tests.json:generic-api-key:61",
-      "RuleID": "generic-api-key",
-      "StartLine": 61,
-      "status": "verified_source_checksum_false_positive"
-    },
-    {
-      "Commit": "93c4fab467c79151190e4dc37690460152a65f1b",
-      "File": "reports/serving-tests.json",
-      "Fingerprint": "93c4fab467c79151190e4dc37690460152a65f1b:reports/serving-tests.json:generic-api-key:114",
-      "RuleID": "generic-api-key",
-      "StartLine": 114,
-      "status": "verified_source_checksum_false_positive"
-    },
-    {
-      "Commit": "93c4fab467c79151190e4dc37690460152a65f1b",
-      "File": "reports/serving-tests.json",
-      "Fingerprint": "93c4fab467c79151190e4dc37690460152a65f1b:reports/serving-tests.json:generic-api-key:118",
-      "RuleID": "generic-api-key",
-      "StartLine": 118,
-      "status": "verified_source_checksum_false_positive"
-    },
-    {
-      "Commit": "93c4fab467c79151190e4dc37690460152a65f1b",
-      "File": "reports/serving-tests.json",
-      "Fingerprint": "93c4fab467c79151190e4dc37690460152a65f1b:reports/serving-tests.json:generic-api-key:120",
-      "RuleID": "generic-api-key",
-      "StartLine": 120,
-      "status": "verified_source_checksum_false_positive"
-    },
-    {
-      "Commit": "93c4fab467c79151190e4dc37690460152a65f1b",
       "File": "reports/platform-tests.json",
       "Fingerprint": "93c4fab467c79151190e4dc37690460152a65f1b:reports/platform-tests.json:generic-api-key:45",
       "RuleID": "generic-api-key",
@@ -148,6 +180,38 @@
     },
     {
       "Commit": "93c4fab467c79151190e4dc37690460152a65f1b",
+      "File": "reports/serving-tests.json",
+      "Fingerprint": "93c4fab467c79151190e4dc37690460152a65f1b:reports/serving-tests.json:generic-api-key:61",
+      "RuleID": "generic-api-key",
+      "StartLine": 61,
+      "status": "verified_source_checksum_false_positive"
+    },
+    {
+      "Commit": "93c4fab467c79151190e4dc37690460152a65f1b",
+      "File": "reports/serving-tests.json",
+      "Fingerprint": "93c4fab467c79151190e4dc37690460152a65f1b:reports/serving-tests.json:generic-api-key:114",
+      "RuleID": "generic-api-key",
+      "StartLine": 114,
+      "status": "verified_source_checksum_false_positive"
+    },
+    {
+      "Commit": "93c4fab467c79151190e4dc37690460152a65f1b",
+      "File": "reports/serving-tests.json",
+      "Fingerprint": "93c4fab467c79151190e4dc37690460152a65f1b:reports/serving-tests.json:generic-api-key:118",
+      "RuleID": "generic-api-key",
+      "StartLine": 118,
+      "status": "verified_source_checksum_false_positive"
+    },
+    {
+      "Commit": "93c4fab467c79151190e4dc37690460152a65f1b",
+      "File": "reports/serving-tests.json",
+      "Fingerprint": "93c4fab467c79151190e4dc37690460152a65f1b:reports/serving-tests.json:generic-api-key:120",
+      "RuleID": "generic-api-key",
+      "StartLine": 120,
+      "status": "verified_source_checksum_false_positive"
+    },
+    {
+      "Commit": "93c4fab467c79151190e4dc37690460152a65f1b",
       "File": "reports/platform-python-tests.json",
       "Fingerprint": "93c4fab467c79151190e4dc37690460152a65f1b:reports/platform-python-tests.json:generic-api-key:177",
       "RuleID": "generic-api-key",
@@ -179,6 +243,14 @@
       "status": "verified_source_checksum_false_positive"
     },
     {
+      "Commit": "cc68c1159c1e37a6d579634d8a76dba6cfad98b8",
+      "File": "render.yaml",
+      "Fingerprint": "cc68c1159c1e37a6d579634d8a76dba6cfad98b8:render.yaml:deployment-literal-secret:34",
+      "RuleID": "deployment-literal-secret",
+      "StartLine": 34,
+      "status": "untriaged_blocking"
+    },
+    {
       "Commit": "b1bdec80c6abb0ccaf6a32cab1ba9dd86f5e3a57",
       "File": ".env.example",
       "Fingerprint": "b1bdec80c6abb0ccaf6a32cab1ba9dd86f5e3a57:.env.example:generic-api-key:15",
@@ -201,8 +273,25 @@
       "RuleID": "generic-api-key",
       "StartLine": 21,
       "status": "historical_default_retired_rotate_existing_installations"
+    },
+    {
+      "Commit": "efe9509e907b38676025259245d36d63fbcb4536",
+      "File": "reports/trivy-ml.json",
+      "Fingerprint": "efe9509e907b38676025259245d36d63fbcb4536:reports/trivy-ml.json:generic-api-key:66",
+      "RuleID": "generic-api-key",
+      "StartLine": 66,
+      "status": "official_python_public_gpg_fingerprint"
+    },
+    {
+      "Commit": "efe9509e907b38676025259245d36d63fbcb4536",
+      "File": "reports/trivy-ml.json",
+      "Fingerprint": "efe9509e907b38676025259245d36d63fbcb4536:reports/trivy-ml.json:generic-api-key:191",
+      "RuleID": "generic-api-key",
+      "StartLine": 191,
+      "status": "official_python_public_gpg_fingerprint"
     }
   ],
   "history_rewritten": false,
-  "untriaged": 0
+  "public_fingerprint_source": "https://github.com/docker-library/python/blob/master/3.13/slim-trixie/Dockerfile",
+  "untriaged": 1
 }

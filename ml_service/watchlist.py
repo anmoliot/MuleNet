@@ -12,6 +12,10 @@ class SimulatedI4CProvider:
         self.entries = frozenset(entries)
 
     def lookup(self, tenant, account_id):
-        return {"provider": "SimulatedI4CProvider", "simulated": True,
-                "matched": (tenant, account_id) in self.entries,
-                "authority": "none", "probability_uplift": None}
+        return {
+            "provider": "SimulatedI4CProvider",
+            "simulated": True,
+            "matched": (tenant, account_id) in self.entries,
+            "authority": "none",
+            "probability_uplift": None,
+        }

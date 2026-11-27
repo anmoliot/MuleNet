@@ -1,0 +1,30 @@
+{
+  "data_provenance": "synthetic",
+  "scope": "Real Spring HTTP + Kafka/Postgres/Redis/ML test stack; controlled ML outage creates the reviewed holds; no API mocking",
+  "browser": {
+    "startTime": "2026-11-27T06:32:25.051Z",
+    "duration": 33478.443,
+    "expected": 2,
+    "skipped": 0,
+    "unexpected": 2,
+    "flaky": 0
+  },
+  "source_sha256": {
+    "index.html": "acb01fee4cfcb2c24f51d4aeecd01e561645c1b4f63a90f6819bc0737544087f",
+    "package-lock.json": "0b0b59ca67267d3cb72acb9ecf1403fcdeb2a648c52ebbec7e30bfb787be74ae",
+    "package.json": "a75c7fd034f23a265b8b3cb508d9ae0b0b2d853bc085882c937c8fc572d8d238",
+    "playwright.platform.config.js": "ba18c854b0baae99ed013177df79edc665eb58128d0d567b351d4151c2f20cb5",
+    "scripts/run-platform-browser.mjs": "bd6edc010d344b04e740313f5a6b8bedbbefa68c772dbbca33b0516d189896f0",
+    "src/main.jsx": "2c31b34aa2775a7907b0cd117d59f5882157d21a0eb6e1aaee218553fb310aed",
+    "src/platform/Console.jsx": "c18ef7e260bb659654481e43fa96946cc888f364ea518014f48b4b855bd9147f",
+    "src/platform/EvidenceGraph.jsx": "c6e586cc899e0ca0b55bbf5ff33168603fc6ddbbeb1d068c5181f003da1b0a00",
+    "src/platform/auth.mjs": "5385d129642fc75729e33e790a21c1a7a336aa46e4743b658333e008d363c94c",
+    "src/platform/client.mjs": "d8ab3b9c808c63c50efcb8373c45d2616005b6b3e732ad34e05b02658c6ca00f",
+    "src/platform/console.css": "4711244cf0684ac72b4d5a201ae4ba9485c8f98fa53ccaadd68080a2c91197e3",
+    "tests/platform.spec.js": "4781f7612d8713ecd6f4a8bda5a467b4d6453ecb8d56f9f11a406a22844759b9",
+    "vite.config.js": "5d4ee9ee834f724d36998669d0aef45d7692b83f753c6043f09d9f089c3a18cc"
+  },
+  "source_unchanged": true,
+  "exit_code": 1,
+  "pass": false
+}
